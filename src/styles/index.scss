@@ -1,0 +1,41 @@
+
+
+
+
+
+@import "react-modal-video/css/modal-video.css";
+
+
+@import "swiper/css/bundle";   
+@import "~bootstrap/scss/bootstrap";
+@import "react-toastify/dist/ReactToastify.css";
+ 
+
+
+@import "../../public/assets/css/animate.css";  
+@import "../../public/assets/css/spacing.css";
+@import "../../public/assets/css/custom-animation.css";
+@import "../../public/assets/css/flaticon_broadx.css";
+@import "../../public/assets/css/nice-select.css"; 
+
+
+
+// @import "../../public/assets/css/bootstrap.css"; 
+@import "../../public/assets/css/font-awesome-pro.css";
+
+@import "../../public/assets/scss/main.scss";
+
+.dark-input {
+  &::placeholder {
+    color: #666 !important;
+  }
+  
+  color: #000 !important;
+  
+  &:focus {
+    color: #000 !important;
+    &::placeholder {
+      color: #999 !important;
+    }
+  }
+}
