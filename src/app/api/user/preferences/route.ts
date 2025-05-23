@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs';
-import { createServerSupabaseClient } from '@/utils/supabase-server';
+import { auth } from '@clerk/nextjs/server';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { notificationService } from '@/services/notificationService';
 
 /**
@@ -10,7 +10,7 @@ import { notificationService } from '@/services/notificationService';
 export async function GET(req: Request) {
   try {
     const { userId } = auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
   try {
     const { userId } = auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -69,7 +69,7 @@ export async function PUT(req: Request) {
     // Validate the input
     const booleanFields = [
       'email_order_updates',
-      'email_shipping_updates', 
+      'email_shipping_updates',
       'email_promotional',
       'email_system_updates',
       'in_app_order_updates',
@@ -110,7 +110,7 @@ export async function PUT(req: Request) {
     // Get updated preferences to return
     const updatedPreferences = await notificationService.getUserPreferences(userId);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       preferences: updatedPreferences
     });

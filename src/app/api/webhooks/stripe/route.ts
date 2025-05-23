@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/utils/supabase-server';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { orderTrackingService } from '@/services/orderTrackingService';
 import { notificationService } from '@/services/notificationService';
 import Stripe from 'stripe';

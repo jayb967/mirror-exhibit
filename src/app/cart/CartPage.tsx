@@ -179,7 +179,7 @@ const CartPage = () => {
           <h1 className="tp-section-title mb-30">Your Cart</h1>
           <div className="text-center py-50">
             <h3 className="mb-20">Your cart is empty</h3>
-            <p className="mb-30">Looks like you haven't added any items to your cart yet.</p>
+            <p className="mb-30">Looks like you haven&apos;t added any items to your cart yet.</p>
             <Link
               className="tp-btn-theme"
               href="/shop"

@@ -117,7 +117,7 @@ export default function MaintenancePage() {
         </p>
         <p className="tw-text-sm tw-text-gray-500">
           Note: Automatic cleanup requires the pg_cron extension to be enabled in your Supabase project.
-          If it's not enabled, you can run the cleanup manually using the button above.
+          If it&apos;s not enabled, you can run the cleanup manually using the button above.
         </p>
       </div>
       </div>

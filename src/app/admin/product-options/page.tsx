@@ -83,7 +83,7 @@ export default function ProductOptionsPage() {
             {sizes.length === 0 ? (
               <tr>
                 <td colSpan={4} className="tw-px-6 tw-py-4 tw-text-center tw-text-sm tw-text-gray-500">
-                  No sizes found. Use the "Set Up Default Options" button to create default sizes.
+                  No sizes found. Use the &quot;Set Up Default Options&quot; button to create default sizes.
                 </td>
               </tr>
             ) : (
@@ -118,7 +118,7 @@ export default function ProductOptionsPage() {
             {frameTypes.length === 0 ? (
               <tr>
                 <td colSpan={4} className="tw-px-6 tw-py-4 tw-text-center tw-text-sm tw-text-gray-500">
-                  No frame types found. Use the "Set Up Default Options" button to create default frame types.
+                  No frame types found. Use the &quot;Set Up Default Options&quot; button to create default frame types.
                 </td>
               </tr>
             ) : (

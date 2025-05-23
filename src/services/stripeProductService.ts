@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { createServerSupabaseClient } from '@/utils/supabase-server';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -349,7 +349,7 @@ class StripeProductService {
   private async getExistingSync(productId: string, productVariationId?: string): Promise<StripeProductData | null> {
     try {
       const supabase = await this.supabase;
-      
+
       let query = supabase
         .from('stripe_products')
         .select('*')
@@ -388,7 +388,7 @@ class StripeProductService {
   ): Promise<void> {
     try {
       const supabase = await this.supabase;
-      
+
       await supabase
         .from('stripe_price_history')
         .insert({
@@ -412,7 +412,7 @@ class StripeProductService {
   private async recordSyncError(productId: string, productVariationId: string | undefined, errorMessage: string): Promise<void> {
     try {
       const supabase = await this.supabase;
-      
+
       await supabase
         .from('stripe_products')
         .upsert({

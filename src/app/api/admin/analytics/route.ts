@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminAccess } from '@/utils/admin-auth';
-import { createServerSupabaseClient } from '@/utils/supabase-server';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
 /**
  * GET /api/admin/analytics
@@ -101,7 +101,7 @@ export async function GET(req: Request) {
     // Format recent orders with customer names
     const formattedRecentOrders = recentOrders?.map(order => ({
       ...order,
-      customer_name: order.shipping_address?.first_name && order.shipping_address?.last_name 
+      customer_name: order.shipping_address?.first_name && order.shipping_address?.last_name
         ? `${order.shipping_address.first_name} ${order.shipping_address.last_name}`
         : 'Unknown Customer'
     })) || [];

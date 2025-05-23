@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import BasicAdminLayout from '@/components/admin/BasicAdminLayout';
 import OrderManagement from '@/components/admin/OrderManagement';
-import { notificationService } from '@/services/notificationService';
-import { 
+
+import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ArrowDownTrayIcon
@@ -105,14 +105,26 @@ const EnhancedOrdersPage: React.FC = () => {
 
       toast.success(`Order status updated to ${newStatus}`);
 
-      // Create admin notification for status change
-      await notificationService.createNotification({
-        type: 'admin_order_status_update',
-        title: `Order #${orderId.substring(0, 8)} status updated`,
-        message: `Order status changed to ${newStatus}${notes ? ` - ${notes}` : ''}`,
-        actionUrl: `/admin/orders/${orderId}`,
-        data: { orderId, newStatus, notes }
-      }, { adminOnly: true });
+      // Create admin notification for status change via API
+      try {
+        await fetch('/api/admin/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'admin_order_status_update',
+            title: `Order #${orderId.substring(0, 8)} status updated`,
+            message: `Order status changed to ${newStatus}${notes ? ` - ${notes}` : ''}`,
+            actionUrl: `/admin/orders/${orderId}`,
+            data: { orderId, newStatus, notes },
+            adminOnly: true
+          }),
+        });
+      } catch (notificationError) {
+        console.error('Failed to create notification:', notificationError);
+        // Don't fail the whole operation if notification fails
+      }
 
       // Refresh orders list
       fetchOrders();

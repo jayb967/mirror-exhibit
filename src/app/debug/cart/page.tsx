@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useClerkAuth';
 import { cartService } from '@/services/cartService';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCartWithAuth } from '@/redux/features/cartSlice';

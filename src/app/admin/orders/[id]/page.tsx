@@ -207,7 +207,7 @@ export default function OrderDetailPage({ params }: OrderParams) {
         <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
           <div className="tw-text-center">
             <h1 className="tw-text-2xl tw-font-bold tw-mb-4">Order Not Found</h1>
-            <p className="tw-mb-8 tw-text-gray-600">The order you're looking for doesn't exist or you don't have permission to view it.</p>
+            <p className="tw-mb-8 tw-text-gray-600">The order you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.</p>
             <button
               onClick={() => router.push('/admin/orders')}
               className="tw-bg-[#A6A182] tw-text-white tw-px-4 tw-py-2 hover:tw-bg-black"

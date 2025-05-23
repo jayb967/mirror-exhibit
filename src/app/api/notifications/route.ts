@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs';
+import { auth } from '@clerk/nextjs/server';
 import { notificationService } from '@/services/notificationService';
 
 /**
@@ -9,7 +9,7 @@ import { notificationService } from '@/services/notificationService';
 export async function GET(req: Request) {
   try {
     const { userId } = auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -44,7 +44,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const { userId } = auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

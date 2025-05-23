@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-import { createServerSupabaseClient } from '@/utils/supabase-server';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
 // Initialize SendGrid
 if (process.env.SENDGRID_API_KEY) {
@@ -79,7 +79,7 @@ class EmailService {
       };
 
       const [response] = await sgMail.send(msg);
-      
+
       return {
         success: true,
         messageId: response.headers['x-message-id'] as string
@@ -97,8 +97,8 @@ class EmailService {
    * Send email using template
    */
   async sendTemplateEmail(
-    templateKey: string, 
-    to: string, 
+    templateKey: string,
+    to: string,
     templateData: Record<string, any>,
     options?: { toName?: string; priority?: number }
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
@@ -140,7 +140,7 @@ class EmailService {
   async queueEmail(emailData: EmailData): Promise<{ success: boolean; queueId?: string; error?: string }> {
     try {
       const supabase = await this.supabase;
-      
+
       const queueItem = {
         to_email: emailData.to,
         to_name: emailData.toName,
@@ -184,7 +184,7 @@ class EmailService {
   async processEmailQueue(limit: number = 10): Promise<{ processed: number; errors: string[] }> {
     try {
       const supabase = await this.supabase;
-      
+
       // Get pending emails
       const { data: queueItems, error } = await supabase
         .from('email_queue')
@@ -268,7 +268,7 @@ class EmailService {
   private async getTemplate(templateKey: string): Promise<EmailTemplate | null> {
     try {
       const supabase = await this.supabase;
-      
+
       const { data, error } = await supabase
         .from('email_templates')
         .select('*')
@@ -293,7 +293,7 @@ class EmailService {
    */
   private processTemplate(template: string, data: Record<string, any>): string {
     let processed = template;
-    
+
     // Replace {{variable}} patterns
     Object.keys(data).forEach(key => {
       const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');

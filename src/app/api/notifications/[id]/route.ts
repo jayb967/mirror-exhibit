@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs';
+import { auth } from '@clerk/nextjs/server';
 import { notificationService } from '@/services/notificationService';
 
 /**
@@ -12,7 +12,7 @@ export async function PATCH(
 ) {
   try {
     const { userId } = auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -33,11 +33,11 @@ export async function PATCH(
       case 'mark_read':
         result = await notificationService.markAsRead(params.id, userId);
         break;
-      
+
       case 'archive':
         result = await notificationService.archiveNotification(params.id, userId);
         break;
-      
+
       default:
         return NextResponse.json(
           { error: 'Invalid action' },

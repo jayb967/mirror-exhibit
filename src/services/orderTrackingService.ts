@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/utils/supabase-server';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { notificationService } from './notificationService';
 import { emailService } from './emailService';
 

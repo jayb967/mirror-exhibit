@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { auth } from '@clerk/nextjs/server';
-import { useAuth } from '@clerk/nextjs';
 
 /**
  * Create a Supabase client for server-side usage with Clerk authentication
@@ -8,7 +7,7 @@ import { useAuth } from '@clerk/nextjs';
  */
 export async function createServerSupabaseClient() {
   const { getToken } = await auth();
-  
+
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -23,26 +22,7 @@ export async function createServerSupabaseClient() {
   );
 }
 
-/**
- * Create a Supabase client for client-side usage with Clerk authentication
- * This should be used in Client Components and hooks
- */
-export function createClientSupabaseClient() {
-  const { getToken } = useAuth();
-  
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: async () => {
-          const token = await getToken({ template: 'supabase' });
-          return token ? { Authorization: `Bearer ${token}` } : {};
-        },
-      },
-    }
-  );
-}
+
 
 /**
  * Create a Supabase client with admin privileges (service role)

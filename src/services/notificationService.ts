@@ -1,7 +1,7 @@
-import { createServerSupabaseClient } from '@/utils/supabase-server';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { emailService } from './emailService';
 
-export type NotificationType = 
+export type NotificationType =
   | 'order_confirmation'
   | 'order_status_update'
   | 'payment_confirmation'
@@ -158,19 +158,19 @@ class NotificationService {
       case 'order_status_update':
       case 'payment_confirmation':
         return preferences.email_order_updates;
-      
+
       case 'shipping_notification':
       case 'delivery_confirmation':
         return preferences.email_shipping_updates;
-      
+
       case 'promotional':
       case 'cart_abandonment':
         return preferences.email_promotional;
-      
+
       case 'system_maintenance':
       case 'user_welcome':
         return preferences.email_system_updates;
-      
+
       default:
         return false;
     }
@@ -182,7 +182,7 @@ class NotificationService {
   async getUserPreferences(userId: string): Promise<NotificationPreferences | null> {
     try {
       const supabase = await this.supabase;
-      
+
       const { data, error } = await supabase
         .from('notification_preferences')
         .select('*')
@@ -206,7 +206,7 @@ class NotificationService {
   async createDefaultPreferences(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
       const supabase = await this.supabase;
-      
+
       const { error } = await supabase.rpc('create_user_notification_preferences', {
         user_uuid: userId
       });
@@ -232,7 +232,7 @@ class NotificationService {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const supabase = await this.supabase;
-      
+
       const { error } = await supabase
         .from('notification_preferences')
         .upsert({
@@ -384,7 +384,7 @@ class NotificationService {
   async markAsRead(notificationId: string, userId?: string): Promise<{ success: boolean; error?: string }> {
     try {
       const supabase = await this.supabase;
-      
+
       let query = supabase
         .from('notifications')
         .update({
@@ -417,7 +417,7 @@ class NotificationService {
   async archiveNotification(notificationId: string, userId?: string): Promise<{ success: boolean; error?: string }> {
     try {
       const supabase = await this.supabase;
-      
+
       let query = supabase
         .from('notifications')
         .update({ is_archived: true })
@@ -449,7 +449,7 @@ class NotificationService {
       // TODO: Implement Clerk user email retrieval
       // This will depend on how you're integrating with Clerk
       // You might need to call Clerk's API or use their SDK
-      
+
       // For now, return null - you'll need to implement this
       // based on your Clerk integration
       return null;

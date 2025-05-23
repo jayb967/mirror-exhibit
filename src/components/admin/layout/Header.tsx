@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState, useEffect } from "react";
 
-import NotificationCenter from "../../NotificationCenter";
+import NotificationCenter from "../NotificationCenter";
 
 // prop type
 interface HeaderProps {
