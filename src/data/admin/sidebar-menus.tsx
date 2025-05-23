@@ -7,6 +7,7 @@ import { GrGallery } from "react-icons/gr";
 import { PiArticle } from "react-icons/pi";
 import { MdOutlinePayment, MdOutlineLocalShipping } from "react-icons/md";
 import { RiCoupon3Line } from "react-icons/ri";
+import { BellIcon, ChartBarIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { SidebarMenuItems } from "@/types/admin/menu-types";
 
 // SVG Icon Components
@@ -101,12 +102,40 @@ const sidebar_menu: SidebarMenuItems = [
   },
   {
     id: 2,
+    title: "Analytics",
+    icon: ChartBarIcon,
+    link: "/admin/analytics",
+  },
+  {
+    id: 3,
+    title: "Notifications",
+    icon: BellIcon,
+    link: "/admin/notifications",
+  },
+  {
+    id: 4,
+    title: "Orders",
+    icon: ShoppingBagIcon,
+    link: "#",
+    subMenus: [
+      {
+        title: "All Orders",
+        link: "/admin/orders",
+      },
+      {
+        title: "Enhanced Orders",
+        link: "/admin/orders/enhanced",
+      },
+    ],
+  },
+  {
+    id: 5,
     title: "Gallery",
     icon: GrGallery,
     link: "/admin/gallery",
   },
   {
-    id: 3,
+    id: 6,
     title: "Exhibitions",
     icon: HiOutlinePhotograph,
     link: "#",
@@ -126,7 +155,7 @@ const sidebar_menu: SidebarMenuItems = [
     ],
   },
   {
-    id: 4,
+    id: 7,
     title: "Artists",
     icon: AiOutlineUser,
     link: "#",
@@ -142,13 +171,13 @@ const sidebar_menu: SidebarMenuItems = [
     ],
   },
   {
-    id: 5,
+    id: 8,
     title: "Guest Users",
     icon: HiOutlineUserGroup,
     link: "/admin/guests",
   },
   {
-    id: 6,
+    id: 9,
     title: "Blog",
     icon: PiArticle,
     link: "#",
@@ -168,13 +197,13 @@ const sidebar_menu: SidebarMenuItems = [
     ],
   },
   {
-    id: 6,
+    id: 10,
     title: "Media",
     icon: HiOutlinePhotograph,
     link: "/admin/media",
   },
   {
-    id: 7,
+    id: 11,
     title: "Shipping",
     icon: MdOutlineLocalShipping,
     link: "#",
@@ -190,25 +219,25 @@ const sidebar_menu: SidebarMenuItems = [
     ],
   },
   {
-    id: 8,
+    id: 12,
     title: "Coupons",
     icon: RiCoupon3Line,
     link: "/admin/coupons",
   },
   {
-    id: 9,
+    id: 13,
     title: "Tickets",
     icon: TbDiscountCheck,
     link: "/admin/tickets",
   },
   {
-    id: 10,
+    id: 14,
     title: "Payments",
     icon: MdOutlinePayment,
     link: "/admin/payments",
   },
   {
-    id: 11,
+    id: 15,
     title: "Settings",
     icon: AiOutlineSetting,
     link: "/admin/settings",

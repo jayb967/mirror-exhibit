@@ -475,7 +475,7 @@ const CheckoutArea = () => {
     setProcessing(true);
 
     try {
-      // Create order data
+      // Prepare order data for Stripe metadata (don't create order in DB yet)
       const orderData = {
         items: cartItems.map(item => ({
           id: item.product_id || item.id,
@@ -515,35 +515,40 @@ const CheckoutArea = () => {
         },
         subtotal,
         tax,
-        shipping: shippingCost,
+        shippingCost,
         total: finalTotal,
         notes: formData.orderNotes,
         createAccount: formData.createAccount
       };
 
-      // Create order in database
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Track checkout form completion for marketing
+      await cartTrackingService.markCheckoutFormCompleted(
+        {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          company: formData.company
         },
-        body: JSON.stringify(orderData),
-      });
+        {
+          address: formData.address,
+          apartment: formData.apartment,
+          city: formData.city,
+          state: formData.state,
+          postalCode: formData.postalCode,
+          country: formData.country
+        },
+        formData.email,
+        isAuthenticated ? user?.id : undefined
+      );
 
-      if (!response.ok) {
-        throw new Error('Failed to create order');
-      }
-
-      const { orderId } = await response.json();
-
-      // Create Stripe checkout session
+      // Create Stripe checkout session directly (order will be created after payment)
       const checkoutResponse = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          orderId,
+          orderData, // Pass full order data to be stored in Stripe metadata
           items: orderData.items,
           shipping: shippingCost,
           tax,
@@ -556,13 +561,22 @@ const CheckoutArea = () => {
         throw new Error('Failed to create checkout session');
       }
 
-      const { url } = await checkoutResponse.json();
+      const { url, sessionId } = await checkoutResponse.json();
 
-      // Track checkout completion
+      // Track checkout started (but not completed until payment)
       await cartTrackingService.updateCheckoutStatus(true, false, formData.email);
 
-      // Clear cart and redirect to Stripe
-      await cartService.clearCart();
+      // Track payment intent started for marketing
+      if (sessionId) {
+        await cartTrackingService.markPaymentIntentStarted(
+          sessionId,
+          formData.email,
+          isAuthenticated ? user?.id : undefined
+        );
+      }
+
+      // Don't clear cart yet - wait until payment is confirmed
+      // Cart will be cleared by webhook after successful payment
 
       if (url) {
         window.location.href = url;

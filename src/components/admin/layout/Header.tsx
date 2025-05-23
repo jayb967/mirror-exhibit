@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState, useEffect } from "react";
 
-import NotificationArea from "./component/NotificationArea";
+import NotificationCenter from "../../NotificationCenter";
 
 // prop type
 interface HeaderProps {
@@ -14,9 +14,7 @@ interface HeaderProps {
 const Header = ({ setSideMenu }: HeaderProps) => {
   const [searchOverlay, setSearchOverlay] = useState<boolean>(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
   const pRef = useRef<HTMLDivElement>(null);
-  const nRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
 
@@ -31,25 +29,16 @@ const Header = ({ setSideMenu }: HeaderProps) => {
       if (!pRef?.current?.contains(e.target)) {
         setProfileOpen(false);
       }
-      if (!nRef?.current?.contains(e.target)) {
-        setNotificationOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [pRef, nRef]);
-
-  const handleNotificationOpen = () => {
-    setNotificationOpen(!notificationOpen);
-    setProfileOpen(false);
-  };
+  }, [pRef]);
 
   const handleProfileOpen = () => {
     setProfileOpen(!profileOpen);
-    setNotificationOpen(false);
   };
 
   return (
@@ -90,11 +79,7 @@ const Header = ({ setSideMenu }: HeaderProps) => {
         </div>
 
         {/* Notifications */}
-        <NotificationArea
-          nRef={nRef}
-          notificationOpen={notificationOpen}
-          handleNotificationOpen={handleNotificationOpen}
-        />
+        <NotificationCenter className="tw-relative" />
 
         {/* Profile dropdown */}
         <div className="tw-relative" ref={pRef}>

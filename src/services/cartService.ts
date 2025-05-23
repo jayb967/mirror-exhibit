@@ -685,6 +685,7 @@ class CartService {
 
   /**
    * Track cart activity for analytics
+   * Uses the cart tracking service with API endpoint to bypass RLS policies
    * @param userId User ID
    * @param email Optional email
    * @returns Promise resolving to success status
@@ -709,53 +710,16 @@ class CartService {
         variation_id: (item as any).variation_id || (item as any).product_variation_id
       }));
 
-      const subtotal = trackingItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      // Use the cart tracking service instead of direct Supabase calls
+      const { cartTrackingService } = await import('./cartTrackingService');
 
-      // Try to update existing record first, then insert if not found
-      const { data: existingRecord } = await this.supabase
-        .from('cart_tracking')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-
-      let error;
-      if (existingRecord) {
-        // Update existing record
-        const result = await this.supabase
-          .from('cart_tracking')
-          .update({
-            email: email,
-            cart_items: trackingItems,
-            subtotal: subtotal,
-            last_activity: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId);
-        error = result.error;
-      } else {
-        // Insert new record
-        const result = await this.supabase
-          .from('cart_tracking')
-          .insert({
-            user_id: userId,
-            email: email,
-            cart_items: trackingItems,
-            subtotal: subtotal,
-            last_activity: new Date().toISOString(),
-            checkout_started: false,
-            checkout_completed: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-        error = result.error;
-      }
-
-      if (error) {
-        console.error('Error tracking cart activity:', error);
-        return false;
-      }
-
-      return true;
+      return await cartTrackingService.trackCartActivity(
+        trackingItems,
+        email,
+        false, // checkout_started
+        false, // checkout_completed
+        userId
+      );
     } catch (error) {
       console.error('Error in cart tracking:', error);
       return false;

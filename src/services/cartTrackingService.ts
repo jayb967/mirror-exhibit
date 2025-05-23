@@ -12,6 +12,19 @@ export interface CartTrackingData {
   checkout_started: boolean;
   checkout_completed: boolean;
   recovery_email_sent: boolean;
+  // Enhanced marketing tracking fields
+  payment_intent_started?: boolean;
+  payment_intent_started_at?: string;
+  stripe_session_id?: string;
+  payment_abandoned?: boolean;
+  payment_abandoned_at?: string;
+  marketing_emails_sent?: number;
+  last_marketing_email_sent?: string;
+  checkout_form_completed?: boolean;
+  checkout_form_completed_at?: string;
+  customer_data?: any;
+  shipping_data?: any;
+  // UTM and device tracking
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
@@ -275,6 +288,7 @@ class CartTrackingService {
 
   /**
    * Track cart activity with explicit parameters (for Clerk compatibility)
+   * Uses API endpoint with service role to bypass RLS policies
    * @param cartItems Current cart items
    * @param email User email
    * @param checkoutStarted Whether checkout has started
@@ -313,88 +327,41 @@ class CartTrackingService {
         email: email || null,
         cart_items: cartItems,
         subtotal,
-        last_activity: new Date().toISOString(),
         checkout_started: checkoutStarted,
         checkout_completed: checkoutCompleted,
-        recovery_email_sent: false,
-        utm_source: this.getUtmParameter('utm_source'),
-        utm_medium: this.getUtmParameter('utm_medium'),
-        utm_campaign: this.getUtmParameter('utm_campaign'),
-        device_type: this.getDeviceType(),
-        browser: this.getBrowser(),
-        referrer: this.getReferrer()
+        metadata: {
+          utm_source: this.getUtmParameter('utm_source'),
+          utm_medium: this.getUtmParameter('utm_medium'),
+          utm_campaign: this.getUtmParameter('utm_campaign'),
+          device_type: this.getDeviceType(),
+          browser: this.getBrowser(),
+          referrer: this.getReferrer()
+        }
       };
 
-      // Check if record exists first, then insert or update accordingly
-      let error = null;
+      // Use API endpoint instead of direct Supabase calls to bypass RLS
+      const response = await fetch('/api/cart-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'track',
+          ...trackingData
+        })
+      });
 
-      if (userId) {
-        // For authenticated users, try to update first, then insert if not found
-        const { data: existingRecord } = await this.supabase
-          .from(this.TRACKING_TABLE)
-          .select('id')
-          .eq('user_id', userId)
-          .single();
-
-        if (existingRecord) {
-          // Update existing record
-          const { error: updateError } = await this.supabase
-            .from(this.TRACKING_TABLE)
-            .update({
-              ...trackingData,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', userId);
-          error = updateError;
-        } else {
-          // Insert new record
-          const { error: insertError } = await this.supabase
-            .from(this.TRACKING_TABLE)
-            .insert({
-              ...trackingData,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-          error = insertError;
-        }
-      } else if (guestToken) {
-        // For guest users, try to update first, then insert if not found
-        const { data: existingRecord } = await this.supabase
-          .from(this.TRACKING_TABLE)
-          .select('id')
-          .eq('guest_token', guestToken)
-          .single();
-
-        if (existingRecord) {
-          // Update existing record
-          const { error: updateError } = await this.supabase
-            .from(this.TRACKING_TABLE)
-            .update({
-              ...trackingData,
-              updated_at: new Date().toISOString()
-            })
-            .eq('guest_token', guestToken);
-          error = updateError;
-        } else {
-          // Insert new record
-          const { error: insertError } = await this.supabase
-            .from(this.TRACKING_TABLE)
-            .insert({
-              ...trackingData,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-          error = insertError;
-        }
-      }
-
-      if (error) {
-        console.error('Error tracking cart activity:', error);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Cart tracking API error:', errorData);
         // Don't fail the cart operation if tracking fails
-        return true; // Return true to not break cart functionality
+        return true;
       }
 
+      const result = await response.json();
+      console.log('Cart tracking successful:', result);
       return true;
+
     } catch (error) {
       console.error('Error in trackCartActivity:', error);
       // Don't fail the cart operation if tracking fails
@@ -404,6 +371,7 @@ class CartTrackingService {
 
   /**
    * Track guest user data
+   * Uses API endpoint with service role to bypass RLS policies
    * @param guestData Guest user data
    * @returns Promise resolving to success status
    */
@@ -412,17 +380,22 @@ class CartTrackingService {
       const guestToken = this.getGuestToken();
       if (!guestToken) return false;
 
-      // Update the cart tracking record with guest data
-      const { error } = await this.supabase
-        .from(this.TRACKING_TABLE)
-        .update({
-          ...guestData,
-          updated_at: new Date().toISOString()
+      // Use API endpoint instead of direct Supabase calls
+      const response = await fetch('/api/cart-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          guest_token: guestToken,
+          ...guestData
         })
-        .eq('guest_token', guestToken);
+      });
 
-      if (error) {
-        console.error('Error tracking guest user data:', error);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Guest data tracking API error:', errorData);
         return false;
       }
 
@@ -451,32 +424,25 @@ class CartTrackingService {
       const guestToken = this.getGuestToken();
       if (!userId && !guestToken) return false;
 
-      const updateData = {
-        checkout_started: checkoutStarted,
-        checkout_completed: checkoutCompleted,
-        email: email || undefined,
-        last_activity: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      // Use API endpoint instead of direct Supabase calls
+      const response = await fetch('/api/cart-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          user_id: userId,
+          guest_token: !userId ? guestToken : undefined,
+          checkout_started: checkoutStarted,
+          checkout_completed: checkoutCompleted,
+          email: email
+        })
+      });
 
-      let error = null;
-
-      if (userId) {
-        const { error: updateError } = await this.supabase
-          .from(this.TRACKING_TABLE)
-          .update(updateData)
-          .eq('user_id', userId);
-        error = updateError;
-      } else if (guestToken) {
-        const { error: updateError } = await this.supabase
-          .from(this.TRACKING_TABLE)
-          .update(updateData)
-          .eq('guest_token', guestToken);
-        error = updateError;
-      }
-
-      if (error) {
-        console.error('Error updating checkout status:', error);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Checkout status update API error:', errorData);
         return false;
       }
 
@@ -492,7 +458,190 @@ class CartTrackingService {
   }
 
   /**
+   * Mark checkout form as completed (for marketing tracking)
+   * @param customerData Customer information from the form
+   * @param shippingData Shipping information from the form
+   * @param email User email
+   * @param userId Optional user ID from Clerk
+   * @returns Promise resolving to success status
+   */
+  async markCheckoutFormCompleted(
+    customerData: any,
+    shippingData: any,
+    email?: string,
+    userId?: string
+  ): Promise<boolean> {
+    try {
+      const guestToken = this.getGuestToken();
+      if (!userId && !guestToken && !email) return false;
+
+      // Use API endpoint for consistent tracking
+      const response = await fetch('/api/cart-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          user_id: userId,
+          guest_token: !userId ? guestToken : undefined,
+          checkout_form_completed: true,
+          checkout_form_completed_at: new Date().toISOString(),
+          customer_data: customerData,
+          shipping_data: shippingData,
+          email: email
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Checkout form completion API error:', errorData);
+        return false;
+      }
+
+      console.log('Checkout form completion tracked for marketing');
+      return true;
+    } catch (error) {
+      console.error('Error marking checkout form completed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Mark payment intent as started (when user reaches Stripe)
+   * @param stripeSessionId Stripe checkout session ID
+   * @param email User email
+   * @param userId Optional user ID from Clerk
+   * @returns Promise resolving to success status
+   */
+  async markPaymentIntentStarted(
+    stripeSessionId: string,
+    email?: string,
+    userId?: string
+  ): Promise<boolean> {
+    try {
+      const guestToken = this.getGuestToken();
+      if (!userId && !guestToken && !email) return false;
+
+      // Use API endpoint for consistent tracking
+      const response = await fetch('/api/cart-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          user_id: userId,
+          guest_token: !userId ? guestToken : undefined,
+          payment_intent_started: true,
+          payment_intent_started_at: new Date().toISOString(),
+          stripe_session_id: stripeSessionId,
+          email: email
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Payment intent started API error:', errorData);
+        return false;
+      }
+
+      console.log('Payment intent started tracked for marketing');
+      return true;
+    } catch (error) {
+      console.error('Error marking payment intent started:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Mark payment as abandoned (for marketing follow-up)
+   * @param email User email
+   * @param userId Optional user ID from Clerk
+   * @returns Promise resolving to success status
+   */
+  async markPaymentAbandoned(
+    email?: string,
+    userId?: string
+  ): Promise<boolean> {
+    try {
+      const guestToken = this.getGuestToken();
+      if (!userId && !guestToken && !email) return false;
+
+      // Use API endpoint for consistent tracking
+      const response = await fetch('/api/cart-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          user_id: userId,
+          guest_token: !userId ? guestToken : undefined,
+          payment_abandoned: true,
+          payment_abandoned_at: new Date().toISOString(),
+          email: email
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Payment abandoned API error:', errorData);
+        return false;
+      }
+
+      console.log('Payment abandonment tracked for marketing follow-up');
+      return true;
+    } catch (error) {
+      console.error('Error marking payment abandoned:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Increment marketing email count
+   * @param email User email
+   * @param userId Optional user ID from Clerk
+   * @returns Promise resolving to success status
+   */
+  async incrementMarketingEmailCount(
+    email?: string,
+    userId?: string
+  ): Promise<boolean> {
+    try {
+      const guestToken = this.getGuestToken();
+      if (!userId && !guestToken && !email) return false;
+
+      // Use API endpoint for consistent tracking
+      const response = await fetch('/api/cart-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'increment_marketing_email',
+          user_id: userId,
+          guest_token: !userId ? guestToken : undefined,
+          email: email
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Marketing email increment API error:', errorData);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error incrementing marketing email count:', error);
+      return false;
+    }
+  }
+
+  /**
    * Convert guest cart to authenticated user cart
+   * Uses API endpoint with service role to bypass RLS policies
    * @param clerkUserId Clerk user ID
    * @returns Promise resolving to success status
    */
@@ -506,34 +655,33 @@ class CartTrackingService {
 
       console.log('Converting guest cart to user cart:', { guestToken, clerkUserId });
 
-      // Try RPC function first, fallback to manual implementation
-      try {
-        const { data, error } = await this.supabase
-          .rpc('merge_guest_cart_with_user', {
-            p_guest_token: guestToken,
-            p_clerk_user_id: clerkUserId
-          });
+      // Use API endpoint instead of direct Supabase calls
+      const response = await fetch('/api/cart-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'convert_guest',
+          guest_token: guestToken,
+          clerk_user_id: clerkUserId
+        })
+      });
 
-        if (!error && data !== null) {
-          console.log('Guest cart conversion via RPC successful:', data);
-          this.clearGuestToken();
-          return data === true;
-        }
-
-        console.log('RPC function failed or not found, using manual implementation:', error);
-      } catch (rpcError) {
-        console.log('RPC call failed, using manual implementation:', rpcError);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Guest conversion API error:', errorData);
+        return false;
       }
 
-      // Manual implementation as fallback
-      const success = await this.manualGuestToUserConversion(guestToken, clerkUserId);
-
-      if (success) {
-        console.log('Guest cart conversion via manual method successful');
+      const result = await response.json();
+      if (result.success) {
+        console.log('Guest cart conversion successful');
         this.clearGuestToken();
+        return true;
       }
 
-      return success;
+      return false;
     } catch (error) {
       console.error('Error in convertGuestToUser:', error);
       return false;

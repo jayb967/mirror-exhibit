@@ -6,6 +6,8 @@ This folder contains the components used in the admin dashboard of the Mirror Ex
 ## 📂 Files Overview
 - `ProductEditModal.tsx` - Modal component for editing product details with multi-image management
 - `SimpleAdminLayout.tsx` - Simplified layout component for admin pages
+- `NotificationCenter.tsx` - **NEW** Real-time admin notification system
+- `OrderManagement.tsx` - **NEW** Enhanced order management with bulk operations
 - `layout/` - Original layout components (deprecated)
 - `svg/` - SVG icons used in the admin dashboard
 
@@ -45,6 +47,31 @@ This folder contains the components used in the admin dashboard of the Mirror Ex
   - Real-time form validation and database integration
   - Responsive design with tabbed interface
 - **Integration:** Used by checkout for tax calculation and shipping service for origin address
+
+### NotificationCenter Component (Phase 3 - NEW)
+- **Purpose:** Real-time admin notification system with dropdown interface
+- **Features:**
+  - Bell icon with unread count badge in admin header
+  - Auto-polling every 30 seconds for new notifications
+  - Mark as read/mark all as read functionality
+  - Action buttons for notification-related tasks
+  - Notification type icons and timestamps
+- **Usage:** Integrated into admin header layout
+- **Dependencies:** `/api/admin/notifications`, `/api/notifications/[id]`
+
+### OrderManagement Component (Phase 3 - NEW)
+- **Purpose:** Enhanced order management with bulk operations and advanced filtering
+- **Features:**
+  - Bulk order selection with checkbox interface
+  - Bulk status updates for multiple orders
+  - Individual order status modification with notes
+  - Order filtering and search capabilities
+  - Status update modal with confirmation
+  - Real-time status indicators with icons
+  - Customer information display
+  - Tracking number integration
+- **Usage:** Used in enhanced orders page (`/admin/orders/enhanced`)
+- **Dependencies:** Order status update API endpoints, notification service
 
 ## 🔄 Recent Changes
 | Date       | Change Description                                                 | Reason                         |

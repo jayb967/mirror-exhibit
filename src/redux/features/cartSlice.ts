@@ -61,25 +61,9 @@ const ensureAnonymousUser = async (): Promise<any> => {
       sessionStorage.setItem('anonymous_user_id', anonymousUserId);
     }
 
-    // Create guest user record in database (background, non-blocking)
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-
-      await supabase.rpc('create_anonymous_guest_user', {
-        p_guest_token: guestToken,
-        p_user_id: anonymousUserId
-      });
-    } catch (rpcError: any) {
-      // Silently handle missing database functions - this is expected during development
-      if (rpcError.code === '42883' || rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
-        // Function doesn't exist yet, continue without database user creation
-      } else {
-        console.log('Guest user creation failed (non-critical):', rpcError.message);
-      }
-    }
+    // Guest user functionality is now handled by cart_tracking table
+    // No need for separate database function calls
+    console.log('Anonymous user initialized for cart tracking:', anonymousUserId);
 
     return { id: anonymousUserId, is_anonymous: true };
   } catch (error) {
@@ -119,6 +103,28 @@ export const addToCartWithAuth = createAsyncThunk(
               price: product.price
             },
             true // silent mode - no toasts from cart service
+          );
+
+          // Also track cart activity for guest users
+          const { cartTrackingService } = await import('@/services/cartTrackingService');
+          const currentCart = await cartService.getCart();
+
+          // Track cart activity (this will work for both guest and authenticated users)
+          await cartTrackingService.trackCartActivity(
+            currentCart.map(item => ({
+              product_id: item.product_id,
+              quantity: item.quantity,
+              price: item.product?.price || item.product?.base_price || product.price || 0,
+              title: item.product?.name || product.title || 'Product',
+              image: item.product?.image_url || item.product?.image || product.image,
+              size_name: (item as any).size_name,
+              frame_name: (item as any).frame_name,
+              variation_id: (item as any).variation_id
+            })),
+            undefined, // email
+            false, // checkout_started
+            false, // checkout_completed
+            undefined // userId (will use guest token)
           );
         } catch (dbError) {
           console.log('Background database sync failed, item already in local cart:', dbError);

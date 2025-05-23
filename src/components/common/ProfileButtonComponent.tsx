@@ -62,12 +62,12 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
 
   return (
     <div className={`tp-header-icon profile ${variant === 'mobile' ? '' : 'd-none d-xl-block'}`} ref={dropdownRef}>
-      <button 
-        className="profile-icon" 
+      <button
+        className="profile-icon"
         onClick={toggleDropdown}
-        style={{ 
-          color: iconColor, 
-          background: 'none', 
+        style={{
+          color: iconColor,
+          background: 'none',
           border: 'none',
           position: 'relative',
           padding: '8px',
@@ -78,7 +78,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
       </button>
 
       {dropdownOpen && (
-        <div 
+        <div
           className="profile-dropdown"
           style={{
             position: 'absolute',
@@ -104,10 +104,10 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                   {user.email}
                 </div>
               </div>
-              
+
               <div style={{ padding: '8px 0' }}>
-                <Link 
-                  href="/account" 
+                <Link
+                  href="/dashboard"
                   onClick={() => setDropdownOpen(false)}
                   style={{
                     display: 'block',
@@ -120,12 +120,12 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <i className="fa-solid fa-user" style={{ marginRight: '8px', width: '16px' }}></i>
-                  My Account
+                  <i className="fa-solid fa-tachometer-alt" style={{ marginRight: '8px', width: '16px' }}></i>
+                  My Dashboard
                 </Link>
-                
-                <Link 
-                  href="/orders" 
+
+                <Link
+                  href="/dashboard/orders"
                   onClick={() => setDropdownOpen(false)}
                   style={{
                     display: 'block',
@@ -143,8 +143,8 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                 </Link>
 
                 {user.role === 'admin' && (
-                  <Link 
-                    href="/admin/dashboard" 
+                  <Link
+                    href="/admin/dashboard"
                     onClick={() => setDropdownOpen(false)}
                     style={{
                       display: 'block',
@@ -161,7 +161,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                     Admin Dashboard
                   </Link>
                 )}
-                
+
                 <div style={{ borderTop: '1px solid #f0f0f0', marginTop: '8px', paddingTop: '8px' }}>
                   <button
                     onClick={handleLogout}
@@ -209,7 +209,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                 <i className="fa-solid fa-sign-in-alt" style={{ marginRight: '8px', width: '16px' }}></i>
                 Sign In
               </button>
-              
+
               <button
                 onClick={handleSignUp}
                 style={{
