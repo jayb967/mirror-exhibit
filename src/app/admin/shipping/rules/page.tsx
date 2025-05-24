@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 
 interface ShippingRule {
@@ -38,7 +38,7 @@ const ShippingRulesPage = () => {
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<ShippingRule | null>(null);
-  
+
   // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -51,29 +51,29 @@ const ShippingRulesPage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [priority, setPriority] = useState('10');
-  
-  const supabase = createClientComponentClient();
-  
+
+  const supabase = useSupabaseClient();
+
   useEffect(() => {
     fetchRules();
     fetchCategories();
     fetchProducts();
   }, []);
-  
+
   const fetchRules = async () => {
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from('shipping_rules')
         .select('*')
         .order('priority', { ascending: false })
         .order('created_at', { ascending: false });
-      
+
       if (error) {
         throw error;
       }
-      
+
       setRules(data || []);
     } catch (error) {
       console.error('Error fetching shipping rules:', error);
@@ -82,24 +82,24 @@ const ShippingRulesPage = () => {
       setLoading(false);
     }
   };
-  
+
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
         .from('product_categories')
         .select('id, name')
         .order('name');
-      
+
       if (error) {
         throw error;
       }
-      
+
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
-  
+
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
@@ -107,20 +107,20 @@ const ShippingRulesPage = () => {
         .select('id, name')
         .order('name')
         .limit(100);
-      
+
       if (error) {
         throw error;
       }
-      
+
       setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const ruleData = {
         name,
@@ -135,7 +135,7 @@ const ShippingRulesPage = () => {
         end_date: endDate || null,
         priority: parseInt(priority)
       };
-      
+
       if (editingRule) {
         // Update existing rule
         const response = await fetch(`/api/shipping/rules`, {
@@ -148,12 +148,12 @@ const ShippingRulesPage = () => {
             ...ruleData
           })
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to update shipping rule');
         }
-        
+
         toast.success('Shipping rule updated successfully');
       } else {
         // Create new rule
@@ -164,15 +164,15 @@ const ShippingRulesPage = () => {
           },
           body: JSON.stringify(ruleData)
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to create shipping rule');
         }
-        
+
         toast.success('Shipping rule created successfully');
       }
-      
+
       // Reset form and refresh rules
       resetForm();
       fetchRules();
@@ -181,7 +181,7 @@ const ShippingRulesPage = () => {
       toast.error((error as Error).message);
     }
   };
-  
+
   const handleEdit = (rule: ShippingRule) => {
     setEditingRule(rule);
     setName(rule.name);
@@ -197,22 +197,22 @@ const ShippingRulesPage = () => {
     setPriority(rule.priority.toString());
     setFormOpen(true);
   };
-  
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this shipping rule?')) {
       return;
     }
-    
+
     try {
       const response = await fetch(`/api/shipping/rules/${id}`, {
         method: 'DELETE'
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete shipping rule');
       }
-      
+
       toast.success('Shipping rule deleted successfully');
       fetchRules();
     } catch (error) {
@@ -220,7 +220,7 @@ const ShippingRulesPage = () => {
       toast.error((error as Error).message);
     }
   };
-  
+
   const resetForm = () => {
     setEditingRule(null);
     setName('');
@@ -236,12 +236,12 @@ const ShippingRulesPage = () => {
     setPriority('10');
     setFormOpen(false);
   };
-  
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };
-  
+
   return (
     <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
       <div className="tw-flex tw-justify-between tw-items-center tw-mb-6">
@@ -253,13 +253,13 @@ const ShippingRulesPage = () => {
           {formOpen ? 'Cancel' : 'Add New Rule'}
         </button>
       </div>
-      
+
       {formOpen && (
         <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-6 tw-mb-8">
           <h2 className="tw-text-xl tw-font-semibold tw-mb-4">
             {editingRule ? 'Edit Shipping Rule' : 'Create New Shipping Rule'}
           </h2>
-          
+
           <form onSubmit={handleSubmit} className="tw-space-y-4">
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Rule Name</label>
@@ -271,7 +271,7 @@ const ShippingRulesPage = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Description</label>
               <textarea
@@ -281,7 +281,7 @@ const ShippingRulesPage = () => {
                 rows={2}
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Rule Type</label>
               <select
@@ -295,7 +295,7 @@ const ShippingRulesPage = () => {
                 <option value="product_specific">Product-specific</option>
               </select>
             </div>
-            
+
             {ruleType === 'threshold' && (
               <div>
                 <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Threshold Amount ($)</label>
@@ -310,7 +310,7 @@ const ShippingRulesPage = () => {
                 />
               </div>
             )}
-            
+
             {ruleType === 'category_specific' && (
               <div>
                 <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Category</label>
@@ -329,7 +329,7 @@ const ShippingRulesPage = () => {
                 </select>
               </div>
             )}
-            
+
             {ruleType === 'product_specific' && (
               <div>
                 <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Product</label>
@@ -348,7 +348,7 @@ const ShippingRulesPage = () => {
                 </select>
               </div>
             )}
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">
                 Country Codes (comma-separated, leave empty for all countries)
@@ -364,7 +364,7 @@ const ShippingRulesPage = () => {
                 Use ISO country codes (e.g., US, CA, GB)
               </p>
             </div>
-            
+
             <div className="tw-flex tw-space-x-4">
               <div className="tw-flex-1">
                 <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Start Date</label>
@@ -375,7 +375,7 @@ const ShippingRulesPage = () => {
                   className="tw-w-full tw-border tw-border-gray-300 tw-rounded tw-px-3 tw-py-2"
                 />
               </div>
-              
+
               <div className="tw-flex-1">
                 <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">End Date</label>
                 <input
@@ -386,7 +386,7 @@ const ShippingRulesPage = () => {
                 />
               </div>
             </div>
-            
+
             <div className="tw-flex tw-space-x-4">
               <div className="tw-flex-1">
                 <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Priority</label>
@@ -402,7 +402,7 @@ const ShippingRulesPage = () => {
                   Higher number = higher priority
                 </p>
               </div>
-              
+
               <div className="tw-flex-1">
                 <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Status</label>
                 <div className="tw-flex tw-items-center tw-space-x-4 tw-mt-2">
@@ -427,7 +427,7 @@ const ShippingRulesPage = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="tw-flex tw-justify-end tw-space-x-3 tw-pt-4">
               <button
                 type="button"
@@ -446,7 +446,7 @@ const ShippingRulesPage = () => {
           </form>
         </div>
       )}
-      
+
       {loading ? (
         <div className="tw-flex tw-justify-center tw-py-8">
           <div className="tw-animate-spin tw-rounded-full tw-h-8 tw-w-8 tw-border-b-2 tw-border-gray-900"></div>

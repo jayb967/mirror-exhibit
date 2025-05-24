@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 
 interface ShippingSettings {
@@ -49,28 +49,28 @@ const ShippingSettingsPage = () => {
     free_shipping_threshold: 100,
     use_easyship: true
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  
-  const supabase = createClientComponentClient();
-  
+
+  const supabase = useSupabaseClient();
+
   useEffect(() => {
     // In a real implementation, we would fetch the settings from the database
     // For now, we'll just use the default values
     setLoading(false);
   }, []);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setSaving(true);
-      
+
       // In a real implementation, we would save the settings to the database
       // For now, we'll just simulate a delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       toast.success('Shipping settings saved successfully');
     } catch (error) {
       console.error('Error saving shipping settings:', error);
@@ -79,7 +79,7 @@ const ShippingSettingsPage = () => {
       setSaving(false);
     }
   };
-  
+
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setSettings(prev => ({
@@ -90,7 +90,7 @@ const ShippingSettingsPage = () => {
       }
     }));
   };
-  
+
   const handlePackageChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setSettings(prev => ({
@@ -101,7 +101,7 @@ const ShippingSettingsPage = () => {
       }
     }));
   };
-  
+
   if (loading) {
     return (
       <div className="tw-flex tw-justify-center tw-py-8">
@@ -109,11 +109,11 @@ const ShippingSettingsPage = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
       <h1 className="tw-text-2xl tw-font-bold tw-mb-6">Shipping Settings</h1>
-      
+
       <form onSubmit={handleSubmit} className="tw-space-y-8">
         {/* Store Address */}
         <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-6">
@@ -121,7 +121,7 @@ const ShippingSettingsPage = () => {
           <p className="tw-text-gray-600 tw-mb-4">
             This address will be used as the origin address for shipping calculations.
           </p>
-          
+
           <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Contact Name</label>
@@ -134,7 +134,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Phone Number</label>
               <input
@@ -146,7 +146,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div className="md:tw-col-span-2">
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Address Line 1</label>
               <input
@@ -158,7 +158,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div className="md:tw-col-span-2">
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Address Line 2</label>
               <input
@@ -169,7 +169,7 @@ const ShippingSettingsPage = () => {
                 className="tw-w-full tw-border tw-border-gray-300 tw-rounded tw-px-3 tw-py-2"
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">City</label>
               <input
@@ -181,7 +181,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">State/Province</label>
               <input
@@ -193,7 +193,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Postal Code</label>
               <input
@@ -205,7 +205,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Country</label>
               <select
@@ -223,14 +223,14 @@ const ShippingSettingsPage = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Default Package */}
         <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-6">
           <h2 className="tw-text-xl tw-font-semibold tw-mb-4">Default Package</h2>
           <p className="tw-text-gray-600 tw-mb-4">
             These dimensions will be used when product-specific dimensions are not available.
           </p>
-          
+
           <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-3 tw-gap-4">
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Weight</label>
@@ -256,7 +256,7 @@ const ShippingSettingsPage = () => {
                 </select>
               </div>
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Length</label>
               <input
@@ -270,7 +270,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Width</label>
               <input
@@ -284,7 +284,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Height</label>
               <input
@@ -298,7 +298,7 @@ const ShippingSettingsPage = () => {
                 required
               />
             </div>
-            
+
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">Dimension Unit</label>
               <select
@@ -313,11 +313,11 @@ const ShippingSettingsPage = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Shipping Options */}
         <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-6">
           <h2 className="tw-text-xl tw-font-semibold tw-mb-4">Shipping Options</h2>
-          
+
           <div className="tw-space-y-4">
             <div>
               <label className="tw-block tw-text-sm tw-font-medium tw-mb-1">
@@ -339,7 +339,7 @@ const ShippingSettingsPage = () => {
                 Orders above this amount will qualify for free standard shipping.
               </p>
             </div>
-            
+
             <div className="tw-flex tw-items-center">
               <input
                 type="checkbox"
@@ -357,7 +357,7 @@ const ShippingSettingsPage = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="tw-flex tw-justify-end">
           <button
             type="submit"

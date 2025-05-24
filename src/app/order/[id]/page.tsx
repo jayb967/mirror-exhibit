@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 
@@ -58,24 +58,24 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
-  const supabase = createClientComponentClient();
-  
+  const supabase = useSupabaseClient();
+
   useEffect(() => {
     fetchOrderDetails();
   }, [params.id]);
-  
+
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
-      
+
       // Check if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
-      
+
       if (user) {
         // Fetch order for authenticated user
         const { data, error } = await supabase
@@ -98,9 +98,9 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
           .eq('id', params.id)
           .eq('user_id', user.id)
           .single();
-        
+
         if (error) throw error;
-        
+
         setOrder({
           ...data,
           items: data.items || []
@@ -108,12 +108,12 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
       } else if (email) {
         // Fetch order for guest user
         const response = await fetch(`/api/guest/orders?orderId=${params.id}&email=${encodeURIComponent(email)}`);
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to fetch order');
         }
-        
+
         const { order: orderData } = await response.json();
         setOrder(orderData);
       } else {
@@ -129,7 +129,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
       setLoading(false);
     }
   };
-  
+
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'MMMM d, yyyy');
@@ -137,7 +137,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
       return dateString;
     }
   };
-  
+
   const getStatusBadgeClass = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -154,7 +154,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
         return 'tw-bg-gray-100 tw-text-gray-800';
     }
   };
-  
+
   if (loading) {
     return (
       <div className="tw-container tw-mx-auto tw-px-4 tw-py-16 tw-text-center">
@@ -163,7 +163,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
       </div>
     );
   }
-  
+
   if (!order) {
     return (
       <div className="tw-container tw-mx-auto tw-px-4 tw-py-16 tw-text-center">
@@ -180,7 +180,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
       </div>
     );
   }
-  
+
   return (
     <div className="tw-container tw-mx-auto tw-px-4 tw-py-12">
       <div className="tw-max-w-4xl tw-mx-auto">
@@ -190,7 +190,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             Continue Shopping
           </Link>
         </div>
-        
+
         {/* Order Summary */}
         <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-6 tw-mb-8">
           <div className="tw-flex tw-flex-wrap tw-justify-between tw-items-center tw-mb-6">
@@ -202,7 +202,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
               {order.status}
             </span>
           </div>
-          
+
           <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
             <div>
               <h3 className="tw-text-sm tw-font-medium tw-text-gray-500 tw-uppercase tw-mb-2">Shipping Address</h3>
@@ -213,7 +213,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
               <p>{order.shipping_address.country}</p>
               <p>{order.shipping_address.phone}</p>
             </div>
-            
+
             <div>
               <h3 className="tw-text-sm tw-font-medium tw-text-gray-500 tw-uppercase tw-mb-2">Order Summary</h3>
               <div className="tw-flex tw-justify-between tw-mb-1">
@@ -241,13 +241,13 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             </div>
           </div>
         </div>
-        
+
         {/* Order Items */}
         <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-overflow-hidden tw-mb-8">
           <div className="tw-p-6 tw-border-b tw-border-gray-200">
             <h2 className="tw-text-xl tw-font-semibold tw-mb-4">Order Items</h2>
           </div>
-          
+
           <div className="tw-divide-y tw-divide-gray-200">
             {order.items.map((item) => (
               <div key={item.id} className="tw-p-6 tw-flex tw-items-center">
@@ -271,7 +271,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             ))}
           </div>
         </div>
-        
+
         {/* Tracking Information */}
         {order.tracking_number && (
           <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-6 tw-mb-8">
@@ -282,7 +282,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             <p className="tw-mb-4">
               Shipping Method: <span className="tw-font-medium">{order.shipping_method}</span>
             </p>
-            <Link 
+            <Link
               href={`/order/track-shipment?tracking=${order.tracking_number}`}
               className="tw-bg-blue-600 hover:tw-bg-blue-700 tw-text-white tw-px-4 tw-py-2 tw-rounded-md tw-text-sm tw-font-medium"
             >
@@ -290,12 +290,12 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             </Link>
           </div>
         )}
-        
+
         {/* Need Help */}
         <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-6">
           <h2 className="tw-text-xl tw-font-semibold tw-mb-4">Need Help?</h2>
           <p className="tw-mb-4">If you have any questions about your order, please contact our customer support team.</p>
-          <Link 
+          <Link
             href="/contact"
             className="tw-text-blue-600 hover:tw-underline"
           >
