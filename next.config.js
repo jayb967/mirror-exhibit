@@ -19,6 +19,10 @@ const nextConfig = {
       { protocol: 'https', hostname: 'cdn.shopify.com' }
     ],
   },
+  // Exclude admin routes from static generation
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
 }
 
 module.exports = nextConfig

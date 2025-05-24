@@ -1,6 +1,5 @@
 'use client';
 
-
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -9,13 +8,12 @@ import React, { useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 import Papa from 'papaparse';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
+import ClientOnlyWrapper from '@/components/admin/ClientOnlyWrapper';
 import { FaCloudUploadAlt, FaFileUpload, FaCheckCircle, FaExclamationTriangle, FaDownload } from 'react-icons/fa';
 import { productImportService, ImportStats, ShopifyProductCSV } from '@/services/productImportService';
 import Link from 'next/link';
 
 const ImportShopifyPage: React.FC = () => {
-  // Prevent rendering during static generation
-  const [mounted, setMounted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [processingStep, setProcessingStep] = useState<'idle' | 'parsing' | 'processing' | 'complete'>('idle');
   const [progress, setProgress] = useState(0);
@@ -32,16 +30,6 @@ const ImportShopifyPage: React.FC = () => {
     errors: []
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Prevent rendering during static generation
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Don't render anything during static generation
-  if (!mounted) {
-    return null;
-  }
 
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -211,8 +199,9 @@ const ImportShopifyPage: React.FC = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
+    <ClientOnlyWrapper fallback={<div>Loading...</div>}>
+      <AdminLayout>
+        <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
         <div className="tw-flex tw-justify-between tw-items-center tw-mb-6">
           <h1 className="tw-text-3xl tw-font-bold">Import Shopify Products</h1>
           <Link
@@ -369,8 +358,9 @@ const ImportShopifyPage: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
-    </AdminLayout>
+        </div>
+      </AdminLayout>
+    </ClientOnlyWrapper>
   );
 };
 

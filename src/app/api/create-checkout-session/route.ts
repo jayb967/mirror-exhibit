@@ -1,3 +1,6 @@
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerSupabaseClient } from '@/utils/clerk-supabase';

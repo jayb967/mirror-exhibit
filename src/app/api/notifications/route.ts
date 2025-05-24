@@ -1,3 +1,6 @@
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { notificationService } from '@/services/notificationService';
