@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 
@@ -38,7 +38,7 @@ const CouponsPage = () => {
   const [maxUses, setMaxUses] = useState('');
   const [isActive, setIsActive] = useState(true);
 
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     fetchCoupons();

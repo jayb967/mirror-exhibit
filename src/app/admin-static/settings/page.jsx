@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { usePathname } from 'next/navigation';
@@ -20,24 +20,24 @@ export default function SettingsPage() {
   });
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     setMounted(true);
-    
+
     const fetchSettings = async () => {
       try {
         setLoading(true);
-        const supabase = createClientComponentClient();
-        
+
         const { data, error } = await supabase
           .from('settings')
           .select('*')
           .single();
-          
+
         if (error && error.code !== 'PGRST116') {
           throw error;
         }
-        
+
         if (data) {
           setSettings(data);
         }
@@ -48,15 +48,15 @@ export default function SettingsPage() {
         setLoading(false);
       }
     };
-    
+
     fetchSettings();
   }, []);
-  
+
   // Don't render anything until mounted
   if (!mounted) {
     return null;
   }
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setSettings(prev => ({
@@ -64,20 +64,19 @@ export default function SettingsPage() {
       [name]: value
     }));
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setSaving(true);
-      const supabase = createClientComponentClient();
-      
+
       const { error } = await supabase
         .from('settings')
         .upsert(settings, { onConflict: 'id' });
-        
+
       if (error) throw error;
-      
+
       toast.success('Settings saved successfully');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -90,14 +89,14 @@ export default function SettingsPage() {
   return (
     <div className="tw-min-h-screen tw-bg-[#F8F8F8]">
       <ToastContainer />
-      
+
       {/* Navigation */}
       <StaticNavigation currentPath={pathname} />
-      
+
       {/* Main content */}
       <div className="tw-md:ml-64 tw-p-4 tw-pt-8">
         <h1 className="tw-text-3xl tw-font-bold tw-mb-8">Settings</h1>
-        
+
         {loading ? (
           <div className="tw-flex tw-justify-center tw-items-center tw-h-64">
             <div className="tw-animate-spin tw-w-12 tw-h-12 tw-border-4 tw-border-[#A6A182] tw-border-t-transparent"></div>
@@ -107,7 +106,7 @@ export default function SettingsPage() {
             <form onSubmit={handleSubmit}>
               <div className="tw-mb-6">
                 <h2 className="tw-text-xl tw-font-semibold tw-mb-4">General Settings</h2>
-                
+
                 <div className="tw-mb-4">
                   <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
                     Site Name
@@ -120,7 +119,7 @@ export default function SettingsPage() {
                     className="tw-w-full tw-p-2 tw-border tw-border-gray-300"
                   />
                 </div>
-                
+
                 <div className="tw-mb-4">
                   <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
                     Site Description
@@ -134,10 +133,10 @@ export default function SettingsPage() {
                   ></textarea>
                 </div>
               </div>
-              
+
               <div className="tw-mb-6">
                 <h2 className="tw-text-xl tw-font-semibold tw-mb-4">Contact Information</h2>
-                
+
                 <div className="tw-mb-4">
                   <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
                     Contact Email
@@ -150,7 +149,7 @@ export default function SettingsPage() {
                     className="tw-w-full tw-p-2 tw-border tw-border-gray-300"
                   />
                 </div>
-                
+
                 <div className="tw-mb-4">
                   <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
                     Support Phone
@@ -164,10 +163,10 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="tw-mb-6">
                 <h2 className="tw-text-xl tw-font-semibold tw-mb-4">Shipping Settings</h2>
-                
+
                 <div className="tw-mb-4">
                   <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
                     Shipping Fee ($)
@@ -182,7 +181,7 @@ export default function SettingsPage() {
                     className="tw-w-full tw-p-2 tw-border tw-border-gray-300"
                   />
                 </div>
-                
+
                 <div className="tw-mb-4">
                   <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
                     Free Shipping Threshold ($)
@@ -198,7 +197,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="tw-mt-8">
                 <button
                   type="submit"

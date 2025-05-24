@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -64,7 +64,7 @@ export default function OrderDetailPage({ params }: OrderParams) {
   const printRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     fetchOrderDetails();

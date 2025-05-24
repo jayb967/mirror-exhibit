@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 
@@ -14,7 +14,7 @@ export default function MaintenancePage() {
   } | null>(null);
   const [daysOld, setDaysOld] = useState(30);
 
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   const handleCleanupGuestData = async () => {
     setLoading(true);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { usePathname } from 'next/navigation';
@@ -18,6 +18,7 @@ export default function StaticAdminDashboard() {
     lowStockProducts: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
+  const supabase = useSupabaseClient();
 
   // Only render after component has mounted on the client
   useEffect(() => {
@@ -27,7 +28,6 @@ export default function StaticAdminDashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const supabase = createClientComponentClient();
 
         // Fetch products count
         const { count: productsCount, error: productsError } = await supabase
