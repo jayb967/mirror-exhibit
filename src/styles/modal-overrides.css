@@ -1,0 +1,33 @@
+/* Modal style overrides for contemporary design */
+
+/* Size and frame type selection buttons */
+.tp-shop-details__size span {
+  border-radius: 0 !important;
+  transition: all 0.3s ease;
+  border: 1px solid #E8E8E8;
+  padding: 4px 13px;
+  margin-right: 7px;
+  margin-bottom: 7px;
+  display: inline-block;
+}
+
+.tp-shop-details__size span:hover,
+.tp-shop-details__size span.active {
+  background-color: var(--tp-theme-1);
+  border: 1px solid var(--tp-theme-1);
+  color: var(--tp-common-white);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Quantity input field */
+.tp-shop-details__quantity {
+  border-radius: 0;
+}
+
+/* Make sure all buttons in the modal have no rounded corners */
+.modal-header .close-btn,
+.tp-cart-minus,
+.tp-cart-plus {
+  border-radius: 0;
+}

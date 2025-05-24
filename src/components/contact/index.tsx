@@ -1,11 +1,11 @@
 
 
 import React from 'react';
-import ContactArea from './ContactArea'; 
+import ContactArea from './ContactArea';
 import Breadcrumb from '../common/Breadcrumb';
 import HeaderFive from '@/layouts/headers/HeaderFive';
 import BrandAreaHomeOne from '../homes/multi-page/home-3/BrandAreaHomeOne';
-import FooterOne from '@/layouts/footers/FooterOne';
+import FooterThree from '@/layouts/footers/FooterThree';
 
 const Contact = () => {
   return (
@@ -15,10 +15,10 @@ const Contact = () => {
         <div id="smooth-content">
           <main>
             <Breadcrumb title='Contact Us' subtitle='Contact Us' />
-            <ContactArea /> 
+            <ContactArea />
             <BrandAreaHomeOne bg_style={true} />
           </main>
-          <FooterOne />
+          <FooterThree />
         </div>
       </div>
     </>

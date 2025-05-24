@@ -1,0 +1,45 @@
+/* Shop details page styles */
+
+/* Add pointer cursor to size and frame type variations */
+.tp-shop-details__size span {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tp-shop-details__size span:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Add hover effect to Add to Cart button */
+.tp-btn-theme {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #222;
+  color: #fff;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 0;
+  border: none;
+  display: inline-block;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tp-btn-theme:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: #000;
+}
+
+/* Using the theme's built-in tp-btn-theme class for consistency */
+
+/* Quantity controls */
+.tp-cart-minus, .tp-cart-plus {
+  cursor: pointer;
+}
+
+/* No custom product card styles needed as we're using the theme's built-in classes */

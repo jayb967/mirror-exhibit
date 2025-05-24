@@ -1,0 +1,256 @@
+/* Shop Page Styles */
+
+/* Breadcrumb styles */
+.breadcrumb__area {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+}
+
+.breadcrumb__overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.breadcrumb__content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 100px 0;
+}
+
+.breadcrumb__title {
+  color: #fff;
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
+
+.breadcrumb__list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.breadcrumb__list span {
+  color: #fff;
+  font-size: 16px;
+}
+
+.breadcrumb__list a {
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.breadcrumb__list a:hover {
+  color: #ccc;
+}
+
+.tp-product-2-item {
+  position: relative;
+  background-color: #fff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0px 6px 25px 0px rgba(0, 0, 0, 0.05);
+}
+
+.tp-product-2-thumb {
+  overflow: hidden;
+}
+
+.tp-product-2-thumb img {
+  transition: transform 0.6s ease;
+}
+
+.tp-product-2-item:hover .tp-product-2-thumb img {
+  transform: scale(1.1);
+}
+
+.tp-product-2-button-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tp-product-2-item:hover .tp-product-2-button-box {
+  opacity: 1;
+}
+
+.tp-btn-black-lg {
+  background-color: #000;
+  color: #fff;
+  padding: 12px 24px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.tp-btn-black-lg:hover {
+  background-color: #333;
+}
+
+.tp-product-2-content {
+  padding: 20px;
+  text-align: left;
+}
+
+.tp-product-2-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.tp-product-2-rate-2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.product-add-to-cart-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.3s ease;
+}
+
+.tp-product-2-item:hover .product-add-to-cart-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 767px) {
+  .product-add-to-cart-btn {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Price filter styles */
+.tp-shop-widget-filter-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.input-range {
+  font-weight: 600;
+}
+
+/* Category sidebar styles */
+.tp-shop-sidebar-widget-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.tp-shop-sidebar-widget-content ul li {
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.tp-shop-sidebar-widget-content ul li a {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.tp-shop-sidebar-widget-content ul li a i {
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+
+.tp-shop-sidebar-widget-content ul li:hover a,
+.tp-shop-sidebar-widget-content ul li.active a {
+  color: #000;
+}
+
+.tp-shop-sidebar-widget-content ul li:hover a i,
+.tp-shop-sidebar-widget-content ul li.active a i {
+  margin-right: 15px;
+}
+
+/* Latest products sidebar */
+.rc__post {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.rc__post-thumb {
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.rc__post-content .rc__meta {
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.rc__post-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Pagination styles */
+.basic-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.basic-pagination ul {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.basic-pagination ul li {
+  margin: 0 5px;
+}
+
+.basic-pagination ul li a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e5e5e5;
+  color: #000;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.basic-pagination ul li.active a,
+.basic-pagination ul li:hover a {
+  background-color: #000;
+  color: #fff;
+  border-color: #000;
+}

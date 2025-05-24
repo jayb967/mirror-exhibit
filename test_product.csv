@@ -1,0 +1,2 @@
+Handle,Title,Body (HTML),Vendor,Product Category,Type,Tags,Published,Option1 Name,Option1 Value,Option2 Name,Option2 Value,Variant SKU,Variant Price,Variant Compare At Price,Image Src,Image Position,Image Alt Text,Variant Weight,Variant Weight Unit,Cost per item,Status
+test-mirror,Test Mirror,<p>This is a test mirror</p>,Mirror Exhibit,Mirrors,Wall Mirror,test,true,Size,Small,Frame,Wood,TM-SM-WD,99.99,,https://picsum.photos/800/800,1,Test Mirror,5,lb,50,active

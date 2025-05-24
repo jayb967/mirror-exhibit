@@ -18,11 +18,17 @@ const Offcanvus = ({ showOffCanvas, setShowOffCanvas }: any) => {
           </div>
           <div className="tpoffcanvas__logo">
             <Link href="/">
-              <Image src={logo_white} alt="image-here" />
+              <Image
+                src={logo_white}
+                alt="Mirror Exhibit Logo"
+                width={140}
+                height={50}
+                style={{ width: '140px', height: 'auto' }}
+              />
             </Link>
           </div>
           <div className="tpoffcanvas__title">
-            <p>Luxury mirrors that reflect your style. Handcrafted with precision and care.</p>
+            <p>Mirror Exhibit offers premium quality mirrors and home decor pieces that transform your living spaces with elegance and style.</p>
           </div>
 
           <div className="tp-main-menu-mobile d-xl-none">
@@ -33,7 +39,7 @@ const Offcanvus = ({ showOffCanvas, setShowOffCanvas }: any) => {
           <div className="tpoffcanvas__contact-info">
             <div className="tpoffcanvas__contact-title">
 
-              <h5>Contact us</h5>
+              <h5>Contact Us</h5>
 
             </div>
             <ul>
@@ -43,21 +49,23 @@ const Offcanvus = ({ showOffCanvas, setShowOffCanvas }: any) => {
               </li>
               <li>
                 <i className="fas fa-envelope"></i>
-                <a href="mailto:solaredge@gmail.com">info@mirrorexhibit.com</a>
+                <a href="mailto:info@mirrorexhibit.com">info@mirrorexhibit.com</a>
               </li>
+              {/* Phone number will be added later
               <li>
                 <i className="fal fa-phone-alt"></i>
-                <a href="tel:+48555223224">+48 555 223 224</a>
+                <a href="tel:+13105557890">(310) 555-7890</a>
               </li>
+              */}
             </ul>
           </div>
           <div className="tpoffcanvas__input">
             <div className="tpoffcanvas__input-title">
-              <h4>Get UPdate</h4>
+              <h4>Subscribe to Our Newsletter</h4>
             </div>
             <form onSubmit={(e) => e.preventDefault()}>
               <div className="p-relative">
-                <input type="text" placeholder="Enter mail" />
+                <input type="email" placeholder="Enter your email" />
                 <button>
                   <i className="fas fa-paper-plane"></i>
                 </button>

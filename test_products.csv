@@ -1,0 +1,7 @@
+Handle,Title,Body (HTML),Vendor,Product Category,Type,Tags,Published,Option1 Name,Option1 Value,Option2 Name,Option2 Value,Variant SKU,Variant Price,Variant Compare At Price,Image Src,Image Position,Image Alt Text,Variant Weight,Variant Weight Unit,Cost per item,Status
+test-mirror-1,Test Mirror 1,<p>This is a test mirror description</p>,Mirror Exhibit,Mirrors,Wall Mirror,test,true,Size,Small,Frame,Wood,TM1-SM-WD,99.99,,https://picsum.photos/800/800,1,Test Mirror 1,5,lb,50,active
+test-mirror-1,Test Mirror 1,<p>This is a test mirror description</p>,Mirror Exhibit,Mirrors,Wall Mirror,test,true,Size,Medium,Frame,Wood,TM1-MD-WD,129.99,,https://picsum.photos/800/800,1,Test Mirror 1,7,lb,70,active
+test-mirror-1,Test Mirror 1,<p>This is a test mirror description</p>,Mirror Exhibit,Mirrors,Wall Mirror,test,true,Size,Large,Frame,Wood,TM1-LG-WD,159.99,,https://picsum.photos/800/800,1,Test Mirror 1,10,lb,90,active
+test-mirror-1,Test Mirror 1,<p>This is a test mirror description</p>,Mirror Exhibit,Mirrors,Wall Mirror,test,true,Size,Small,Frame,Metal,TM1-SM-MT,109.99,,https://picsum.photos/800/800,1,Test Mirror 1,5,lb,60,active
+test-mirror-1,Test Mirror 1,<p>This is a test mirror description</p>,Mirror Exhibit,Mirrors,Wall Mirror,test,true,Size,Medium,Frame,Metal,TM1-MD-MT,139.99,,https://picsum.photos/800/800,1,Test Mirror 1,7,lb,80,active
+test-mirror-1,Test Mirror 1,<p>This is a test mirror description</p>,Mirror Exhibit,Mirrors,Wall Mirror,test,true,Size,Large,Frame,Metal,TM1-LG-MT,169.99,,https://picsum.photos/800/800,1,Test Mirror 1,10,lb,100,active

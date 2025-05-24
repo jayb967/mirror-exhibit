@@ -1,0 +1,4 @@
+name,description,price,stock_quantity,category,image_url,dimensions,material,is_featured
+"Acrylic Painting","Beautiful landscape painting",199.99,10,"Paintings","https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&h=800&fit=crop","24x36 inches","Acrylic on canvas",true
+"Bronze Sculpture","Abstract modern sculpture",499.99,5,"Sculptures","https://images.unsplash.com/photo-1622737133809-d95047b9e673?w=800&h=800&fit=crop","12x8x20 inches","Bronze",false
+"Modern Print","Contemporary art print",89.99,20,"Prints","https://images.unsplash.com/photo-1577083552792-a0d461cb1dd6?w=800&h=800&fit=crop","18x24 inches","Archival paper",true

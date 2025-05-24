@@ -9,24 +9,25 @@ import logo from '@/assets/img/logo/logo-grey.png';
 import { CopyRight } from '@/components/common/SocialLinks';
 
 const footer_content = {
-  info: `Lorem Ipsum is simply dummy text the printing and typesetting industry`,
-  link_title: `Our Links`,
+  info: `Mirror Exhibit offers premium quality mirrors and home decor pieces that transform your living spaces with elegance and style.`,
+  link_title: `Social Media`,
   links: [
-    { title: 'Dribble', link: 'https://dribble.com' },
-    { title: 'Linkedin', link: 'https://linkedin.com' },
+    { title: 'Instagram', link: 'https://instagram.com' },
+    { title: 'Pinterest', link: 'https://pinterest.com' },
     { title: 'Facebook', link: 'https://facebook.com' },
   ],
-  page_title: 'Pages',
+  page_title: 'Shop',
   pages: [
-    { title: 'About Us', link: '/about-us' },
-    { title: 'Our Team', link: '/team' },
-    { title: 'Recent News', link: '/blog' },
+    { title: 'Wall Mirrors', link: '/shop' },
+    { title: 'Decorative Mirrors', link: '/shop' },
+    { title: 'Bathroom Mirrors', link: '/shop' },
+    { title: 'Custom Designs', link: '/shop' },
   ],
-  info_title: `Office Information`,
-  address: <>Thornridge Cir. <br /> Shiloh 81063</>,
-  phone: '(201) 555-0124',
-  email: 'abggcd@gmail.com',
-
+  info_title: `Contact Us`,
+  address: <>Los Angeles, CA</>,
+  // Phone number will be added later
+  // phone: '(310) 555-7890',
+  email: 'info@mirrorexhibit.com',
 }
 
 
@@ -51,7 +52,7 @@ const FooterOne = () => {
                   </div>
                   <div className="tp-footer-input-box">
                     <form onSubmit={(e) => e.preventDefault()}>
-                      <input type="email" placeholder="Email here" />
+                      <input type="email" placeholder="Subscribe to our newsletter" />
                       <div className="tp-footer-icon">
                         <span>
                           <svg width="16" height="15" viewBox="0 0 16 15" fill="none"
@@ -112,6 +113,7 @@ const FooterOne = () => {
                             {address}
                           </a>
                         </li>
+                        {/* Phone number will be added later
                         <li>
                           <span>
                             <svg width="11" height="15" viewBox="0 0 11 15" fill="none"
@@ -123,6 +125,7 @@ const FooterOne = () => {
                           </span>
                           <a href={`tel:${phone}`}>{phone}</a>
                         </li>
+                        */}
                         <li>
                           <span>
                             <svg width="14" height="11" viewBox="0 0 14 11" fill="none"
@@ -149,14 +152,14 @@ const FooterOne = () => {
           <div className="container">
             <div className="row align-items-center">
               <div className="col-lg-6 col-md-6 wow tpfadeUp" data-wow-duration=".9s" data-wow-delay=".3s">
-                <div className="tp-copyright-left text-center text-md-start"> 
+                <div className="tp-copyright-left text-center text-md-start">
                   <p>  <CopyRight /> </p>
                 </div>
               </div>
               <div className="col-lg-6 col-md-6 wow tpfadeUp" data-wow-duration=".9s" data-wow-delay=".5s">
                 <div className="tp-copyright-right text-md-end text-center">
-                  <a href="#">Trams & Condition</a>
-                  <a href="#">Sitemap</a>
+                  <a href="#">Terms & Conditions</a>
+                  <a href="#">Shipping Policy</a>
                   <a href="#">Privacy Policy</a>
                 </div>
               </div>

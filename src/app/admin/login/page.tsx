@@ -1,100 +1,201 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/utils/supabase/client'
-
+import { useState, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import LoginLayout from '@/components/admin/LoginLayout';
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+  // Use useEffect to set mounted state to true after component mounts
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
 
     try {
+      const supabase = createClientComponentClient();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
-      })
+      });
 
-      if (error) throw error
+      if (error) {
+        throw error;
+      }
 
-      router.push('/admin')
+      setSuccess(true);
+      // Use window.location for navigation instead of router
+      window.location.href = '/admin/dashboard';
     } catch (error: any) {
-      setError(error.message)
+      setError(error.message || 'Failed to sign in');
+      setSuccess(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
+  };
+
+  // Only render the form when the component is mounted
+  if (!mounted) {
+    return <div style={{ minHeight: '100vh', backgroundColor: '#F8F8F8' }}></div>;
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Admin Login
-          </h2>
+    <LoginLayout>
+      <div>
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '40px'
+        }}>
+          <div style={{
+            width: '24px',
+            height: '24px',
+            margin: '0 auto 15px',
+            backgroundColor: '#A6A182',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}>
+            🔒
+          </div>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
+            marginBottom: '8px'
+          }}>Admin Access</h2>
+          <p style={{
+            color: '#54595F',
+            fontSize: '16px'
+          }}>Sign in to access the admin dashboard</p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+
+        <form onSubmit={handleLogin} style={{ width: '100%', boxSizing: 'border-box' }}>
+          <div style={{ marginBottom: '20px', width: '100%', boxSizing: 'border-box' }}>
+            <label htmlFor="email" style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontWeight: '500'
+            }}>Email address</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{
+                width: '100%',
+                height: '50px',
+                padding: '0 15px',
+                border: '1px solid #E6E6E6',
+                fontSize: '16px',
+                boxSizing: 'border-box'
+              }}
+            />
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
+          <div style={{ marginBottom: '20px', width: '100%', boxSizing: 'border-box' }}>
+            <label htmlFor="password" style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontWeight: '500'
+            }}>Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: '100%',
+                height: '50px',
+                padding: '0 15px',
+                border: '1px solid #E6E6E6',
+                fontSize: '16px',
+                boxSizing: 'border-box'
+              }}
+            />
           </div>
+
+          {error && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: '20px',
+              padding: '12px',
+              backgroundColor: '#FFEBEE',
+              color: '#D32F2F',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}>
+              <span style={{ marginRight: '8px' }}>⚠️</span>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: '20px',
+              padding: '12px',
+              backgroundColor: '#E8F5E9',
+              color: '#2E7D32',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}>
+              <span style={{ marginRight: '8px' }}>✅</span>
+              <p>Login successful! Redirecting to admin dashboard...</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              height: '50px',
+              backgroundColor: '#A6A182',
+              color: 'white',
+              border: 'none',
+              fontWeight: '600',
+              fontSize: '14px',
+              letterSpacing: '1.2px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxSizing: 'border-box'
+            }}
+          >
+            {loading ? (
+              <>
+                <span style={{ marginRight: '8px' }}>⏳</span>
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <span style={{ marginRight: '8px' }}>🔒</span>
+                <span>Sign in</span>
+              </>
+            )}
+          </button>
         </form>
       </div>
-    </div>
-  )
+    </LoginLayout>
+  );
 }

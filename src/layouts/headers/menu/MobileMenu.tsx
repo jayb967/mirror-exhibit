@@ -2,8 +2,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import React, { useState } from "react";
-// internal  
+// internal
 import menu_data from "./MenuData";
+import CartButtonComponent from "@/components/common/CartButtonComponent";
 
 
 const MobileMenu = ({ onePageHomeOne }: any) => {
@@ -85,8 +86,14 @@ const MobileMenu = ({ onePageHomeOne }: any) => {
         ))}
       </ul>
 
-
-
+      {/* Mobile Cart Button */}
+      <div className="mobile-cart-section" style={{ padding: '20px', borderTop: '1px solid #eee', marginTop: '20px' }}>
+        <CartButtonComponent
+          variant="navbar"
+          iconColor="#000"
+          showDropdown={false}
+        />
+      </div>
 
     </>
   );

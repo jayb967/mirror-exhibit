@@ -4,6 +4,7 @@ import { gsap } from 'gsap';
 import { useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import ScrollToTop from "@/components/common/ScrollToTop";
+import FloatingCartButton from "@/components/common/FloatingCartButton";
 
 
 import { scrollSmother } from "@/utils/scrollSmother";
@@ -19,10 +20,9 @@ if (typeof window !== "undefined") {
 }
 
 
-// test function 
+// test function
 import hoverWebGl from "@/utils/hoverWebgl";
-import { useDispatch } from 'react-redux';
-import { get_cart_products } from '@/redux/features/cartSlice';
+
 
 
 const Wrapper = ({ children }: any) => {
@@ -49,16 +49,26 @@ const Wrapper = ({ children }: any) => {
     scrollSmother();
   }, [])
 
-  const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(get_cart_products());;
-  }, [dispatch]);
+  // Cart initialization is now handled in StoreProvider
 
 
   return <>
     {children}
     <ScrollToTop />
-    <ToastContainer position="top-center" />
+    <FloatingCartButton />
+    <ToastContainer
+      position="top-center"
+      autoClose={2000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+      limit={1}
+    />
   </>;
 };
 

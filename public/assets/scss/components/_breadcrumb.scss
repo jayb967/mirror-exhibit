@@ -6,14 +6,14 @@
 
 .breadcrumb{
     &__pt{
-        padding-top: 120px;
+        padding-top: 0; /* Reduced from 120px to fix spacing issue */
         @media #{$lg,$md,$xs}{
-            padding-top: 90px;
+            padding-top: 0; /* Reduced from 90px to fix spacing issue */
         }
     }
     &__height{
         height: 336px;
-        display: flex; 
+        display: flex;
         align-items: center;
         justify-content: center;
         background-repeat: no-repeat;
@@ -40,8 +40,8 @@
         font-weight: 700;
         font-size: 68px;
         text-transform: capitalize;
-        color: var(--tp-common-white); 
-        margin-bottom: 0; 
+        color: var(--tp-common-white);
+        margin-bottom: 0;
         line-height: 1;
         @media #{$xxl}{
             font-size: 62px;
@@ -58,10 +58,10 @@
         @media #{$xs}{
             font-size: 35px;
             margin-bottom: 20px;
-        } 
+        }
         @media #{$sm}{
             margin-bottom: 0;
-        }      
+        }
     }
     &__list{
         display: inline-block;
@@ -69,20 +69,20 @@
         & span{
             font-size: 20px;
             font-weight: 600;
-            text-transform: capitalize;   
-            color: var(--tp-common-white);  
+            text-transform: capitalize;
+            color: var(--tp-common-white);
             @media #{$xl,$lg,$md,$xs}{
                 font-size: 17px;
-            }           
+            }
             &.dvdr{
                 & i{
                     font-size: 15px;
-                    display: inline-block; 
+                    display: inline-block;
                     margin: 0 13px;
                 }
             }
             & a {
-                color: var(--tp-common-white);  
+                color: var(--tp-common-white);
             }
         }
     }

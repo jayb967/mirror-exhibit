@@ -2,8 +2,9 @@
 import Link from "next/link";
 import Image, { StaticImageData } from "next/image";
 import React, { useState } from "react";
-// internal   
+// internal
 import ScrollspyNav from "react-scrollspy-nav";
+import CartButtonComponent from "@/components/common/CartButtonComponent";
 
 import demo_img_1 from "@/assets/img/menu/home-1.jpg";
 import demo_img_2 from "@/assets/img/menu/home-2.jpg";
@@ -176,6 +177,16 @@ const OnePageMobileMenu = ({ onePageHomeOne, onePageHomeTwo, onePageHomeThree, o
 
 
       </ul>
+
+      {/* Mobile Cart Button */}
+      <div className="mobile-cart-section" style={{ padding: '20px', borderTop: '1px solid #eee', marginTop: '20px' }}>
+        <CartButtonComponent
+          variant="navbar"
+          iconColor="#000"
+          showDropdown={false}
+        />
+      </div>
+
     </>
   );
 };

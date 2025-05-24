@@ -1,17 +1,17 @@
 
 
-import HeaderFive from '@/layouts/headers/HeaderFive';
+import HeaderFour from '@/layouts/headers/HeaderFour';
 import React from 'react';
 import Breadcrumb from '../common/Breadcrumb';
 import ShopDetailsArea from './ShopDetailsArea';
 import OurProductArea from './OurProductArea';
 import ContactAreaHomeOne from '../homes/multi-page/home-3/ContactAreaHomeOne';
-import FooterOne from '@/layouts/footers/FooterOne';
+import FooterThree from '@/layouts/footers/FooterThree';
 
 const ShopDetails = () => {
   return (
     <>
-      <HeaderFive />
+      <HeaderFour />
       <div id="smooth-wrapper">
         <div id="smooth-content">
           <main>
@@ -20,7 +20,7 @@ const ShopDetails = () => {
             <OurProductArea />
             <ContactAreaHomeOne />
           </main>
-          <FooterOne />
+          <FooterThree />
         </div>
       </div>
 

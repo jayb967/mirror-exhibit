@@ -64,7 +64,7 @@ const OnePageOffcanvas = ({ showOffCanvas, setShowOffCanvas, onePageHomeOne, one
             </div>
             <form onSubmit={(e) => e.preventDefault()}>
               <div className="p-relative">
-                <input type="text" placeholder="Enter mail" />
+                <input type="text" placeholder="Enter email" />
                 <button>
                   <i className="fas fa-paper-plane"></i>
                 </button>

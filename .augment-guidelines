@@ -1,0 +1,141 @@
+1. Preservation of Features
+
+Never remove existing features unless explicitly instructed to do so.
+
+If a modification is required to fix a bug, make the minimum necessary adjustments to preserve existing functionality.
+
+2. Avoiding Duplicate Components
+
+Check thoroughly for existing components, functions, and files before creating new ones.
+
+If a similar component or function already exists, modify the existing one to cover new use cases or fix bugs without duplication.
+
+If duplicate functions or files are identified, consolidate them into one comprehensive version, covering all edge cases clearly.
+
+3. Component and Function Reusability
+
+Always create modular and reusable components and functions.
+
+Clearly document components and functions to enhance reusability and understanding across the project.
+
+Ensure that common functionalities are abstracted into shared utilities or helper functions.
+
+4. Code Consistency and Style
+
+Maintain a consistent coding style throughout the project, following established patterns.
+
+Use descriptive naming conventions for functions, components, and variables.
+
+Follow established linting rules and coding standards strictly.
+
+5. Edge Case Handling
+
+When modifying or consolidating code, explicitly handle all edge cases to prevent regressions.
+
+Include clear comments indicating why specific edge cases are handled.
+
+6. Code Validation
+
+After making changes, carefully validate the entire codebase to ensure no unintended side effects or feature regressions occur.
+
+Provide explicit test cases or scenarios when validating modifications.
+
+7. Documentation and Comments
+
+Clearly comment any modifications explaining the purpose of the change.
+
+Update documentation simultaneously with code changes to ensure alignment and clarity.
+
+8. Explicit Instruction Compliance
+
+Make changes strictly based on explicit instructions provided.
+
+Seek clarification if instructions are ambiguous or incomplete before proceeding.
+
+9. Automatic Documentation
+Purpose:
+
+Clearly document the purpose, structure, and functionality of code within each folder.
+
+Maintain an always-current state of documentation synchronized with codebase changes.
+
+Instructions:
+
+Markdown Documentation File:
+
+Every folder must contain a markdown (README.md) file.
+
+If a markdown file doesn’t exist in a folder, create one automatically during the next modification or addition.
+
+Documentation Structure:
+Each markdown file should clearly include the following:
+
+Folder Purpose: Briefly explain the overall purpose of the folder and its role within the project.
+
+File Listing: List all files in the folder with brief explanations of their roles or functionalities.
+
+Components & Functions: Summarize key components, functions, and utilities:
+
+Purpose and usage instructions.
+
+Any important dependencies or interactions with other parts of the project.
+
+Recent Changes: Include a section logging the most recent significant changes with:
+
+Date of change.
+
+Description of what was modified and why.
+
+Automatic Updates:
+
+Every time a change is made within a folder (including bug fixes, new features, code consolidation, or refactoring):
+
+Immediately update the folder's markdown documentation.
+
+Clearly document:
+
+The specific change.
+
+Its reason and impact.
+
+Any edge cases addressed.
+
+Ensure documentation updates occur simultaneously with code changes.
+
+Referencing Documentation:
+
+Before making any code modifications, always read the existing markdown documentation in the relevant folder.
+
+Cross-reference the markdown file to ensure consistency and avoid redundancy.
+
+Example Markdown (README.md) Template
+markdown
+Copy
+Edit
+# Folder: [Folder Name]
+
+## 📌 Purpose
+Briefly describe the purpose of this folder within the project context.
+
+## 📂 Files Overview
+- `ComponentA.tsx` - UI component for user profile details.
+- `helperFunctions.ts` - Shared utility functions for date and time formatting.
+- `styles.css` - CSS styles for components within this folder.
+
+## 🧩 Components and Functions
+### ComponentA.tsx
+- **Purpose:** Display detailed user profile information.
+- **Usage:** `<ComponentA user={userData} />`
+- **Dependencies:** `helperFunctions.ts`, `styles.css`
+
+### helperFunctions.ts
+- **Purpose:** Utility for formatting dates and handling locale-based text formatting.
+- **Functions:**
+  - `formatDate(date: Date): string`
+  - `capitalizeText(text: string): string`
+
+## 🔄 Recent Changes
+| Date       | Change Description                                                 | Reason                         |
+|------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-05-10 | Added error handling in `formatDate` function.                     | Fix crash when date is invalid |
+| 2025-05-08 | Refactored `ComponentA.tsx` to reuse shared utilities effectively. | Improve code reusability       |

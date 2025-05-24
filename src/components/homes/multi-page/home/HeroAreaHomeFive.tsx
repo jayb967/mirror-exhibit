@@ -31,7 +31,7 @@ const slider_data: sliderDataType[] = [
     title: `Custom Mirrors`,
     description: `Contemporary, minimal, and beautifully iconic`,
   },
-  
+
   // {
   //   bg_img: `assets/img/slider/slider-5-3.jpg`,
   //   subtitle: `Thoughtful`,
@@ -106,9 +106,11 @@ const HeroAreaHomeFive = () => {
                           <div className="tp-slider-3-content">
                             <p className="mb-40" dangerouslySetInnerHTML={{ __html: item.description }}>
                             </p>
-                            <Link className="tp-btn-black hover-2 theme-bg" href="/shop">
-                              <span>Shop Now</span>
-                            </Link>
+                            <div className="d-inline-block">
+                              <Link className="tp-btn-black hover-2 theme-bg" href="/shop">
+                                <span>Shop Now</span>
+                              </Link>
+                            </div>
                           </div>
                         </div>
                       </div>

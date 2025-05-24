@@ -1,0 +1,27 @@
+/* Product carousel styles */
+
+.product-carousel-wrapper:hover .swiper-nav-button {
+  opacity: 1 !important;
+}
+
+.swiper-nav-button {
+  transition: opacity 0.3s ease;
+}
+
+/* Hide default Swiper navigation arrows */
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  display: none !important;
+}
+
+/* Make custom arrows larger */
+.swiper-nav-button svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* Increase the size of the navigation buttons */
+.swiper-nav-button {
+  width: 50px !important;
+  height: 50px !important;
+}

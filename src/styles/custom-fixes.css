@@ -1,0 +1,125 @@
+/* Custom fixes for specific issues */
+
+/* Fix for product card layout - ensure add to cart button doesn't overlap price */
+.tp-product-2-content {
+  padding-bottom: 60px !important; /* Add extra padding at the bottom to make room for the button */
+}
+
+.product-add-to-cart-btn {
+  bottom: 0 !important;
+  margin-top: 20px !important;
+  position: absolute !important;
+  width: 100% !important;
+  left: 0 !important;
+  background-color: var(--tp-theme-1) !important;
+  color: var(--tp-common-white) !important;
+  border-radius: 0 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  transition: all 0.3s ease !important;
+  height: 50px !important;
+  line-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 15px !important;
+}
+
+.product-add-to-cart-btn:hover {
+  background-color: #8a876c !important;
+}
+
+/* Global Add to Cart button styling */
+button.add-to-cart-btn,
+.tw-bg-blue-600,
+.tw-bg-blue-700,
+.tw-bg-green-600,
+.tw-bg-green-700 {
+  background-color: var(--tp-theme-1) !important;
+  color: var(--tp-common-white) !important;
+  border-radius: 0 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  transition: all 0.3s ease !important;
+  padding: 0 30px !important;
+  border: none !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  height: 67px !important;
+  line-height: 67px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+button.add-to-cart-btn:hover,
+.tw-bg-blue-600:hover,
+.tw-bg-blue-700:hover,
+.tw-bg-green-600:hover,
+.tw-bg-green-700:hover {
+  background-color: #8a876c !important;
+}
+
+/* Fix for modal positioning issue - ensure it's always centered on the screen */
+.product-options-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.product-options-modal {
+  position: relative !important;
+  margin: 0 auto !important;
+  transform: none !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+/* Fix for hero section to be full height */
+.tp-slider-3-height {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.tp-slider-3-bg {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Ensure content is properly positioned within full-height hero */
+.tp-slider-3-wrap {
+  position: relative !important;
+  z-index: 2 !important;
+  padding: 80px 0 !important;
+}
+
+/* Mobile responsiveness for hero section */
+@media (max-width: 767px) {
+  .tp-slider-3-height {
+    min-height: 100vh !important;
+    padding: 100px 0 50px !important;
+  }
+
+  .tp-slider-3-title {
+    font-size: 32px !important;
+  }
+}

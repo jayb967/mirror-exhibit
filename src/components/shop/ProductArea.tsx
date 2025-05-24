@@ -10,7 +10,10 @@ import { useDispatch } from 'react-redux';
 import { addToCart } from '@/redux/features/cartSlice';
 import ReactPaginate from 'react-paginate';
 import InputRange from '@/ui/InputRange';
-import { useGetShowingProductsQuery } from '@/redux/features/productApi';
+// Commented out RTK Query hook to use direct fetch instead
+// import { useGetShowingProductsQuery } from '@/redux/features/productApi';
+import { toast } from 'react-toastify';
+import ProductOptionsModal from '../common/ProductOptionsModal';
 
 interface DataType {
   product_title: string;
@@ -73,29 +76,104 @@ const {
 } = shop_content
 
 const ProductArea = () => {
-  const { data: productsData, error, isLoading } = useGetShowingProductsQuery();
   const [products, setProducts] = useState<ProductType[]>([]); // Provide initial state
   const [allProducts, setAllProducts] = useState<ProductType[]>([]); // Provide initial state
   const [selected, setSelected] = useState('All Category');
   const [priceValue, setPriceValue] = useState([0, 0]);
-  const [initialLoadEnded, setInitialLoadEnded] = useState(false)
+  const [initialLoadEnded, setInitialLoadEnded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [defaultOptions, setDefaultOptions] = useState({
+    sizes: [],
+    frameTypes: []
+  });
+
+  // Fetch products directly from the API
   useEffect(() => {
-    if (productsData && productsData.products) {
-      setProducts(productsData.products);
-      setAllProducts(productsData.products);
-      
-      if (!initialLoadEnded) {
-        const maxPrice = productsData.products.reduce((max, item) => {
-          return item.price > max ? item.price : max;
-        }, 0);
-        setPriceValue([0, maxPrice]);
-        setInitialLoadEnded(true)
-      }      
-    }
-  }, [productsData]);
+    console.log('ProductArea component mounted');
 
-  console.log('what is the productsData', productsData)
+    const fetchProducts = async () => {
+      try {
+        console.log('Fetching products directly...');
+        const response = await fetch('/api/products/show');
+        console.log('API response received:', response.status);
+        const data = await response.json();
+        console.log('Direct fetch result:', data);
+        console.log('Data structure:', JSON.stringify(data, null, 2));
+
+        if (data.success && data.products && data.products.length > 0) {
+          console.log('Setting products with:', data.products.length, 'items');
+          setProducts(data.products);
+          setAllProducts(data.products);
+
+          if (!initialLoadEnded) {
+            const maxPrice = data.products.reduce((max, item) => {
+              return item.price > max ? item.price : max;
+            }, 0);
+            setPriceValue([0, maxPrice]);
+            setInitialLoadEnded(true);
+          }
+        } else {
+          console.log('No products found in API response');
+          console.log('Data success:', data.success);
+          console.log('Products array:', data.products);
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Call the fetch function immediately
+    fetchProducts();
+
+    // Log the current state
+    console.log('Initial state - products:', products.length);
+    console.log('Initial state - isLoading:', isLoading);
+  }, []);
+
+  // Log when products change
+  useEffect(() => {
+    console.log('Products updated, new count:', products.length);
+  }, [products]);
+
+  // Fetch product options (sizes and frame types)
+  useEffect(() => {
+    const fetchProductOptions = async () => {
+      try {
+        console.log('Fetching product options...');
+        const response = await fetch('/api/product-options');
+        const data = await response.json();
+
+        if (data.success) {
+          console.log('Product options loaded:', data);
+          setDefaultOptions({
+            sizes: data.sizes || [],
+            frameTypes: data.frameTypes || []
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching product options:', err);
+      }
+    };
+
+    fetchProductOptions();
+  }, []);
+
+  // Handle opening the product options modal
+  const handleOpenModal = (product) => {
+    setSelectedProduct(product);
+    setModalOpen(true);
+  };
+
+  // Handle closing the product options modal
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
 
   const itemsPerPage = 9;
   const [itemOffset, setItemOffset] = useState(0);
@@ -111,7 +189,14 @@ const ProductArea = () => {
 
   const dispatch = useDispatch();
   const handleAddToCart = (item) => {
-    dispatch(addToCart(item));
+    dispatch(addToCart({
+      id: item._id || item.id,
+      title: item.title || item.name,
+      price: item.price,
+      image: item.image || item.image_url,
+      quantity: 1,
+    }));
+    toast.success(`${item.title || item.name} added to cart`);
   };
 
   const handleChanges = (val: number[]) => {
@@ -129,11 +214,21 @@ const ProductArea = () => {
       }, 0);
       setPriceValue([0, maxPrice]);
     } else {
-      const filteredProducts = allProducts.filter(product => product.category?.name === category);
+      // Check if category is a string or an object with name property
+      const filteredProducts = allProducts.filter(product => {
+        if (typeof product.category === 'string') {
+          return product.category === category;
+        } else if (product.category && typeof product.category === 'object') {
+          return product.category.name === category;
+        }
+        return false;
+      });
+
       setProducts(filteredProducts);
-      const maxPrice = filteredProducts.reduce((max, item) => {
-        return item.price > max ? item.price : max;
-      }, 0);
+      const maxPrice = filteredProducts.length > 0 ?
+        filteredProducts.reduce((max, item) => {
+          return item.price > max ? item.price : max;
+        }, 0) : 1000;
       setPriceValue([0, maxPrice]);
     }
   };
@@ -146,37 +241,66 @@ const ProductArea = () => {
             <div className="col-xl-9 col-lg-8">
               <div className="row">
 
-                {currentItems.map((item, i) => (
-                  <div key={i} className="col-xl-4 col-lg-6 col-md-6 mb-30">
-                    <div className="tp-product-2-item">
-                      <div className="tp-product-2-thumb-box fix p-relative">
-                        <div className="tp-product-2-thumb" style={{ height: '8rem' }}>
-                          <Image fill style={{ objectFit: "cover" }} src={item?.image} alt={item?.title} />
-                        </div>
-                        <div className="tp-product-2-btn">
-                          <button onClick={() => handleAddToCart(item)} className="tp-btn-black">
-                            <span>Add to Cart</span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="tp-product-2-content d-flex justify-content-between align-items-center">
-                        <h4 className="tp-product-2-title mb-0">
-                          <Link href={`/product-details/${item._id}`}>
-                            <span>{item?.title}</span>
-                          </Link>
-                        </h4>
-                        <div className="tp-product-2-rate-2">
-                          <span>${item?.price}</span>
-                        </div>
-                      </div>
+                {isLoading ? (
+                  <div className="col-12 text-center py-5">
+                    <h3>Loading products...</h3>
+                    <div className="spinner-border text-primary mt-3" role="status">
+                      <span className="visually-hidden">Loading...</span>
                     </div>
                   </div>
-                ))}
+                ) : products.length === 0 ? (
+                  <div className="col-12 text-center py-5">
+                    <h3>No Products Found</h3>
+                    <p>We couldn't find any products matching your criteria.</p>
+                  </div>
+                ) : (
+                  currentItems.map((item, i) => (
+                    <div key={i} className="col-xl-4 col-lg-6 col-md-6 mb-30">
+                      <div className="tp-product-2-item">
+                        <div className="tp-product-2-thumb-box fix p-relative">
+                          <div className="tp-product-2-thumb" style={{ height: '300px' }}>
+                            <Image
+                              fill
+                              style={{ objectFit: "cover" }}
+                              src={item?.image || item?.image_url || '/assets/img/logo/ME_Logo.png'}
+                              alt={item?.title || item?.name}
+                            />
+                          </div>
+                          <div className="tp-product-2-button-box">
+                            <Link href={`/product/${item._id || item.id}`} className="tp-btn-black-lg">
+                              <span>VIEW DETAILS</span>
+                            </Link>
+                          </div>
+                        </div>
+                        <div className="tp-product-2-content d-flex flex-column">
+                          <h4 className="tp-product-2-title mb-2">
+                            <Link href={`/product/${item._id || item.id}`}>
+                              <span>{item?.title || item?.name}</span>
+                            </Link>
+                          </h4>
+                          <div className="tp-product-2-rate-2">
+                            <span>${item?.price}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleOpenModal(item);
+                          }}
+                          className="product-add-to-cart-btn"
+                        >
+                          ADD TO CART
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
 
                 <div className="col-xl-12">
                   <div className="basic-pagination mt-30">
 
-                    {currentItems.length ?
+                    {!isLoading && currentItems.length > 0 ?
                       <ReactPaginate
                         breakLabel="..."
                         nextLabel={<i className="fa-light fa-arrow-right-long"></i>}
@@ -187,7 +311,7 @@ const ProductArea = () => {
                         renderOnZeroPageCount={null}
                       />
                       :
-                      <h3> No Products Found </h3>
+                      null
                     }
 
                   </div>
@@ -223,7 +347,7 @@ const ProductArea = () => {
                         </span>
 
                       </div>
-                      <div id="slider-range" className="mb-10 mt-20">                        
+                      <div id="slider-range" className="mb-10 mt-20">
                         <InputRange
                           MAX={priceValue[1] ? priceValue[1] : 1}
                           MIN={0}
@@ -264,6 +388,17 @@ const ProductArea = () => {
           </div>
         </div>
       </div>
+
+      {/* Product Options Modal */}
+      {selectedProduct && (
+        <ProductOptionsModal
+          isOpen={modalOpen}
+          onClose={handleCloseModal}
+          product={selectedProduct}
+          frameTypes={defaultOptions.frameTypes}
+          sizes={defaultOptions.sizes}
+        />
+      )}
     </>
   );
 };

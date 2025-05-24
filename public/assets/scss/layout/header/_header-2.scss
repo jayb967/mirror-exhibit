@@ -21,7 +21,7 @@
 
     & > nav {
       & > ul {
-        counter-reset: count;
+        /* Removed counter-reset: count; */
 
         & > li {
           display: inline-block;
@@ -37,15 +37,7 @@
             color: var(--tp-common-white);
             position: relative;
 
-            &::after {
-              position: absolute;
-              counter-increment: count;
-              content: counter(count, decimal-leading-zero);
-              left: 0;
-              top: 10px;
-              font-size: 12px;
-              font-weight: 500;
-            }
+            /* Removed counter-increment and content */
 
             &::before {
               position: absolute;
@@ -162,15 +154,7 @@
               color: var(--tp-common-white) !important;
               position: relative;
 
-              &::after {
-                position: absolute;
-                counter-increment: count;
-                content: counter(count, decimal-leading-zero);
-                left: 0;
-                top: 10px;
-                font-size: 12px;
-                font-weight: 500;
-              }
+              /* Removed counter-increment and content */
 
               &::before {
                 position: absolute;

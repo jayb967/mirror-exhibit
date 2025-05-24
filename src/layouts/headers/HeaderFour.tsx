@@ -11,7 +11,7 @@ import Offcanvus from '@/components/common/Offcanvus';
 import OnPageMenu from './menu/OnPageMenu';
 import UseSticky from '@/hooks/UseSticky';
 import OnePageOffcanvas from '@/components/common/OnePageOffcanvas';
-import ShoppingCart from '@/components/common/ShoppingCart';
+import CartButtonComponent from '@/components/common/CartButtonComponent';
 
 const HeaderFour = ({ onePageHomeFive }: any) => {
 
@@ -45,8 +45,8 @@ const HeaderFour = ({ onePageHomeFive }: any) => {
 
       <div
         id={`${onePageHomeFive ? 'header-sticky' : ''}`}
-        className={`tp-header-area tp-header-tranparent tp-header-style-4 tp-header-style-5 
-      ${onePageHomeFive ? 'tp-onepage-header background-bg' : ''} 
+        className={`tp-header-area tp-header-tranparent tp-header-style-4 tp-header-style-5
+      ${onePageHomeFive ? 'tp-onepage-header background-bg' : ''}
       ${sticky ? 'header-sticky' : ''}`}>
         <div className="container custom-container-3">
           <div className="row align-items-center">
@@ -65,17 +65,10 @@ const HeaderFour = ({ onePageHomeFive }: any) => {
             </div>
             <div className="col-xl-2 col-lg-8 col-6">
               <div className="tp-header-right d-flex align-items-center justify-content-end">
-                <div className="tp-header-icon cart d-none d-xl-block">
-                  <Link className="cart-icon p-relative" href="/cart">
-                    <i className="fa-sharp fa-solid fa-cart-shopping shopping-cart"></i>
-                    <span>
-                      <i className="far fa-plus"></i>
-                    </span>
-                  </Link>
-
-                  <ShoppingCart />
-
-                </div>
+                <CartButtonComponent
+                  variant="navbar"
+                  iconColor={sticky ? "#000" : "#fff"}
+                />
                 <div className="tp-header-bar" >
                   <button className="tp-menu-bar" style={{ marginTop: '5px' }} onClick={() => setShowOffCanvas(!showOffCanvas)}><i className="fa-solid fa-bars"></i></button>
                 </div>
@@ -104,15 +97,10 @@ const HeaderFour = ({ onePageHomeFive }: any) => {
               </div>
               <div className="col-xl-2 col-lg-8 col-6">
                 <div className="tp-header-right d-flex align-items-center justify-content-end">
-                  <div className="tp-header-icon cart d-none d-xl-block">
-                    <Link className="cart-icon p-relative" href="/cart">
-                      <i className="fa-sharp fa-solid fa-cart-shopping shopping-cart"></i>
-                      <span>
-                        <i className="far fa-plus"></i>
-                      </span>
-                    </Link>
-                    <ShoppingCart />
-                  </div>
+                  <CartButtonComponent
+                    variant="navbar"
+                    iconColor="#000"
+                  />
                   <div className="tp-header-bar">
                     <button className="tp-menu-bar" onClick={() => setShowOffCanvas(!showOffCanvas)}><i className="fa-solid fa-bars"></i></button>
                   </div>

@@ -1,11 +1,14 @@
-'use client'
+import './globals.css';
+import '@/styles/custom-fixes.css';
+import { Inter } from "next/font/google";
+import { AppWrapper } from '@/components/AppWrapper';
 
-import '../styles/index.scss';
-import store from '@/redux/store';
-import { Provider } from 'react-redux';
-import {supabase} from '@/utils/supabase/client'
-import { SessionContextProvider } from '@supabase/auth-helpers-react'
-import { useState } from 'react'
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata = {
+  title: 'Mirror Exhibit',
+  description: 'Mirror Exhibit E-commerce Platform',
+};
 
 export default function RootLayout({
   children,
@@ -16,18 +19,10 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Satisfy&family=Poppins:wght@300;400;500;600;700&family=Schoolbell&display=swap"
-        />
-      </head>
-      <body suppressHydrationWarning={true}>
-        <Provider store={store}>
-          <SessionContextProvider supabaseClient={supabaseClient}>
-            {children}
-          </SessionContextProvider>
-        </Provider>
+      <body suppressHydrationWarning={true} className={inter.className}>
+        <AppWrapper>
+          {children}
+        </AppWrapper>
       </body>
     </html>
   );

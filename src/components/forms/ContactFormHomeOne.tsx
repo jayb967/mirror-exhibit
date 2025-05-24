@@ -9,17 +9,18 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 
 
-interface FormData { 
-  email: string; 
-  phone: string;  
-  address: string; 
-  message: string; 
+interface FormData {
+  email: string;
+  phone: string;
+  address: string;
+  message: string;
 }
 
 const schema = yup
-  .object({ 
+  .object({
     email: yup.string().required().email().label("Email"),
-    phone: yup.string().required().label("Phone"), 
+    // Phone field made optional until we have a phone number
+    phone: yup.string().label("Phone"),
     address: yup.string().required().label("Subject"),
     message: yup.string().required().label("Message"),
   })
@@ -31,7 +32,7 @@ const ContactFormHomeOne = () => {
 
 
   const { register, handleSubmit, reset, formState: { errors }, } = useForm<FormData>({ resolver: yupResolver(schema), });
-  const onSubmit = (data: FormData) => {   
+  const onSubmit = (data: FormData) => {
     const notify = () => toast("Message send successful");
     notify();
     reset();
@@ -62,7 +63,7 @@ const ContactFormHomeOne = () => {
           </div>
           <div className="col-lg-6 col-md-6">
             <div className="tp-contact-input-box">
-              <input type="text" placeholder="Your Phone" {...register("phone")} />
+              <input type="text" placeholder="Your Phone (Optional)" {...register("phone")} />
               <div className="tp-contact-icon">
                 <span>
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none"

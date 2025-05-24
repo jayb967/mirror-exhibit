@@ -24,8 +24,9 @@ const footer_content = {
     { title: 'Gallery Lists', link: '#' },
   ],
   info_title: `Office Information`,
-  address: <>Thornridge Cir. <br /> Shiloh 81063</>,
-  phone: '(201) 555-0124',
+  address: <>Los Angeles, CA</>,
+  // Phone number will be added later
+  // phone: '(310) 555-7890',
   email: 'info@mirrorexhibit.com',
   our_policy: [
     { title: 'Terms & Conditions', link: '#' },
@@ -111,9 +112,11 @@ const FooterThree = () => {
                             {address}
                           </a>
                         </li> */}
+                        {/* Phone number will be added later
                         <li>
                           <a href={`tel:${phone}`}>{phone}</a>
                         </li>
+                        */}
                         <li>
                           <a href={`mailto:${email}`}>{email}</a>
                         </li>

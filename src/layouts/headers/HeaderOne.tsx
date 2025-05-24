@@ -72,9 +72,9 @@ const HeaderOne = ({ onePageHomeOne, onePageHomeThree }: any) => {
       </div>
 
       <div
-        className={`tp-header-area z-index-5 
-      ${onePageHomeOne ? 'tp-onepage-header' : ''} 
-      ${onePageHomeThree ? 'tp-header-style-3 tp-onepage-header grey-bg' : ''} 
+        className={`tp-header-area z-index-5
+      ${onePageHomeOne ? 'tp-onepage-header' : ''}
+      ${onePageHomeThree ? 'tp-header-style-3 tp-onepage-header grey-bg' : ''}
       ${sticky ? 'header-sticky' : ''}`}
       >
         <div className="container custom-container-1">
@@ -98,10 +98,8 @@ const HeaderOne = ({ onePageHomeOne, onePageHomeThree }: any) => {
                 <div className="tp-header-icon cart d-none d-xl-block">
                   <Link className="cart-icon p-relative" href="/cart">
                     <i className="fa-sharp fa-solid fa-cart-shopping shopping-cart"></i>
-                    <span>
-                      <i className="far fa-plus"></i>
-                    </span>
-                  </Link> 
+                    <span className="cart-count"></span>
+                  </Link>
 
                   <ShoppingCart />
 
@@ -139,10 +137,8 @@ const HeaderOne = ({ onePageHomeOne, onePageHomeThree }: any) => {
                   <div className="tp-header-icon cart d-none d-xl-block">
                     <Link className="cart-icon p-relative" href="/cart">
                       <i className="fa-sharp fa-solid fa-cart-shopping shopping-cart"></i>
-                      <span>
-                        <i className="far fa-plus"></i>
-                      </span>
-                    </Link> 
+                      <span className="cart-count"></span>
+                    </Link>
 
                     <ShoppingCart />
 
