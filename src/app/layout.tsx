@@ -16,8 +16,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [supabaseClient] = useState(() => supabase)
-
   return (
     <ClerkProvider>
       <html lang="en">

@@ -11,4 +11,18 @@ export const createSupportRequest = async (subject: string, message: string) => 
   return data
 }
 
-// ... rest of the functions remain the same ...
+// Email Campaign Functions
+export const createEmailCampaign = async (campaignData: {
+  name: string;
+  subject: string;
+  content: string;
+  target_audience?: string;
+}) => {
+  const { data, error } = await supabase
+    .from('email_campaigns')
+    .insert([campaignData])
+    .select()
+
+  if (error) throw error
+  return data
+}

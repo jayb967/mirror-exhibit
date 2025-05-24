@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createClerkClient } from '@clerk/nextjs/server';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // Create Clerk client instance
 const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY,

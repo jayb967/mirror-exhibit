@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { toast } from "react-toastify";
 
-export default function OrderCanceledPage() {
+function OrderCanceledContent() {
   const [loading, setLoading] = useState(true);
   const [orderId, setOrderId] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -77,13 +77,13 @@ export default function OrderCanceledPage() {
       <p className="tw-text-lg tw-text-gray-600 tw-mb-6">
         Your checkout process was canceled and no payment has been processed.
       </p>
-      
+
       {orderId && (
         <p className="tw-text-gray-500 tw-mb-8">
           Order reference: <span className="tw-font-medium">{orderId}</span>
         </p>
       )}
-      
+
       <div className="tw-bg-white tw-rounded-lg tw-shadow-sm tw-p-6 tw-mb-10 tw-max-w-xl tw-mx-auto">
         <h2 className="tw-text-xl tw-font-semibold tw-mb-4">What happens next?</h2>
         <ul className="tw-list-disc tw-text-left tw-pl-5 tw-space-y-2 tw-text-gray-700">
@@ -92,7 +92,7 @@ export default function OrderCanceledPage() {
           <li>If you encountered any issues during checkout, please contact our support team.</li>
         </ul>
       </div>
-      
+
       <div className="tw-flex tw-flex-col sm:tw-flex-row tw-gap-4 tw-justify-center">
         <Link href="/cart" className="tw-bg-blue-600 hover:tw-bg-blue-700 tw-text-white tw-px-6 tw-py-3 tw-rounded-md tw-font-medium">
           Return to Cart
@@ -103,4 +103,20 @@ export default function OrderCanceledPage() {
       </div>
     </div>
   );
-} 
+}
+
+export default function OrderCanceledPage() {
+  return (
+    <Suspense fallback={
+      <div className="tw-container tw-mx-auto tw-py-16 tw-px-4 tw-max-w-4xl tw-text-center">
+        <div className="tw-animate-pulse">
+          <div className="tw-h-16 tw-w-16 tw-bg-gray-200 tw-rounded tw-mx-auto tw-mb-8"></div>
+          <div className="tw-h-8 tw-bg-gray-200 tw-rounded tw-mb-4 tw-w-2/3 tw-mx-auto"></div>
+          <div className="tw-h-4 tw-bg-gray-200 tw-rounded tw-mb-12 tw-w-1/2 tw-mx-auto"></div>
+        </div>
+      </div>
+    }>
+      <OrderCanceledContent />
+    </Suspense>
+  );
+}

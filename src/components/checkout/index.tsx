@@ -3,8 +3,7 @@
 import React from 'react';
 import HeaderFive from '@/layouts/headers/HeaderFive';
 import Breadcrumb from '../common/Breadcrumb';
-import ContactAreaHomeOne from '../homes/multi-page/home-3/ContactAreaHomeOne';
-import FooterOne from '@/layouts/footers/FooterOne';
+import FooterThree from '@/layouts/footers/FooterThree';
 import CheckoutArea from './CheckoutArea';
 
 const Checkout = () => {
@@ -16,9 +15,8 @@ const Checkout = () => {
           <main>
             <Breadcrumb title='Checkout' subtitle='Checkout' />
             <CheckoutArea />
-            <ContactAreaHomeOne />
           </main>
-          <FooterOne />
+          <FooterThree />
         </div>
       </div>
     </>

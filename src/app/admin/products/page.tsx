@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
@@ -62,7 +62,7 @@ interface FrameType {
 
 
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -804,5 +804,19 @@ export default function ProductsPage() {
         }}
       />
     </SimpleAdminLayout>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <SimpleAdminLayout>
+        <div className="tw-flex tw-items-center tw-justify-center tw-h-64">
+          <div className="tw-animate-spin tw-rounded-full tw-h-12 tw-w-12 tw-border-b-2" style={{ borderColor: '#A6A182' }}></div>
+        </div>
+      </SimpleAdminLayout>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }

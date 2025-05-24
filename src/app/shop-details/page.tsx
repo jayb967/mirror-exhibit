@@ -1,10 +1,10 @@
 
 'use client'
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-const ShopDetailsRedirect = () => {
+const ShopDetailsContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const productId = searchParams.get('id');
@@ -24,6 +24,19 @@ const ShopDetailsRedirect = () => {
       <h2>Redirecting...</h2>
       <p>Please wait while we redirect you to the product page.</p>
     </div>
+  );
+};
+
+const ShopDetailsRedirect = () => {
+  return (
+    <Suspense fallback={
+      <div className="container py-5 text-center">
+        <h2>Loading...</h2>
+        <p>Please wait while we load the page.</p>
+      </div>
+    }>
+      <ShopDetailsContent />
+    </Suspense>
   );
 };
 

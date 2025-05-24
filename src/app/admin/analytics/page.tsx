@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import BasicAdminLayout from '@/components/admin/BasicAdminLayout';
-import { 
+import {
   ChartBarIcon,
   CurrencyDollarIcon,
   ShoppingBagIcon,
   UsersIcon,
-  TrendingUpIcon,
-  TrendingDownIcon
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon
 } from '@heroicons/react/24/outline';
 
 interface AnalyticsData {
@@ -83,9 +83,9 @@ const AdminAnalyticsPage: React.FC = () => {
   };
 
   const getGrowthIcon = (growth: number) => {
-    return growth >= 0 
-      ? <TrendingUpIcon className="tw-h-4 tw-w-4 tw-text-green-500" />
-      : <TrendingDownIcon className="tw-h-4 tw-w-4 tw-text-red-500" />;
+    return growth >= 0
+      ? <ArrowTrendingUpIcon className="tw-h-4 tw-w-4 tw-text-green-500" />
+      : <ArrowTrendingDownIcon className="tw-h-4 tw-w-4 tw-text-red-500" />;
   };
 
   const getGrowthColor = (growth: number) => {

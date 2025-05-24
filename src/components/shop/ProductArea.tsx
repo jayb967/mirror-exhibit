@@ -12,7 +12,7 @@ import ReactPaginate from 'react-paginate';
 import InputRange from '@/ui/InputRange';
 // Commented out RTK Query hook to use direct fetch instead
 // import { useGetShowingProductsQuery } from '@/redux/features/productApi';
-import { toast } from 'react-toastify';
+// Toast notifications are handled by Redux actions
 import ProductOptionsModal from '../common/ProductOptionsModal';
 
 interface DataType {
@@ -198,7 +198,7 @@ const ProductArea = () => {
       image: item.image || item.image_url,
       quantity: 1,
     }));
-    toast.success(`${item.title || item.name} added to cart`);
+    // Toast notification is handled by Redux action
   };
 
   const handleChanges = (val: number[]) => {

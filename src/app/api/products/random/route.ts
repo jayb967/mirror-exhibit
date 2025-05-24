@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // Function to return the company logo as placeholder image
 function getPlaceholderImage(): string {
   // Return the company logo instead of random generated images

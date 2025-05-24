@@ -11,3 +11,6 @@ export function createClient() {
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
+
+// Export a default instance for components that expect direct import
+export const supabase = createClient()

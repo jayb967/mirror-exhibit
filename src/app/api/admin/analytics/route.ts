@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { verifyAdminAccess } from '@/utils/admin-auth';
 import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/analytics
  * Get comprehensive analytics data for admin dashboard

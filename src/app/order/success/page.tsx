@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -38,7 +38,7 @@ interface OrderItem {
   };
 }
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const searchParams = useSearchParams();
@@ -318,5 +318,23 @@ export default function OrderSuccessPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="tw-container tw-mx-auto tw-py-16 tw-px-4 tw-max-w-4xl">
+        <div className="tw-animate-pulse">
+          <div className="tw-flex tw-justify-center tw-mb-8">
+            <div className="tw-h-16 tw-w-16 tw-rounded-full tw-bg-green-100"></div>
+          </div>
+          <div className="tw-h-8 tw-bg-gray-200 tw-rounded tw-mb-4 tw-w-2/3 tw-mx-auto"></div>
+          <div className="tw-h-4 tw-bg-gray-200 tw-rounded tw-mb-12 tw-w-1/2 tw-mx-auto"></div>
+        </div>
+      </div>
+    }>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }

@@ -194,7 +194,7 @@ const ShopDetailsArea = () => {
       product_id: product.id
     };
     dispatch(addToCartWithAuth(cartItem));
-    toast.success(`${product.title} added to cart`);
+    // Toast notification is handled by Redux action
   };
 
   const increaseQuantity = () => setQuantity(prev => prev + 1);

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -39,7 +42,7 @@ export async function GET(request: NextRequest) {
       // Return both types
       const productFaqs = data?.product_faqs || [];
       const generalFaqs = data?.general_faqs || [];
-      
+
       return NextResponse.json({
         product_faqs: productFaqs.sort((a: any, b: any) => a.sort_order - b.sort_order),
         general_faqs: generalFaqs.sort((a: any, b: any) => a.sort_order - b.sort_order)
