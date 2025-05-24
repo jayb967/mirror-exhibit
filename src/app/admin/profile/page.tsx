@@ -1,4 +1,8 @@
-"use client";
+'use client';
+
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 
 import React, { useState, useRef, ChangeEvent, FormEvent } from "react";
 import Image from "next/image";

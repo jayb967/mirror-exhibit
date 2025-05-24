@@ -1,3 +1,6 @@
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 
 import CustomerList from '@/components/admin/customers/CustomerList'
 

@@ -1,3 +1,6 @@
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 import EmailCampaigns from '@/components/admin/marketing/EmailCampaigns'
 
 export default function MarketingPage() {

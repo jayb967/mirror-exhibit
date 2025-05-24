@@ -1,5 +1,10 @@
 'use client';
 
+
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
+
 import React from 'react';
 
 export default function ImportProductsPage() {

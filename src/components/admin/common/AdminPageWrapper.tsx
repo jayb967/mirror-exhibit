@@ -1,7 +1,6 @@
-import { ReactNode } from 'react';
-import { useSession } from '@supabase/auth-helpers-react';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { ReactNode, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 interface AdminPageWrapperProps {
   children: ReactNode;
@@ -10,18 +9,18 @@ interface AdminPageWrapperProps {
 }
 
 export default function AdminPageWrapper({ children, title, description }: AdminPageWrapperProps) {
-  const session = useSession();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!session) {
+    if (isLoaded && !user) {
       router.push('/admin/login');
-    } else if (session.user.user_metadata?.role !== 'admin') {
+    } else if (isLoaded && user && user.privateMetadata?.role !== 'admin') {
       router.push('/unauthorized');
     }
-  }, [session, router]);
+  }, [user, isLoaded, router]);
 
-  if (!session || session.user.user_metadata?.role !== 'admin') {
+  if (!isLoaded || !user || user.privateMetadata?.role !== 'admin') {
     return null;
   }
 
@@ -38,4 +37,4 @@ export default function AdminPageWrapper({ children, title, description }: Admin
       </div>
     </div>
   );
-} 
+}

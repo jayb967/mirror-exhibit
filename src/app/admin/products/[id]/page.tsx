@@ -1,3 +1,6 @@
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 import ProductForm from '@/components/admin/products/ProductForm'
 
 export default function EditProductPage({ params }: { params: { id: string } }) {

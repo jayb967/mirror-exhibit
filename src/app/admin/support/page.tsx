@@ -1,3 +1,6 @@
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 import SupportList from '@/components/admin/support/SupportList'
 
 export default function SupportPage() {

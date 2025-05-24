@@ -1,5 +1,10 @@
 'use client';
 
+
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
+
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useClerkAuth';
 import { useRouter } from 'next/navigation';
