@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -13,7 +12,7 @@ function getPlaceholderImage(): string {
 
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
 
     // Fetch all products with their variations, sizes, and frame types
     const { data, error } = await supabase

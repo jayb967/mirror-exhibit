@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { usePathname } from 'next/navigation';
@@ -12,22 +12,22 @@ export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     setMounted(true);
-    
+
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const supabase = createClientComponentClient();
-        
+
         const { data, error } = await supabase
           .from('products')
           .select('*')
           .order('created_at', { ascending: false });
-          
+
         if (error) throw error;
-        
+
         setProducts(data || []);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -36,15 +36,15 @@ export default function ProductsPage() {
         setLoading(false);
       }
     };
-    
+
     fetchProducts();
   }, []);
-  
+
   // Don't render anything until mounted
   if (!mounted) {
     return null;
   }
-  
+
   // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -56,21 +56,21 @@ export default function ProductsPage() {
   return (
     <div className="tw-min-h-screen tw-bg-[#F8F8F8]">
       <ToastContainer />
-      
+
       {/* Navigation */}
       <StaticNavigation currentPath={pathname} />
-      
+
       {/* Main content */}
       <div className="tw-md:ml-64 tw-p-4 tw-pt-8">
         <h1 className="tw-text-3xl tw-font-bold tw-mb-8">Products</h1>
-        
+
         {/* Add product button */}
         <div className="tw-mb-6">
           <button className="tw-bg-black tw-text-white tw-px-4 tw-py-2 hover:tw-bg-[#A6A182]">
             Add New Product
           </button>
         </div>
-        
+
         {loading ? (
           <div className="tw-flex tw-justify-center tw-items-center tw-h-64">
             <div className="tw-animate-spin tw-w-12 tw-h-12 tw-border-4 tw-border-[#A6A182] tw-border-t-transparent"></div>

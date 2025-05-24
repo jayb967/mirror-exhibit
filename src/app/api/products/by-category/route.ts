@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -12,7 +11,7 @@ function getPlaceholderImage(): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters

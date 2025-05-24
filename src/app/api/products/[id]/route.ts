@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
 export async function GET(
   request: Request,
@@ -16,7 +15,7 @@ export async function GET(
       );
     }
 
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
 
     // Fetch the product with its variations, sizes, frame types, and images
     const { data, error } = await supabase

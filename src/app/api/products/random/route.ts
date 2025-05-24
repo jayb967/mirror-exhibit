@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -21,7 +20,7 @@ export async function GET(
     const limit = parseInt(searchParams.get('limit') || '4', 10);
 
     // Create a Supabase client for server-side use
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
 
     // Build the query
     let query = supabase
