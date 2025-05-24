@@ -8,8 +8,17 @@ A flexible, analytics-enabled product carousel component for displaying differen
 - **Analytics Integration**: Comprehensive user interaction tracking
 - **Responsive Design**: Mobile-friendly carousel with adaptive breakpoints
 - **Customizable Content**: Dynamic titles, subtitles, and descriptions
-- **Performance Optimized**: Efficient API calls with caching and fallbacks
+- **Error Handling**: Graceful error states with user-friendly messages
+- **Loading States**: Skeleton loaders for better user experience
 - **Accessibility**: Keyboard navigation and screen reader support
+
+## 🔧 Recent Updates (2024)
+
+### Error Handling Improvements
+- **Removed placeholder products**: No longer shows fallback product data when API fails
+- **Added error state**: Shows "Couldn't retrieve products" message when products can't be loaded
+- **Skeleton loaders**: Displays loading skeletons during data fetching
+- **Better UX**: Clear messaging when products are unavailable instead of showing fake data
 
 ## 🎯 Product Types Supported
 
@@ -48,20 +57,20 @@ interface ProductAreaHomeFourProps {
   // Product filtering
   productType?: 'featured' | 'popular' | 'most-viewed' | 'new-arrivals' | 'trending' | 'all';
   category?: string; // Category slug or name
-  
+
   // Display customization
   title?: string;
   subtitle?: string;
   description?: string;
   sectionId?: string;
-  
+
   // Behavior options
   limit?: number; // Default 15
   autoplay?: boolean; // Default true
   autoplayDelay?: number; // Default 5000ms
   showViewAll?: boolean; // Show "View All" link
   viewAllLink?: string; // Custom link for "View All"
-  
+
   // Styling options
   className?: string;
   containerClassName?: string;
@@ -77,7 +86,7 @@ interface ProductAreaHomeFourProps {
 
 ### Featured Products
 ```jsx
-<ProductAreaHomeFour 
+<ProductAreaHomeFour
   productType="featured"
   title="Featured Collection"
   subtitle="Handpicked Selection"
@@ -88,7 +97,7 @@ interface ProductAreaHomeFourProps {
 
 ### Category-Specific Products
 ```jsx
-<ProductAreaHomeFour 
+<ProductAreaHomeFour
   productType="popular"
   category="wall-mirrors"
   title="Popular Wall Mirrors"
@@ -102,7 +111,7 @@ interface ProductAreaHomeFourProps {
 
 ### New Arrivals with Custom Styling
 ```jsx
-<ProductAreaHomeFour 
+<ProductAreaHomeFour
   productType="new-arrivals"
   title="Fresh Designs"
   subtitle="New Arrivals"
@@ -117,7 +126,7 @@ interface ProductAreaHomeFourProps {
 
 ### Trending Products by Category
 ```jsx
-<ProductAreaHomeFour 
+<ProductAreaHomeFour
   productType="trending"
   category="decorative-mirrors"
   title="Trending Decorative Pieces"
@@ -131,7 +140,7 @@ interface ProductAreaHomeFourProps {
 
 ### Disabled Autoplay
 ```jsx
-<ProductAreaHomeFour 
+<ProductAreaHomeFour
   productType="featured"
   title="Featured Products"
   autoplay={false}
@@ -150,7 +159,7 @@ interface ProductAreaHomeFourProps {
 
 ### Custom Styling
 ```jsx
-<ProductAreaHomeFour 
+<ProductAreaHomeFour
   className="my-custom-carousel"
   containerClassName="my-custom-container"
   // ... other props

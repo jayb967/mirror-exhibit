@@ -17,7 +17,7 @@ import {
 } from '@/redux/features/productApi';
 import ProductSkeleton from '@/components/common/ProductSkeleton';
 import ProductCard from '@/components/common/ProductCard';
-import ProductAnalytics, { useAnalytics } from '@/utils/analytics';
+import { useAnalytics } from '@/utils/analytics';
 import '@/styles/product-modal.css';
 import '@/styles/product-carousel.css';
 import Head from 'next/head';
@@ -248,63 +248,22 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
   ]);
   const [swiperRef, setSwiperRef] = useState<any>(null);
 
-  // Fallback products in case the API is down
-  const fallbackProducts = [
-    {
-      id: 1,
-      title: "Elegant Arched Wall Mirror",
-      price: 199.99,
-      image: "/assets/img/product/product-1.jpg",
-      brand: "Mirror Exhibit",
-      category: "Wall Mirrors",
-      description: "A stunning arched wall mirror with a sleek gold frame that adds sophistication to any room. Perfect for entryways, living rooms, or as a statement piece in your bedroom."
-    },
-    {
-      id: 2,
-      title: "Sunburst Decorative Mirror",
-      price: 149.99,
-      image: "/assets/img/product/product-2.jpg",
-      brand: "Mirror Exhibit",
-      category: "Round Mirrors",
-      description: "This eye-catching sunburst mirror creates a dramatic focal point with its radiant design. The intricate metalwork frame catches light beautifully, adding dimension and style to your walls."
-    },
-    {
-      id: 3,
-      title: "Modern Geometric Mirror",
-      price: 249.99,
-      image: "/assets/img/product/product-3.jpg",
-      brand: "Mirror Exhibit",
-      category: "Framed Mirrors",
-      description: "Contemporary and bold, this geometric framed mirror features clean lines and a minimalist design. The matte black frame creates striking contrast against any wall color."
-    },
-    {
-      id: 4,
-      title: "Antique Inspired Floor Mirror",
-      price: 329.99,
-      image: "/assets/img/product/product-4.jpg",
-      brand: "Mirror Exhibit",
-      category: "Floor Mirrors",
-      description: "This full-length floor mirror combines vintage charm with practical functionality. The ornate frame features hand-carved details and a distressed finish for timeless elegance."
-    }
-  ];
+  // Check if we have an error or no products to determine if we should show error state
+  const hasError = isError || (data && (!data.success || !data.products || data.products.length === 0));
 
   // Memoize the products array to prevent unnecessary recalculations
   const products = useMemo(() => {
-    let productList = [];
-
     if (data?.success && data.products && data.products.length > 0) {
-      productList = data.products;
-    } else {
-      // Return fallback products if there's an error, no data, or empty products array
-      productList = fallbackProducts;
+      // Add priority flag to the first 4 products for optimized loading
+      return data.products.map((product: any, index: number) => ({
+        ...product,
+        priority: index < 4 // First 4 products get priority loading
+      }));
     }
 
-    // Add priority flag to the first 4 products for optimized loading
-    return productList.map((product: any, index: number) => ({
-      ...product,
-      priority: index < 4 // First 4 products get priority loading
-    }));
-  }, [data, isError, fallbackProducts]);
+    // Return empty array if there's an error or no products
+    return [];
+  }, [data, isError]);
 
   // Navigation arrow handlers with analytics
   const handlePrev = () => {
@@ -348,7 +307,7 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
     }
   };
 
-  // Create an array of skeleton loaders for loading state
+  // Create an array of skeleton loaders for loading state or error state
   const skeletonItems = Array(8).fill(0).map((_, i) => (
     <SwiperSlide
       key={`skeleton-${i}`}
@@ -364,6 +323,49 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
       </div>
     </SwiperSlide>
   ));
+
+  // Create error message slide
+  const errorMessageSlide = (
+    <SwiperSlide
+      key="error-message"
+      className="swiper-slide"
+      style={{
+        ...productCardStyles.swiperSlide,
+        width: '100%',
+        padding: '10px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px',
+      }}
+    >
+      <div className="text-center py-5" style={{ width: '100%' }}>
+        <div style={{
+          fontSize: '48px',
+          color: '#ddd',
+          marginBottom: '20px'
+        }}>
+          📦
+        </div>
+        <h3 style={{
+          color: '#666',
+          marginBottom: '10px',
+          fontSize: '24px',
+          fontWeight: '600'
+        }}>
+          Couldn't retrieve products
+        </h3>
+        <p style={{
+          color: '#999',
+          fontSize: '16px',
+          maxWidth: '400px',
+          margin: '0 auto'
+        }}>
+          We're having trouble loading our product catalog right now. Please check back later or contact us if the issue persists.
+        </p>
+      </div>
+    </SwiperSlide>
+  );
 
   // Reference to the carousel wrapper
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -509,37 +511,33 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                       overflow: 'visible',
                     }}
                   >
-                  {isLoading ? skeletonItems : products.length > 0 ? products.map((item: any, i: number) => (
-                    <SwiperSlide
-                      key={item.id || i}
-                      className="swiper-slide"
-                      style={{
-                        ...productCardStyles.swiperSlide,
-                        width: 'auto', // Let Swiper control the width
-                        padding: '10px', // Add padding around each slide
-                      }}
-                    >
-                      <div style={{ width: '100%' }}>
-                        <ProductCard
-                          product={item}
-                          pauseCarousel={pauseCarousel}
-                          resumeCarousel={resumeCarousel}
-                        />
-                      </div>
-                    </SwiperSlide>
-                  )) : (
-                    <SwiperSlide
-                      className="swiper-slide"
-                      style={{
-                        ...productCardStyles.swiperSlide,
-                        width: 'auto',
-                        padding: '10px',
-                      }}
-                    >
-                      <div className="col-12 text-center py-5">
-                        <h3>No products available at the moment. Please check back later.</h3>
-                      </div>
-                    </SwiperSlide>
+                  {isLoading ? (
+                    skeletonItems
+                  ) : hasError ? (
+                    // Show error message when there's an error or no products
+                    errorMessageSlide
+                  ) : products.length > 0 ? (
+                    products.map((item: any, i: number) => (
+                      <SwiperSlide
+                        key={item.id || i}
+                        className="swiper-slide"
+                        style={{
+                          ...productCardStyles.swiperSlide,
+                          width: 'auto', // Let Swiper control the width
+                          padding: '10px', // Add padding around each slide
+                        }}
+                      >
+                        <div style={{ width: '100%' }}>
+                          <ProductCard
+                            product={item}
+                            pauseCarousel={pauseCarousel}
+                            resumeCarousel={resumeCarousel}
+                          />
+                        </div>
+                      </SwiperSlide>
+                    ))
+                  ) : (
+                    errorMessageSlide
                   )}
                   </Swiper>
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createPublicSupabaseClient } from '@/utils/clerk-supabase';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -11,7 +11,7 @@ function getPlaceholderImage(): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createPublicSupabaseClient();
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters

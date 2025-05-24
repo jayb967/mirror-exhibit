@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createPublicSupabaseClient } from '@/utils/clerk-supabase';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ function getPlaceholderImage(): string {
 
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createPublicSupabaseClient();
 
     // Fetch all products with their variations, sizes, and frame types
     const { data, error } = await supabase

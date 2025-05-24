@@ -42,6 +42,23 @@ export function createAdminSupabaseClient() {
 }
 
 /**
+ * Create a public Supabase client for read-only public data
+ * This uses the anon key and is safe for public product access
+ */
+export function createPublicSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
+}
+
+/**
  * Get the current Clerk user ID from server context
  */
 export async function getCurrentUserId(): Promise<string | null> {
