@@ -1,5 +1,9 @@
 "use client";
 
+// Force dynamic rendering for all admin pages
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import React from "react";
 import { Poppins } from "next/font/google";
 import { StoreProvider } from '@/components/StoreProvider';
@@ -17,6 +21,18 @@ interface AdminRootLayoutProps {
 }
 
 export default function AdminRootLayout({ children }: AdminRootLayoutProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  // Prevent rendering during static generation
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render anything during static generation
+  if (!mounted) {
+    return null;
+  }
+
   // Use Redux Provider only - no more CartContext
   return (
     <StoreProvider>
