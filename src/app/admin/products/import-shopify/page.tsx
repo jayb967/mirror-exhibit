@@ -4,14 +4,20 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import { toast } from 'react-toastify';
 import Papa from 'papaparse';
-import AdminLayout from '@/components/admin/layout/AdminLayout';
 import ClientOnlyWrapper from '@/components/admin/ClientOnlyWrapper';
 import { FaCloudUploadAlt, FaFileUpload, FaCheckCircle, FaExclamationTriangle, FaDownload } from 'react-icons/fa';
 import { productImportService, ImportStats, ShopifyProductCSV } from '@/services/productImportService';
 import Link from 'next/link';
+import nextDynamic from 'next/dynamic';
+
+// Dynamically import AdminLayout to prevent SSR issues
+const AdminLayout = nextDynamic(() => import('@/components/admin/layout/AdminLayout'), {
+  ssr: false,
+  loading: () => <div>Loading...</div>
+});
 
 const ImportShopifyPage: React.FC = () => {
   const [uploading, setUploading] = useState(false);

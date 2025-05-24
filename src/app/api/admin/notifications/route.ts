@@ -1,3 +1,6 @@
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { verifyAdminAccess } from '@/utils/admin-auth';
 import { notificationService } from '@/services/notificationService';
