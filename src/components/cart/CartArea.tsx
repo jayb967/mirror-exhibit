@@ -28,9 +28,7 @@ const CartArea = () => {
     else {
       setShipCost(value)
     }
-  }
-
-
+  } 
 
 
 
@@ -58,7 +56,7 @@ const CartArea = () => {
                         <tr key={i}>
                           <td className="product-thumbnail">
                             <Link href="/shop-details">
-                              <Image style={{ width: "100px", height: "100px" }} src={item.img} alt="" />
+                              <Image width={100} height={100} src={item.image} alt="" />
                             </Link>
                           </td>
                           <td className="product-name">

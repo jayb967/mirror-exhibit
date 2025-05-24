@@ -25,10 +25,12 @@ interface DataType {
 }
 
 interface ProductType {
-  id: number;
+  _id: number;
   name: string;
+  title: string;
   price: number;
   category: string;
+  image: string;
   // Add other properties as needed
 }
 
@@ -76,15 +78,20 @@ const ProductArea = () => {
   const [allProducts, setAllProducts] = useState<ProductType[]>([]); // Provide initial state
   const [selected, setSelected] = useState('All Category');
   const [priceValue, setPriceValue] = useState([0, 0]);
+  const [initialLoadEnded, setInitialLoadEnded] = useState(false)
 
   useEffect(() => {
     if (productsData && productsData.products) {
       setProducts(productsData.products);
       setAllProducts(productsData.products);
-      const maxPrice = productsData.products.reduce((max, item) => {
-        return item.price > max ? item.price : max;
-      }, 0);
-      setPriceValue([0, maxPrice]);
+      
+      if (!initialLoadEnded) {
+        const maxPrice = productsData.products.reduce((max, item) => {
+          return item.price > max ? item.price : max;
+        }, 0);
+        setPriceValue([0, maxPrice]);
+        setInitialLoadEnded(true)
+      }      
     }
   }, [productsData]);
 
@@ -122,7 +129,7 @@ const ProductArea = () => {
       }, 0);
       setPriceValue([0, maxPrice]);
     } else {
-      const filteredProducts = allProducts.filter(product => product.category.name === category);
+      const filteredProducts = allProducts.filter(product => product.category?.name === category);
       setProducts(filteredProducts);
       const maxPrice = filteredProducts.reduce((max, item) => {
         return item.price > max ? item.price : max;
@@ -143,8 +150,8 @@ const ProductArea = () => {
                   <div key={i} className="col-xl-4 col-lg-6 col-md-6 mb-30">
                     <div className="tp-product-2-item">
                       <div className="tp-product-2-thumb-box fix p-relative">
-                        <div className="tp-product-2-thumb">
-                          <Image className="w-100" style={{ objectFit: "cover" }} src={item?.image} alt={item?.title} />
+                        <div className="tp-product-2-thumb" style={{ height: '8rem' }}>
+                          <Image fill style={{ objectFit: "cover" }} src={item?.image} alt={item?.title} />
                         </div>
                         <div className="tp-product-2-btn">
                           <button onClick={() => handleAddToCart(item)} className="tp-btn-black">
@@ -216,9 +223,9 @@ const ProductArea = () => {
                         </span>
 
                       </div>
-                      <div id="slider-range" className="mb-10 mt-20">
+                      <div id="slider-range" className="mb-10 mt-20">                        
                         <InputRange
-                          MAX={priceValue[1]}
+                          MAX={priceValue[1] ? priceValue[1] : 1}
                           MIN={0}
                           STEP={1}
                           values={priceValue}
