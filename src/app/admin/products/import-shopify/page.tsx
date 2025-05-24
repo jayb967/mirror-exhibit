@@ -4,22 +4,100 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import React, { useState, useRef, Suspense } from 'react';
-import { toast } from 'react-toastify';
-import Papa from 'papaparse';
-import ClientOnlyWrapper from '@/components/admin/ClientOnlyWrapper';
-import { FaCloudUploadAlt, FaFileUpload, FaCheckCircle, FaExclamationTriangle, FaDownload } from 'react-icons/fa';
-import { productImportService, ImportStats, ShopifyProductCSV } from '@/services/productImportService';
-import Link from 'next/link';
-import nextDynamic from 'next/dynamic';
+import React, { useState, useRef, useEffect } from 'react';
 
-// Dynamically import AdminLayout to prevent SSR issues
-const AdminLayout = nextDynamic(() => import('@/components/admin/layout/AdminLayout'), {
-  ssr: false,
-  loading: () => <div>Loading...</div>
-});
+// Completely client-side component that prevents any SSR
+function ImportShopifyPageContent() {
+  const [isClient, setIsClient] = useState(false);
 
-const ImportShopifyPage: React.FC = () => {
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '16px',
+        color: '#666'
+      }}>
+        Loading admin panel...
+      </div>
+    );
+  }
+
+  // Dynamic imports inside the client component
+  const [components, setComponents] = useState<any>(null);
+
+  useEffect(() => {
+    const loadComponents = async () => {
+      const [
+        { toast },
+        Papa,
+        AdminLayout,
+        { FaCloudUploadAlt, FaFileUpload, FaCheckCircle, FaExclamationTriangle, FaDownload },
+        { productImportService },
+        Link
+      ] = await Promise.all([
+        import('react-toastify'),
+        import('papaparse'),
+        import('@/components/admin/layout/AdminLayout'),
+        import('react-icons/fa'),
+        import('@/services/productImportService'),
+        import('next/link')
+      ]);
+
+      setComponents({
+        toast,
+        Papa: Papa.default,
+        AdminLayout: AdminLayout.default,
+        FaCloudUploadAlt,
+        FaFileUpload,
+        FaCheckCircle,
+        FaExclamationTriangle,
+        FaDownload,
+        productImportService,
+        Link: Link.default
+      });
+    };
+
+    loadComponents();
+  }, []);
+
+  if (!components) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '16px',
+        color: '#666'
+      }}>
+        Loading components...
+      </div>
+    );
+  }
+
+  return <ActualImportShopifyPage {...components} />;
+}
+
+// The actual page component with all the logic
+function ActualImportShopifyPage({
+  toast,
+  Papa,
+  AdminLayout,
+  FaCloudUploadAlt,
+  FaFileUpload,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaDownload,
+  productImportService,
+  Link
+}: any) {
   const [uploading, setUploading] = useState(false);
   const [processingStep, setProcessingStep] = useState<'idle' | 'parsing' | 'processing' | 'complete'>('idle');
   const [progress, setProgress] = useState(0);
@@ -205,7 +283,6 @@ const ImportShopifyPage: React.FC = () => {
   };
 
   return (
-    <ClientOnlyWrapper fallback={<div>Loading...</div>}>
       <AdminLayout>
         <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
         <div className="tw-flex tw-justify-between tw-items-center tw-mb-6">
@@ -366,8 +443,12 @@ const ImportShopifyPage: React.FC = () => {
         </div>
         </div>
       </AdminLayout>
-    </ClientOnlyWrapper>
   );
+}
+
+// Main export component
+const ImportShopifyPage: React.FC = () => {
+  return <ImportShopifyPageContent />;
 };
 
 export default ImportShopifyPage;
