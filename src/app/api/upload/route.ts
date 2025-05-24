@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { verifyAdminAccess } from '@/utils/admin-auth';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -17,30 +16,13 @@ const CLOUDINARY_UPLOAD_URL = process.env.NEXT_PUBLIC_CLOUDINARY_URL ||
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
+    // Verify admin access using centralized utility
+    const authResult = await verifyAdminAccess({
+      operation: 'upload product images'
+    });
 
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Get user role
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
-    // Only allow admins to upload
-    if (!userData || userData.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden' },
-        { status: 403 }
-      );
+    if (!authResult.success) {
+      return authResult.error;
     }
 
     // Get form data

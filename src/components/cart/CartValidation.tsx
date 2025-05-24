@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useCart } from '@/contexts/CartContext';
+import { useSelector, useDispatch } from 'react-redux';
 import { stockService } from '@/services/stockService';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
+import { decrease_quantity, remove_cart_product } from '@/redux/features/cartSlice';
 
 interface CartValidationProps {
   onValidationComplete: (isValid: boolean) => void;
@@ -16,7 +17,10 @@ interface CartValidationProps {
  * Validates cart items against stock levels before proceeding
  */
 const CartValidation: React.FC<CartValidationProps> = ({ onValidationComplete, children }) => {
-  const { cartItems, updateQuantity, removeFromCart } = useCart();
+  // Redux cart data
+  const cartItems = useSelector((state: any) => state.cart.cart);
+  const dispatch = useDispatch();
+
   const [validating, setValidating] = useState(true);
   const [invalidItems, setInvalidItems] = useState<Array<{
     product_id: string;
@@ -29,7 +33,7 @@ const CartValidation: React.FC<CartValidationProps> = ({ onValidationComplete, c
   useEffect(() => {
     const validateCartItems = async () => {
       setValidating(true);
-      
+
       try {
         // Skip validation if cart is empty
         if (cartItems.length === 0) {
@@ -37,16 +41,16 @@ const CartValidation: React.FC<CartValidationProps> = ({ onValidationComplete, c
           setValidating(false);
           return;
         }
-        
+
         // Prepare cart items for validation
-        const itemsToValidate = cartItems.map(item => ({
-          product_id: item.product_id,
+        const itemsToValidate = cartItems.map((item: any) => ({
+          product_id: item.product_id || item.id,
           quantity: item.quantity
         }));
-        
+
         // Validate cart with stock service
         const { isValid, invalidItems, errorMessage } = await stockService.validateCart(itemsToValidate);
-        
+
         // If cart is valid, proceed
         if (isValid) {
           onValidationComplete(true);
@@ -54,16 +58,16 @@ const CartValidation: React.FC<CartValidationProps> = ({ onValidationComplete, c
         } else {
           // Enhance invalid items with product names
           const enhancedInvalidItems = invalidItems.map(item => {
-            const cartItem = cartItems.find(ci => ci.product_id === item.product_id);
+            const cartItem = cartItems.find((ci: any) => (ci.product_id || ci.id) === item.product_id);
             return {
               ...item,
-              productName: cartItem?.product?.name || 'Product'
+              productName: cartItem?.title || 'Product'
             };
           });
-          
+
           setInvalidItems(enhancedInvalidItems);
           onValidationComplete(false);
-          
+
           if (errorMessage) {
             toast.error(errorMessage);
           }
@@ -76,25 +80,43 @@ const CartValidation: React.FC<CartValidationProps> = ({ onValidationComplete, c
         setValidating(false);
       }
     };
-    
+
     validateCartItems();
   }, [cartItems, onValidationComplete]);
 
   // Handle updating item quantity to available stock
-  const handleUpdateQuantity = async (productId: string, availableStock: number) => {
+  const handleUpdateQuantity = (productId: string, availableStock: number) => {
     if (availableStock <= 0) {
-      await removeFromCart(productId);
-      toast.info('Item removed from cart due to unavailability');
+      // Find the cart item to remove
+      const cartItem = cartItems.find((item: any) => (item.product_id || item.id) === productId);
+      if (cartItem) {
+        dispatch(remove_cart_product(cartItem));
+        toast.info('Item removed from cart due to unavailability');
+      }
     } else {
-      await updateQuantity(productId, availableStock);
-      toast.info(`Quantity adjusted to ${availableStock}`);
+      // For updating quantity, we need to find the item and adjust it
+      const cartItem = cartItems.find((item: any) => (item.product_id || item.id) === productId);
+      if (cartItem) {
+        // Calculate how many times to decrease quantity
+        const currentQuantity = cartItem.quantity;
+        const decreaseAmount = currentQuantity - availableStock;
+
+        // Decrease quantity by the difference
+        for (let i = 0; i < decreaseAmount; i++) {
+          dispatch(decrease_quantity(cartItem));
+        }
+        toast.info(`Quantity adjusted to ${availableStock}`);
+      }
     }
   };
 
   // Handle removing item from cart
-  const handleRemoveItem = async (productId: string) => {
-    await removeFromCart(productId);
-    toast.info('Item removed from cart');
+  const handleRemoveItem = (productId: string) => {
+    const cartItem = cartItems.find((item: any) => (item.product_id || item.id) === productId);
+    if (cartItem) {
+      dispatch(remove_cart_product(cartItem));
+      toast.info('Item removed from cart');
+    }
   };
 
   // If validating, show loading state
@@ -117,7 +139,7 @@ const CartValidation: React.FC<CartValidationProps> = ({ onValidationComplete, c
         <p className="tw-text-yellow-700 tw-mb-4">
           Please review the following items and update your cart before proceeding:
         </p>
-        
+
         <ul className="tw-space-y-3 tw-mb-4">
           {invalidItems.map(item => (
             <li key={item.product_id} className="tw-flex tw-justify-between tw-items-center tw-border-b tw-border-yellow-200 tw-pb-2">
@@ -146,7 +168,7 @@ const CartValidation: React.FC<CartValidationProps> = ({ onValidationComplete, c
             </li>
           ))}
         </ul>
-        
+
         <div className="tw-flex tw-justify-between tw-items-center">
           <Link href="/cart" className="tw-text-blue-600 hover:tw-text-blue-800">
             Return to Cart
@@ -155,7 +177,7 @@ const CartValidation: React.FC<CartValidationProps> = ({ onValidationComplete, c
             onClick={() => {
               // Update all items to their available stock
               Promise.all(
-                invalidItems.map(item => 
+                invalidItems.map(item =>
                   handleUpdateQuantity(item.product_id, item.availableStock)
                 )
               );

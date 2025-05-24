@@ -19,7 +19,7 @@ const ProductDetails = () => {
             <ProductBreadcrumb />
             <ShopDetailsArea />
             <OurProductArea />
-            <ContactAreaHomeOne />
+            {/* <ContactAreaHomeOne /> */}
           </main>
           <FooterThree />
         </div>

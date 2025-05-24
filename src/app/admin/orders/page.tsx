@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import SimpleAdminLayout from '@/components/admin/SimpleAdminLayout';
@@ -28,8 +27,6 @@ export default function OrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const ordersPerPage = 10;
 
-  const supabase = createClientComponentClient();
-
   useEffect(() => {
     fetchOrders();
   }, [currentPage, statusFilter]);
@@ -38,54 +35,34 @@ export default function OrdersPage() {
     try {
       setLoading(true);
 
-      // Build the query
-      let query = supabase
-        .from('orders')
-        .select(`
-          *,
-          profiles:user_id (
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false });
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: ordersPerPage.toString(),
+      });
 
-      // Apply status filter if selected
       if (statusFilter) {
-        query = query.eq('status', statusFilter);
+        params.append('status', statusFilter);
       }
 
-      // Apply pagination
-      const from = (currentPage - 1) * ordersPerPage;
-      const to = from + ordersPerPage - 1;
-      query = query.range(from, to);
+      // Use the admin API route
+      const response = await fetch(`/api/admin/orders?${params.toString()}`);
 
-      const { data, error, count } = await query;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch orders');
+      }
 
-      if (error) throw error;
+      const data = await response.json();
 
-      // Get total count for pagination
-      const { count: totalCount, error: countError } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq(statusFilter ? 'status' : 'id', statusFilter || 'id');
-
-      if (countError) throw countError;
-
-      // Process orders to include user name
-      const processedOrders = data?.map(order => ({
-        ...order,
-        user_name: order.profiles
-          ? `${order.profiles.first_name || ''} ${order.profiles.last_name || ''}`.trim() || 'Anonymous'
-          : 'Anonymous'
-      })) || [];
-
-      setOrders(processedOrders);
-      setTotalPages(Math.ceil((totalCount || 0) / ordersPerPage));
+      setOrders(data.orders || []);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      toast.error('Failed to load orders');
+      // Only show error toast if it's not just an empty result
+      if (error instanceof Error && !error.message.includes('No orders found')) {
+        toast.error('Failed to load orders');
+      }
     } finally {
       setLoading(false);
     }
@@ -93,15 +70,21 @@ export default function OrdersPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({
+      const response = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
           status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId);
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update order status');
+      }
 
       toast.success(`Order status updated to ${newStatus}`);
 

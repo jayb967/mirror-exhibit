@@ -1,0 +1,243 @@
+/* Product Details Page Enhancements */
+
+/* Image Gallery Enhancements */
+.tp-shop-details__tab-big-img {
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.tp-shop-details__tab-big-img:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Thumbnail Gallery Styling */
+.tp-shop-details__tab-btn-box {
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.tp-shop-details__tab-btn {
+  border-radius: 0 !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+.tp-shop-details__tab-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.tp-shop-details__tab-btn.active {
+  border-color: #000 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Product Details Tabs Styling */
+.pro-details-nav-btn {
+  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 40px;
+}
+
+.pro-details-nav-btn .nav-links {
+  background: none;
+  border: none;
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.pro-details-nav-btn .nav-links:hover {
+  color: #000;
+  background-color: #f8f8f8;
+}
+
+.pro-details-nav-btn .nav-links.active {
+  color: #000;
+  border-bottom-color: #000;
+  background-color: #fff;
+  font-weight: 600;
+}
+
+/* Tab Content Styling */
+.tp-content-tab {
+  min-height: 300px;
+}
+
+.tab-para {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Product Details List Styling */
+.product-details-list-box {
+  margin-top: 30px;
+}
+
+.product-details-list-box span {
+  font-weight: 600;
+  font-size: 18px;
+  color: #000;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.product-details-list-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.product-details-list-box ul li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.product-details-list-box ul li span {
+  margin-right: 10px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  font-weight: normal;
+  margin-bottom: 0;
+  display: inline-block;
+}
+
+.product-details-list-box ul li span svg {
+  color: #28a745;
+}
+
+/* FAQ Accordion Styling */
+.tp-custom-accordion .accordion-items {
+  border: 1px solid #e5e5e5;
+  margin-bottom: 15px;
+  border-radius: 0;
+}
+
+.tp-custom-accordion .accordion-buttons {
+  background: #fff;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 20px 25px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.tp-custom-accordion .accordion-buttons:hover {
+  background-color: #f8f8f8;
+}
+
+.tp-custom-accordion .accordion-buttons span {
+  margin-right: 10px;
+  font-weight: 600;
+  color: #666;
+}
+
+.tp-custom-accordion .accordion-collapse {
+  border-top: 1px solid #e5e5e5;
+}
+
+.tp-custom-accordion .accordion-body {
+  padding: 20px 25px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Reviews Section Styling */
+.tp-content-tab .text-center {
+  padding: 60px 20px;
+}
+
+.tp-content-tab .text-center h4 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.tp-content-tab .text-center p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+/* Button Styling */
+.tp-btn-theme {
+  background-color: #000;
+  color: #fff;
+  border: 2px solid #000;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.tp-btn-theme:hover {
+  background-color: #fff;
+  color: #000;
+  border-color: #000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tp-shop-details__tab-btn-box {
+    justify-content: center;
+  }
+  
+  .tp-shop-details__tab-btn {
+    width: 60px !important;
+    height: 60px !important;
+    margin-right: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .pro-details-nav-btn .nav-links {
+    padding: 12px 15px;
+    font-size: 14px;
+  }
+  
+  .tp-content-tab .text-center {
+    padding: 40px 15px;
+  }
+  
+  .tp-custom-accordion .accordion-buttons {
+    padding: 15px 20px;
+    font-size: 14px;
+  }
+  
+  .tp-custom-accordion .accordion-body {
+    padding: 15px 20px;
+    font-size: 14px;
+  }
+}

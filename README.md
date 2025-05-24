@@ -112,9 +112,9 @@ This is a Next.js e-commerce application for Mirror Exhibit, a shop that sells b
 
 ## API Routes
 
-- `/api/cart` - Manages cart operations (GET, POST, PUT, DELETE)
 - `/api/create-checkout-session` - Creates a Stripe checkout session
 - `/api/webhooks/stripe` - Handles Stripe webhook events
+- `/api/debug/cart` - Debug endpoint for cart troubleshooting (development only)
 
 ## Stripe Integration
 

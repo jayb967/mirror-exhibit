@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useAuth } from '@/hooks/useClerkAuth';
 import BasicAdminLayout from '@/components/admin/BasicAdminLayout';
 
 export default function AdminPage() {
@@ -10,21 +10,25 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
+  const { isAuthenticated, isAdmin } = useAuth();
 
   useEffect(() => {
     setMounted(true);
 
     async function checkAuth() {
       try {
-        const supabase = createClientComponentClient();
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session) {
-          // If no session, the middleware will handle the redirect to login
+        if (!isAuthenticated) {
+          // If not authenticated, the middleware will handle the redirect to login
           return;
         }
 
-        // If authenticated, redirect to dashboard
+        if (!isAdmin) {
+          // If not admin, redirect to unauthorized
+          router.push('/unauthorized');
+          return;
+        }
+
+        // If authenticated and admin, redirect to dashboard
         router.push('/admin/dashboard');
       } catch (err) {
         console.error('Error checking authentication:', err);
@@ -35,7 +39,7 @@ export default function AdminPage() {
     }
 
     checkAuth();
-  }, [router]);
+  }, [router, isAuthenticated, isAdmin]);
 
   // Only render after client-side mounting to prevent hydration errors
   if (!mounted) {

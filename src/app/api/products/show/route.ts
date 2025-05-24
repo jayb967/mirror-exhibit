@@ -34,7 +34,7 @@ export async function GET() {
       `, { count: 'exact' })
       // Removed is_active filter to see if there are any products at all
       .order('is_featured', { ascending: false }) // Featured products first
-      .limit(100); // Increased limit to see more products
+      .limit(15); // Increased limit to see more products
 
     // Handle database errors
     if (error) {

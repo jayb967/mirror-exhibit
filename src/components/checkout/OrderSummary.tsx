@@ -70,8 +70,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
               <div key={item.id || `${item.product_id}-${index}`} className="tw-flex tw-items-center">
                 <div className="tw-relative tw-h-16 tw-w-16 tw-mr-4 tw-flex-shrink-0">
                   <Image
-                    src={item.product?.image_url || item.product?.image || '/assets/img/placeholder.jpg'}
-                    alt={item.product?.name || item.product?.title || 'Product'}
+                    src={item.image || item.product?.image_url || item.product?.image || '/assets/img/logo/ME_Logo.png'}
+                    alt={item.title || item.product?.name || item.product?.title || 'Product'}
                     width={64}
                     height={64}
                     style={{ objectFit: 'cover' }}
@@ -83,14 +83,23 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
                 </div>
                 <div className="tw-flex-1">
                   <h3 className="tw-text-sm tw-font-medium tw-text-gray-900">
-                    {item.product?.name || item.product?.title}
+                    {item.title || item.product?.name || item.product?.title || 'Product'}
                   </h3>
+                  {/* Show product variations if available */}
+                  {(item.size_name || item.frame_name) && (
+                    <p className="tw-text-xs tw-text-gray-500 tw-mb-1">
+                      {[
+                        item.size_name ? `Size: ${item.size_name}` : '',
+                        item.frame_name ? `Frame: ${item.frame_name}` : ''
+                      ].filter(Boolean).join(', ')}
+                    </p>
+                  )}
                   <p className="tw-text-sm tw-text-gray-500">
-                    ${(item.product?.price || 0).toFixed(2)} each
+                    ${(item.price || item.product?.price || 0).toFixed(2)} each
                   </p>
                 </div>
                 <div className="tw-font-bold tw-text-gray-900">
-                  ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                  ${((item.price || item.product?.price || 0) * item.quantity).toFixed(2)}
                 </div>
               </div>
             ))}

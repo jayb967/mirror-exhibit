@@ -1,4 +1,4 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { CartItem } from './cartService';
 
 export interface CartTrackingData {
@@ -27,7 +27,10 @@ export interface CartTrackingData {
  * Tracks cart activity for marketing and analytics purposes
  */
 class CartTrackingService {
-  private supabase = createClientComponentClient();
+  private supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   private readonly TRACKING_TABLE = 'cart_tracking';
   private readonly CART_TRACKING_ID_KEY = 'cart_tracking_id';
 
@@ -50,9 +53,10 @@ class CartTrackingService {
         return null;
       }
 
-      // Get current user or guest token
-      const { data: { user } } = await this.supabase.auth.getUser();
-      const userId = user?.id;
+      // Get current user or guest token (Clerk version)
+      // For now, we'll primarily work with guest tokens since this is a service class
+      // TODO: Implement proper Clerk user detection in service classes
+      const userId = null; // Will be set by components that have access to Clerk
       const guestToken = this.getGuestToken();
 
       if (!userId && !guestToken && !email) {
@@ -267,6 +271,390 @@ class CartTrackingService {
   private getReferrer(): string | null {
     if (typeof window === 'undefined') return null;
     return document.referrer || null;
+  }
+
+  /**
+   * Track cart activity with explicit parameters (for Clerk compatibility)
+   * @param cartItems Current cart items
+   * @param email User email
+   * @param checkoutStarted Whether checkout has started
+   * @param checkoutCompleted Whether checkout is completed
+   * @param userId Optional user ID from Clerk
+   * @returns Promise resolving to success status
+   */
+  async trackCartActivity(
+    cartItems: CartItem[],
+    email?: string,
+    checkoutStarted: boolean = false,
+    checkoutCompleted: boolean = false,
+    userId?: string
+  ): Promise<boolean> {
+    try {
+      // If cart tracking is disabled, return true to not block cart operations
+      if (process.env.NEXT_PUBLIC_DISABLE_CART_TRACKING === 'true') {
+        return true;
+      }
+
+      if (cartItems.length === 0) {
+        return true; // Don't block cart operations
+      }
+
+      const guestToken = this.getGuestToken();
+      if (!userId && !guestToken && !email) {
+        return true; // Don't block cart operations
+      }
+
+      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      // Prepare tracking data
+      const trackingData = {
+        user_id: userId || null,
+        guest_token: !userId ? guestToken : null,
+        email: email || null,
+        cart_items: cartItems,
+        subtotal,
+        last_activity: new Date().toISOString(),
+        checkout_started: checkoutStarted,
+        checkout_completed: checkoutCompleted,
+        recovery_email_sent: false,
+        utm_source: this.getUtmParameter('utm_source'),
+        utm_medium: this.getUtmParameter('utm_medium'),
+        utm_campaign: this.getUtmParameter('utm_campaign'),
+        device_type: this.getDeviceType(),
+        browser: this.getBrowser(),
+        referrer: this.getReferrer()
+      };
+
+      // Check if record exists first, then insert or update accordingly
+      let error = null;
+
+      if (userId) {
+        // For authenticated users, try to update first, then insert if not found
+        const { data: existingRecord } = await this.supabase
+          .from(this.TRACKING_TABLE)
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+
+        if (existingRecord) {
+          // Update existing record
+          const { error: updateError } = await this.supabase
+            .from(this.TRACKING_TABLE)
+            .update({
+              ...trackingData,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+          error = updateError;
+        } else {
+          // Insert new record
+          const { error: insertError } = await this.supabase
+            .from(this.TRACKING_TABLE)
+            .insert({
+              ...trackingData,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          error = insertError;
+        }
+      } else if (guestToken) {
+        // For guest users, try to update first, then insert if not found
+        const { data: existingRecord } = await this.supabase
+          .from(this.TRACKING_TABLE)
+          .select('id')
+          .eq('guest_token', guestToken)
+          .single();
+
+        if (existingRecord) {
+          // Update existing record
+          const { error: updateError } = await this.supabase
+            .from(this.TRACKING_TABLE)
+            .update({
+              ...trackingData,
+              updated_at: new Date().toISOString()
+            })
+            .eq('guest_token', guestToken);
+          error = updateError;
+        } else {
+          // Insert new record
+          const { error: insertError } = await this.supabase
+            .from(this.TRACKING_TABLE)
+            .insert({
+              ...trackingData,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          error = insertError;
+        }
+      }
+
+      if (error) {
+        console.error('Error tracking cart activity:', error);
+        // Don't fail the cart operation if tracking fails
+        return true; // Return true to not break cart functionality
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in trackCartActivity:', error);
+      // Don't fail the cart operation if tracking fails
+      return true; // Return true to not break cart functionality
+    }
+  }
+
+  /**
+   * Track guest user data
+   * @param guestData Guest user data
+   * @returns Promise resolving to success status
+   */
+  async trackGuestUserData(guestData: any): Promise<boolean> {
+    try {
+      const guestToken = this.getGuestToken();
+      if (!guestToken) return false;
+
+      // Update the cart tracking record with guest data
+      const { error } = await this.supabase
+        .from(this.TRACKING_TABLE)
+        .update({
+          ...guestData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('guest_token', guestToken);
+
+      if (error) {
+        console.error('Error tracking guest user data:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in trackGuestUserData:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Update checkout status
+   * @param checkoutStarted Whether checkout has started
+   * @param checkoutCompleted Whether checkout is completed
+   * @param email User email
+   * @param userId Optional user ID from Clerk
+   * @returns Promise resolving to success status
+   */
+  async updateCheckoutStatus(
+    checkoutStarted: boolean,
+    checkoutCompleted: boolean,
+    email?: string,
+    userId?: string
+  ): Promise<boolean> {
+    try {
+      const guestToken = this.getGuestToken();
+      if (!userId && !guestToken) return false;
+
+      const updateData = {
+        checkout_started: checkoutStarted,
+        checkout_completed: checkoutCompleted,
+        email: email || undefined,
+        last_activity: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      let error = null;
+
+      if (userId) {
+        const { error: updateError } = await this.supabase
+          .from(this.TRACKING_TABLE)
+          .update(updateData)
+          .eq('user_id', userId);
+        error = updateError;
+      } else if (guestToken) {
+        const { error: updateError } = await this.supabase
+          .from(this.TRACKING_TABLE)
+          .update(updateData)
+          .eq('guest_token', guestToken);
+        error = updateError;
+      }
+
+      if (error) {
+        console.error('Error updating checkout status:', error);
+        return false;
+      }
+
+      if (checkoutCompleted) {
+        this.clearTrackingId();
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in updateCheckoutStatus:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Convert guest cart to authenticated user cart
+   * @param clerkUserId Clerk user ID
+   * @returns Promise resolving to success status
+   */
+  async convertGuestToUser(clerkUserId: string): Promise<boolean> {
+    try {
+      const guestToken = this.getGuestToken();
+      if (!guestToken) {
+        console.log('No guest token found, nothing to convert');
+        return false;
+      }
+
+      console.log('Converting guest cart to user cart:', { guestToken, clerkUserId });
+
+      // Try RPC function first, fallback to manual implementation
+      try {
+        const { data, error } = await this.supabase
+          .rpc('merge_guest_cart_with_user', {
+            p_guest_token: guestToken,
+            p_clerk_user_id: clerkUserId
+          });
+
+        if (!error && data !== null) {
+          console.log('Guest cart conversion via RPC successful:', data);
+          this.clearGuestToken();
+          return data === true;
+        }
+
+        console.log('RPC function failed or not found, using manual implementation:', error);
+      } catch (rpcError) {
+        console.log('RPC call failed, using manual implementation:', rpcError);
+      }
+
+      // Manual implementation as fallback
+      const success = await this.manualGuestToUserConversion(guestToken, clerkUserId);
+
+      if (success) {
+        console.log('Guest cart conversion via manual method successful');
+        this.clearGuestToken();
+      }
+
+      return success;
+    } catch (error) {
+      console.error('Error in convertGuestToUser:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Manual guest to user cart conversion (fallback when RPC function fails)
+   */
+  private async manualGuestToUserConversion(guestToken: string, clerkUserId: string): Promise<boolean> {
+    try {
+      console.log('Starting manual guest cart conversion...');
+
+      // Get guest cart record
+      const { data: guestCart, error: guestError } = await this.supabase
+        .from('cart_tracking')
+        .select('*')
+        .eq('guest_token', guestToken)
+        .single();
+
+      if (guestError || !guestCart) {
+        console.log('No guest cart found for token:', guestToken);
+        return false;
+      }
+
+      console.log('Found guest cart with', guestCart.cart_items?.length || 0, 'items');
+
+      // Check if user already has a cart (handle potential RLS errors gracefully)
+      let userCart = null;
+      let userError = null;
+
+      try {
+        const result = await this.supabase
+          .from('cart_tracking')
+          .select('*')
+          .eq('user_id', clerkUserId)
+          .single();
+
+        userCart = result.data;
+        userError = result.error;
+      } catch (error) {
+        console.log('Error checking for existing user cart (non-critical):', error);
+        userError = error;
+      }
+
+      if (userCart && !userError) {
+        console.log('Found existing user cart, merging...');
+
+        // Merge cart items
+        const mergedItems = [...(userCart.cart_items || []), ...(guestCart.cart_items || [])];
+        const mergedSubtotal = (userCart.subtotal || 0) + (guestCart.subtotal || 0);
+        const mergedCheckoutStarted = userCart.checkout_started || guestCart.checkout_started;
+
+        // Update user cart with merged data
+        const { error: updateError } = await this.supabase
+          .from('cart_tracking')
+          .update({
+            cart_items: mergedItems,
+            subtotal: mergedSubtotal,
+            last_activity: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            checkout_started: mergedCheckoutStarted,
+            email: userCart.email || guestCart.email
+          })
+          .eq('user_id', clerkUserId);
+
+        if (updateError) {
+          console.error('Error updating user cart:', updateError);
+          return false;
+        }
+
+        // Delete guest cart
+        const { error: deleteError } = await this.supabase
+          .from('cart_tracking')
+          .delete()
+          .eq('guest_token', guestToken);
+
+        if (deleteError) {
+          console.error('Error deleting guest cart:', deleteError);
+          // Don't return false here, the merge was successful
+        }
+
+        console.log('Successfully merged guest cart with existing user cart');
+        return true;
+
+      } else {
+        console.log('No existing user cart, converting guest cart...');
+
+        // Convert guest cart to user cart
+        const { error: convertError } = await this.supabase
+          .from('cart_tracking')
+          .update({
+            user_id: clerkUserId,
+            guest_token: null,
+            is_anonymous: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('guest_token', guestToken);
+
+        if (convertError) {
+          console.error('Error converting guest cart:', convertError);
+          return false;
+        }
+
+        console.log('Successfully converted guest cart to user cart');
+        return true;
+      }
+
+    } catch (error) {
+      console.error('Error in manual guest cart conversion:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Clear guest token from localStorage
+   */
+  private clearGuestToken(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('guest_token');
+    }
   }
 }
 

@@ -1,19 +1,50 @@
 
 'use client'
 
-import product_data from '@/data/product_data';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation, Mousewheel, Keyboard } from 'swiper/modules';
-import { useGetShowingProductsQuery } from '@/redux/features/productApi';
+import {
+  useGetShowingProductsQuery,
+  useGetFilteredProductsQuery,
+  useGetFeaturedProductsQuery,
+  useGetPopularProductsQuery,
+  useGetMostViewedProductsQuery,
+  useGetNewArrivalsQuery,
+  useGetTrendingProductsQuery,
+  useGetProductsByCategoryQuery
+} from '@/redux/features/productApi';
 import ProductSkeleton from '@/components/common/ProductSkeleton';
 import ProductCard from '@/components/common/ProductCard';
+import ProductAnalytics, { useAnalytics } from '@/utils/analytics';
 import '@/styles/product-modal.css';
 import '@/styles/product-carousel.css';
 import Head from 'next/head';
+
+// Props interface for the flexible component
+interface ProductAreaHomeFourProps {
+  // Product filtering
+  productType?: 'featured' | 'popular' | 'most-viewed' | 'new-arrivals' | 'trending' | 'all';
+  category?: string; // Category slug or name
+
+  // Display customization
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  sectionId?: string;
+
+  // Behavior options
+  limit?: number; // Default 15
+  autoplay?: boolean; // Default true
+  autoplayDelay?: number; // Default 5000ms
+  showViewAll?: boolean; // Show "View All" link
+  viewAllLink?: string; // Custom link for "View All"
+
+  // Styling options
+  className?: string;
+  containerClassName?: string;
+}
 
 // Custom CSS for consistent product card heights
 const productCardStyles = {
@@ -23,7 +54,7 @@ const productCardStyles = {
     paddingBottom: '40px', // Add padding to accommodate the overlapping button
     justifyContent: 'center', // Center the card in the slide
   },
-  swiperContainer: {
+  swiperContainerStyle: {
     paddingBottom: '60px', // Increased padding to accommodate the "Add to Cart" button
     overflow: 'visible',
     margin: '0 -10px', // Negative margin to offset container padding
@@ -114,8 +145,107 @@ const productCardStyles = {
 // const products = product_data.filter(item => item.path === 'home_3')
 
 
-const ProductAreaHomeFour = () => {
-  const { data, isError, isLoading } = useGetShowingProductsQuery();
+const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
+  // Product filtering props
+  productType = 'all',
+  category,
+
+  // Display customization props
+  title = 'Luxury Reflected',
+  subtitle = 'Collection',
+  description = 'Explore our exclusive selection of bespoke mirrors, meticulously crafted to elevate your living spaces with timeless elegance and style.',
+  sectionId = 'product-carousel',
+
+  // Behavior options
+  limit = 15,
+  autoplay = true,
+  autoplayDelay = 5000,
+  showViewAll = false,
+  viewAllLink,
+
+  // Styling options
+  className = '',
+  containerClassName = ''
+}) => {
+  // Analytics hook
+  const analytics = useAnalytics();
+
+  // Call all hooks unconditionally, then select the right data
+  const filteredQuery = useGetFilteredProductsQuery(
+    { type: productType, category, limit },
+    { skip: !(category && productType !== 'all') }
+  );
+  const categoryQuery = useGetProductsByCategoryQuery(
+    { category: category!, limit },
+    { skip: !category || productType !== 'all' }
+  );
+  const featuredQuery = useGetFeaturedProductsQuery(
+    { limit },
+    { skip: productType !== 'featured' || !!category }
+  );
+  const popularQuery = useGetPopularProductsQuery(
+    { limit },
+    { skip: productType !== 'popular' || !!category }
+  );
+  const mostViewedQuery = useGetMostViewedProductsQuery(
+    { limit },
+    { skip: productType !== 'most-viewed' || !!category }
+  );
+  const newArrivalsQuery = useGetNewArrivalsQuery(
+    { limit },
+    { skip: productType !== 'new-arrivals' || !!category }
+  );
+  const trendingQuery = useGetTrendingProductsQuery(
+    { limit },
+    { skip: productType !== 'trending' || !!category }
+  );
+  const defaultQuery = useGetShowingProductsQuery(
+    undefined,
+    { skip: productType !== 'all' || !!category }
+  );
+
+  // Select the active query result with fallback logic
+  const { data, isError, isLoading } = useMemo(() => {
+    let primaryQuery;
+
+    if (category && productType !== 'all') {
+      primaryQuery = filteredQuery;
+    } else if (category) {
+      primaryQuery = categoryQuery;
+    } else {
+      switch (productType) {
+        case 'featured':
+          primaryQuery = featuredQuery;
+          break;
+        case 'popular':
+          primaryQuery = popularQuery;
+          break;
+        case 'most-viewed':
+          primaryQuery = mostViewedQuery;
+          break;
+        case 'new-arrivals':
+          primaryQuery = newArrivalsQuery;
+          break;
+        case 'trending':
+          primaryQuery = trendingQuery;
+          break;
+        default:
+          primaryQuery = defaultQuery;
+          break;
+      }
+    }
+
+    // Check if primary query has no products and implement fallback
+    if (primaryQuery.data && Array.isArray(primaryQuery.data.products) && primaryQuery.data.products.length === 0) {
+      console.log(`🔄 No products found for ${productType}, falling back to default products`);
+      return defaultQuery;
+    }
+
+    return primaryQuery;
+  }, [
+    productType, category, filteredQuery, categoryQuery, featuredQuery,
+    popularQuery, mostViewedQuery, newArrivalsQuery, trendingQuery, defaultQuery
+  ]);
   const [swiperRef, setSwiperRef] = useState<any>(null);
 
   // Fallback products in case the API is down
@@ -170,31 +300,51 @@ const ProductAreaHomeFour = () => {
     }
 
     // Add priority flag to the first 4 products for optimized loading
-    return productList.map((product, index) => ({
+    return productList.map((product: any, index: number) => ({
       ...product,
       priority: index < 4 // First 4 products get priority loading
     }));
   }, [data, isError, fallbackProducts]);
 
-  // Navigation arrow handlers
+  // Navigation arrow handlers with analytics
   const handlePrev = () => {
     swiperRef?.slidePrev();
+    analytics.trackCarouselInteraction('prev', sectionId, {
+      source: `${sectionId}_carousel`
+    });
   };
 
   const handleNext = () => {
     swiperRef?.slideNext();
+    analytics.trackCarouselInteraction('next', sectionId, {
+      source: `${sectionId}_carousel`
+    });
   };
 
-  // Carousel control functions
+  // Carousel control functions with analytics
   const pauseCarousel = () => {
+    console.log('🎠 Pausing carousel...', swiperRef);
     if (swiperRef && swiperRef.autoplay) {
       swiperRef.autoplay.stop();
+      analytics.trackCarouselInteraction('pause', sectionId, {
+        source: `${sectionId}_carousel`
+      });
+      console.log('🎠 Carousel paused successfully');
+    } else {
+      console.log('🎠 No swiper ref or autoplay available');
     }
   };
 
   const resumeCarousel = () => {
+    console.log('🎠 Resuming carousel...', swiperRef);
     if (swiperRef && swiperRef.autoplay) {
       swiperRef.autoplay.start();
+      analytics.trackCarouselInteraction('resume', sectionId, {
+        source: `${sectionId}_carousel`
+      });
+      console.log('🎠 Carousel resumed successfully');
+    } else {
+      console.log('🎠 No swiper ref or autoplay available');
     }
   };
 
@@ -258,19 +408,37 @@ const ProductAreaHomeFour = () => {
         <link rel="preload" as="image" href="/assets/placeholder-product.jpg" />
       </Head>
 
-      <div id="product-one-page" className="tp-product-2-area tp-product-2-style-3 fix pt-20 pb-150">
-        <div className="container">
+      <div id={sectionId} className={`tp-product-2-area tp-product-2-style-3 fix pt-20 pb-150 ${className}`}>
+        <div className={`container ${containerClassName}`}>
           <div className="tp-product-2-wrap mb-60">
             <div className="row align-items-end">
               <div className="col-xl-8 col-lg-8 col-md-7">
                 <div className="tp-product-2-title-box">
-                  <span className="tp-section-subtitle tp-split-text tp-split-in-right">Collection</span>
-                  <h3 className="tp-section-title tp-split-text tp-split-in-right">Luxury  <br /> Reflected</h3>
+                  <span className="tp-section-subtitle tp-split-text tp-split-in-right">{subtitle}</span>
+                  <h3 className="tp-section-title tp-split-text tp-split-in-right">{title.split(' ').map((word, index) => (
+                    <React.Fragment key={index}>
+                      {word}
+                      {index === 0 && title.split(' ').length > 1 ? <br /> : ' '}
+                    </React.Fragment>
+                  ))}</h3>
                 </div>
               </div>
               <div className="col-xl-4 col-lg-4 col-md-5">
                 <div className="tp-product-2-top-text">
-                  <p>Explore our exclusive selection of bespoke mirrors, meticulously crafted to elevate your living spaces with timeless elegance and style.</p>
+                  <p>{description}</p>
+                  {showViewAll && viewAllLink && (
+                    <div className="mt-3">
+                      <a
+                        href={viewAllLink}
+                        className="tp-btn tp-btn-border tp-btn-border-sm"
+                        onClick={() => analytics.trackCarouselInteraction('autoplay_stop', sectionId, {
+                          source: `${sectionId}_view_all`
+                        })}
+                      >
+                        View All
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -285,10 +453,10 @@ const ProductAreaHomeFour = () => {
                     loop={true}
                     slidesPerView={4}
                     spaceBetween={40}
-                    autoplay={{
-                      delay: 5000,
+                    autoplay={autoplay ? {
+                      delay: autoplayDelay,
                       disableOnInteraction: false,
-                    }}
+                    } : false}
                     mousewheel={{
                       forceToAxis: true,
                       sensitivity: 1,
@@ -336,14 +504,14 @@ const ProductAreaHomeFour = () => {
                     }}
                     className="swiper-container tp-product-2-active"
                     style={{
-                      ...productCardStyles.swiperContainer,
+                      ...productCardStyles.swiperContainerStyle,
                       paddingBottom: '50px',
                       overflow: 'visible',
                     }}
                   >
-                  {isLoading ? skeletonItems : products.length > 0 ? products.map((item, i) => (
+                  {isLoading ? skeletonItems : products.length > 0 ? products.map((item: any, i: number) => (
                     <SwiperSlide
-                      key={i}
+                      key={item.id || i}
                       className="swiper-slide"
                       style={{
                         ...productCardStyles.swiperSlide,

@@ -3,7 +3,7 @@
 import { toast } from "react-toastify";
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { getLocalStorage, setLocalStorage } from "@/utils/localstorage";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 
 interface Product {
   id: string;
@@ -23,6 +23,8 @@ interface CartState {
   orderQuantity: number;
   isLoading: boolean;
   isSyncing: boolean;
+  appliedCoupon: any | null;
+  discount: number;
 }
 
 const initialState: CartState = {
@@ -30,6 +32,8 @@ const initialState: CartState = {
   orderQuantity: 1,
   isLoading: false,
   isSyncing: false,
+  appliedCoupon: null,
+  discount: 0,
 };
 
 // Helper function to get guest token
@@ -37,27 +41,128 @@ const getGuestToken = (): string => {
   if (typeof window === 'undefined') return '';
   let guestToken = localStorage.getItem('guest_token');
   if (!guestToken) {
-    guestToken = 'guest_' + Math.random().toString(36).substr(2, 9);
+    guestToken = 'guest_' + Math.random().toString(36).substring(2, 11);
     localStorage.setItem('guest_token', guestToken);
   }
   return guestToken;
 };
+
+// Helper function to ensure anonymous user is signed in (Clerk version)
+const ensureAnonymousUser = async (): Promise<any> => {
+  try {
+    // For Clerk, we'll create a pseudo-anonymous user using guest token
+    const guestToken = getGuestToken();
+
+    // Create a pseudo-user ID for guest cart functionality
+    const anonymousUserId = `guest_${guestToken}`;
+
+    // Store in session storage for this session
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('anonymous_user_id', anonymousUserId);
+    }
+
+    // Create guest user record in database (background, non-blocking)
+    try {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      await supabase.rpc('create_anonymous_guest_user', {
+        p_guest_token: guestToken,
+        p_user_id: anonymousUserId
+      });
+    } catch (rpcError: any) {
+      // Silently handle missing database functions - this is expected during development
+      if (rpcError.code === '42883' || rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
+        // Function doesn't exist yet, continue without database user creation
+      } else {
+        console.log('Guest user creation failed (non-critical):', rpcError.message);
+      }
+    }
+
+    return { id: anonymousUserId, is_anonymous: true };
+  } catch (error) {
+    console.log('Anonymous user setup failed (non-critical):', error);
+    return null;
+  }
+};
+
+// Async thunk for adding to cart with immediate UI response and background database sync
+export const addToCartWithAuth = createAsyncThunk(
+  'cart/addToCartWithAuth',
+  async (product: Product & { silent?: boolean }, { dispatch }) => {
+    try {
+      // 1. IMMEDIATE: Add to local cart first for instant UI response
+      dispatch(addToCart({ ...product, silent: false })); // Show toast from Redux
+
+      // 2. BACKGROUND: Handle database operations asynchronously
+      // Import cart service dynamically to avoid circular imports
+      const { cartService } = await import('@/services/cartService');
+
+      // Ensure anonymous user is signed in (background)
+      ensureAnonymousUser().then(async () => {
+        try {
+          // Always use product_id for cart service operations (not variation_id)
+          const productId = product.product_id || product.id;
+
+          // Add to database in background (silent mode to prevent duplicate toasts)
+          await cartService.addToCart(
+            productId,
+            product.quantity || 1,
+            {
+              variation_id: product.variation_id,
+              frame_type: product.frame_type,
+              frame_name: product.frame_name,
+              size: product.size,
+              size_name: product.size_name,
+              price: product.price
+            },
+            true // silent mode - no toasts from cart service
+          );
+        } catch (dbError) {
+          console.log('Background database sync failed, item already in local cart:', dbError);
+          // Don't show error to user since item is already in cart locally
+        }
+      }).catch(authError => {
+        console.log('Background auth failed, item already in local cart:', authError);
+        // Don't show error to user since item is already in cart locally
+      });
+
+      return product;
+    } catch (error) {
+      console.error('Error in addToCartWithAuth:', error);
+      // Fallback to regular add to cart (local storage only)
+      dispatch(addToCart(product));
+      return product;
+    }
+  }
+);
 
 // Async thunk for syncing cart with database using cart_tracking table (no validation)
 export const syncCartWithDatabase = createAsyncThunk(
   'cart/syncWithDatabase',
   async (_, { getState }) => {
     try {
-      const supabase = createClientComponentClient();
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
 
       // Test database connection first
       const { error: connectionError } = await supabase.from('cart_tracking').select('id').limit(1);
       if (connectionError) {
-        console.warn('Database not available, skipping cart sync');
+        // Silently skip cart sync if table doesn't exist - this is expected during development
+        if (connectionError.code === '42P01' || connectionError.message?.includes('does not exist')) {
+          // Table doesn't exist yet, skip sync silently
+          return null;
+        }
+        console.log('Database not available for cart sync (non-critical):', connectionError.message);
         return null; // Return null to indicate no sync occurred
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      // For Clerk, we'll handle user authentication at the component level
+      // In Redux, we'll primarily work with guest tokens
       const state = getState() as { cart: CartState };
       const localCart = state.cart.cart;
 
@@ -80,36 +185,41 @@ export const syncCartWithDatabase = createAsyncThunk(
 
       const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-      if (user) {
-        // User is logged in - sync to cart_tracking table
+      // For now, always treat as guest user since we're in Redux
+      // TODO: Implement proper Clerk user detection in Redux
+      const guestToken = getGuestToken();
+
+      // Try to update existing record first, then insert if not found
+      const { data: existingRecord } = await supabase
+        .from('cart_tracking')
+        .select('id')
+        .eq('guest_token', guestToken)
+        .single();
+
+      if (existingRecord) {
+        // Update existing record
         await supabase
           .from('cart_tracking')
-          .upsert({
-            user_id: user.id,
-            email: user.email,
+          .update({
             cart_items: cartItems,
             subtotal: subtotal,
             last_activity: new Date().toISOString(),
-            checkout_started: false,
-            checkout_completed: false
-          }, {
-            onConflict: 'user_id'
-          });
+            updated_at: new Date().toISOString()
+          })
+          .eq('guest_token', guestToken);
       } else {
-        // Guest user - save to cart_tracking with guest_token
-        const guestToken = getGuestToken();
-
+        // Insert new record
         await supabase
           .from('cart_tracking')
-          .upsert({
+          .insert({
             guest_token: guestToken,
             cart_items: cartItems,
             subtotal: subtotal,
             last_activity: new Date().toISOString(),
             checkout_started: false,
-            checkout_completed: false
-          }, {
-            onConflict: 'guest_token'
+            checkout_completed: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
       }
 
@@ -124,126 +234,29 @@ export const syncCartWithDatabase = createAsyncThunk(
 // Async thunk for loading cart from database after login (with validation)
 export const loadCartFromDatabase = createAsyncThunk(
   'cart/loadFromDatabase',
-  async (_, { rejectWithValue }) => {
+  async () => {
     try {
-      const supabase = createClientComponentClient();
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
 
       // Test database connection first
       const { error: connectionError } = await supabase.from('cart_tracking').select('id').limit(1);
       if (connectionError) {
-        console.warn('Database not available, skipping cart load');
+        // Silently skip cart load if table doesn't exist - this is expected during development
+        if (connectionError.code === '42P01' || connectionError.message?.includes('does not exist')) {
+          // Table doesn't exist yet, return empty array silently
+          return [];
+        }
+        console.log('Database not available for cart load (non-critical):', connectionError.message);
         return []; // Return empty array if database not available
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        // Not logged in, return empty cart
-        return [];
-      }
-
-      // Try to get cart from cart_tracking table
-      const { data, error } = await supabase
-        .from('cart_tracking')
-        .select('cart_items, subtotal')
-        .eq('user_id', user.id)
-        .eq('checkout_completed', false)
-        .single();
-
-      if (error || !data || !data.cart_items) {
-        // No cart found in database, return empty cart
-        return [];
-      }
-
-      // Validate and convert cart_items back to Product format (only on load)
-      const validCartItems = [];
-      const invalidItems = [];
-
-      for (const item of data.cart_items) {
-        try {
-          // Validate that the product still exists and is active
-          const { data: product, error: productError } = await supabase
-            .from('products')
-            .select('id, title, base_price, is_active')
-            .eq('id', item.product_id)
-            .single();
-
-          if (productError || !product || !product.is_active) {
-            console.warn(`Product ${item.product_id} from database cart is no longer available`);
-            invalidItems.push(item);
-            continue; // Skip this item
-          }
-
-          // Validate variation if exists
-          if (item.variation_id) {
-            const { data: variation, error: variationError } = await supabase
-              .from('product_variations')
-              .select('id, price')
-              .eq('id', item.variation_id)
-              .single();
-
-            if (variationError || !variation) {
-              console.warn(`Variation ${item.variation_id} from database cart is no longer available`);
-              invalidItems.push(item);
-              continue; // Skip this item
-            }
-          }
-
-          // Create unique key for the item
-          const createUniqueKey = (cartItem: any) => {
-            if (cartItem.variation_id) {
-              return cartItem.variation_id;
-            }
-            const sizeKey = cartItem.size_name || 'no-size';
-            const frameKey = cartItem.frame_name || 'no-frame';
-            return `${cartItem.product_id}-${sizeKey}-${frameKey}`;
-          };
-
-          validCartItems.push({
-            id: createUniqueKey(item),
-            title: item.title,
-            price: item.price,
-            quantity: Math.max(1, item.quantity), // Ensure quantity is at least 1
-            image: item.image,
-            size_name: item.size_name,
-            frame_name: item.frame_name,
-            variation_id: item.variation_id,
-            product_id: item.product_id
-          });
-        } catch (error) {
-          console.warn(`Error validating cart item from database:`, error);
-          invalidItems.push(item);
-        }
-      }
-
-      // If some items were invalid, update the database to remove them
-      if (invalidItems.length > 0) {
-        console.log(`Removing ${invalidItems.length} invalid items from database cart`);
-        const updatedCartItems = validCartItems.map(item => ({
-          product_id: item.product_id,
-          quantity: item.quantity,
-          price: item.price,
-          title: item.title,
-          image: item.image,
-          size_name: item.size_name,
-          frame_name: item.frame_name,
-          variation_id: item.variation_id
-        }));
-
-        const updatedSubtotal = updatedCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-        // Update database with cleaned cart
-        await supabase
-          .from('cart_tracking')
-          .update({
-            cart_items: updatedCartItems,
-            subtotal: updatedSubtotal,
-            last_activity: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-      }
-
-      return validCartItems;
+      // For Clerk, we'll handle user authentication differently
+      // For now, return empty cart since we're focusing on guest functionality
+      // TODO: Implement proper Clerk user detection for cart loading
+      return [];
     } catch (error) {
       console.warn('Error loading cart from database, continuing with local storage:', error);
       return []; // Return empty array instead of rejecting
@@ -318,11 +331,27 @@ const cartSlice = createSlice({
       setLocalStorage("cart", state.cart);
       // Note: Database sync will be triggered by middleware
     },
+    // Load cart from service (used by async thunks)
+    loadCartFromService: (state, { payload }: PayloadAction<any[]>) => {
+      // Convert cart service format to Redux format
+      state.cart = payload.map(item => ({
+        id: item.product_id,
+        product_id: item.product_id,
+        title: item.product?.name || 'Product',
+        quantity: item.quantity,
+        price: item.product?.price || item.product?.base_price || 0,
+        image: item.product?.image_url || item.product?.image,
+        size_name: item.size_name,
+        frame_name: item.frame_name,
+        variation_id: item.variation_id || item.product_variation_id
+      }));
+      setLocalStorage("cart", state.cart);
+    },
     //
-    increment: (state, { payload }) => {
+    increment: (state) => {
       state.orderQuantity = state.orderQuantity + 1;
     },
-    decrement: (state, { payload }) => {
+    decrement: (state) => {
       state.orderQuantity =
         state.orderQuantity > 1
           ? state.orderQuantity - 1
@@ -411,6 +440,35 @@ const cartSlice = createSlice({
     },
     get_cart_products: (state) => {
       state.cart = getLocalStorage<Product>("cart");
+      // Also load coupon data from localStorage
+      if (typeof window !== 'undefined') {
+        const savedCoupon = localStorage.getItem("appliedCoupon");
+        const savedDiscount = localStorage.getItem("discount");
+        if (savedCoupon) {
+          try {
+            state.appliedCoupon = JSON.parse(savedCoupon);
+            state.discount = savedDiscount ? parseFloat(savedDiscount) : 0;
+          } catch (error) {
+            console.warn('Error parsing saved coupon data:', error);
+          }
+        }
+      }
+    },
+    apply_coupon: (state, { payload }: PayloadAction<{ coupon: any; discount: number }>) => {
+      state.appliedCoupon = payload.coupon;
+      state.discount = payload.discount;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("appliedCoupon", JSON.stringify(payload.coupon));
+        localStorage.setItem("discount", payload.discount.toString());
+      }
+    },
+    remove_coupon: (state) => {
+      state.appliedCoupon = null;
+      state.discount = 0;
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("appliedCoupon");
+        localStorage.removeItem("discount");
+      }
     },
     quantityDecrement: (state, { payload }: PayloadAction<Product>) => {
       // Create a unique identifier that includes product ID and variation details
@@ -439,11 +497,21 @@ const cartSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Handle addToCartWithAuth
+      .addCase(addToCartWithAuth.pending, () => {
+        // Optional: show loading state
+      })
+      .addCase(addToCartWithAuth.fulfilled, () => {
+        // Cart is already updated by the loadCartFromService action
+      })
+      .addCase(addToCartWithAuth.rejected, (_, action) => {
+        console.error('Add to cart with auth failed:', action.error);
+      })
       // Handle syncCartWithDatabase
       .addCase(syncCartWithDatabase.pending, (state) => {
         state.isSyncing = true;
       })
-      .addCase(syncCartWithDatabase.fulfilled, (state, action) => {
+      .addCase(syncCartWithDatabase.fulfilled, (state) => {
         state.isSyncing = false;
         // Sync doesn't modify cart anymore, just syncs to database
       })
@@ -482,6 +550,9 @@ export const {
   quantityDecrement,
   increment,
   decrement,
+  apply_coupon,
+  remove_coupon,
+  loadCartFromService,
 } = cartSlice.actions;
 
 // Async thunks are already exported above where they're defined

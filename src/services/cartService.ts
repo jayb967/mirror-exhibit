@@ -1,4 +1,4 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 import { stockService } from './stockService';
@@ -51,22 +51,33 @@ const GUEST_TOKEN_KEY = 'guest_token';
  * Uses Supabase for authenticated users and local storage for guests
  */
 class CartService {
-  private supabase = createClientComponentClient();
+  private supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   /**
-   * Get the current user from Supabase
+   * Get the current user from Clerk (via window.Clerk if available)
    * @returns The current user or null if not authenticated
    */
   private async getCurrentUser() {
-    const { data } = await this.supabase.auth.getUser();
-    return data.user;
+    // For Clerk, we need to check if the user is authenticated differently
+    // Since this is a service class, we'll check for Clerk on the window object
+    if (typeof window !== 'undefined' && (window as any).Clerk) {
+      const clerk = (window as any).Clerk;
+      return clerk.user ? {
+        id: clerk.user.id,
+        email: clerk.user.emailAddresses[0]?.emailAddress || '',
+      } : null;
+    }
+    return null;
   }
 
   /**
-   * Get or create a guest token
+   * Get or create a guest token (private method)
    * @returns The guest token
    */
-  private getGuestToken(): string {
+  private getGuestTokenPrivate(): string {
     if (typeof window === 'undefined') return '';
 
     let guestToken = localStorage.getItem(GUEST_TOKEN_KEY);
@@ -76,6 +87,16 @@ class CartService {
     }
     return guestToken;
   }
+
+  /**
+   * Public method to get guest token for external use
+   * @returns The guest token
+   */
+  getGuestToken(): string {
+    return this.getGuestTokenPrivate();
+  }
+
+
 
   /**
    * Get cart items from local storage
@@ -112,21 +133,103 @@ class CartService {
    */
   async createGuestUser(guestData: Partial<GuestUser>): Promise<GuestUser | null> {
     try {
-      const guestToken = this.getGuestToken();
+      const guestToken = this.getGuestTokenPrivate();
 
-      const { data, error } = await this.supabase
+      // Try to update existing record first, then insert if not found
+      const { data: existingRecord } = await this.supabase
         .from('guest_users')
-        .upsert({
-          ...guestData,
-          guest_token: guestToken
-        })
-        .select()
+        .select('id')
+        .eq('guest_token', guestToken)
         .single();
+
+      let data, error;
+      if (existingRecord) {
+        // Update existing record
+        const result = await this.supabase
+          .from('guest_users')
+          .update({
+            ...guestData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('guest_token', guestToken)
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      } else {
+        // Insert new record
+        const result = await this.supabase
+          .from('guest_users')
+          .insert({
+            ...guestData,
+            guest_token: guestToken,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) throw error;
       return data;
     } catch (error) {
       console.error('Error creating guest user:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update guest user in the database
+   * @param guestData Guest user data to update
+   * @returns The updated guest user
+   */
+  async updateGuestUser(guestData: Partial<GuestUser>): Promise<GuestUser | null> {
+    try {
+      const guestToken = this.getGuestTokenPrivate();
+
+      // Try to update existing record first, then insert if not found
+      const { data: existingRecord } = await this.supabase
+        .from('guest_users')
+        .select('id')
+        .eq('guest_token', guestToken)
+        .single();
+
+      let data, error;
+      if (existingRecord) {
+        // Update existing record
+        const result = await this.supabase
+          .from('guest_users')
+          .update({
+            ...guestData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('guest_token', guestToken)
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      } else {
+        // Insert new record
+        const result = await this.supabase
+          .from('guest_users')
+          .insert({
+            ...guestData,
+            guest_token: guestToken,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      }
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating guest user:', error);
       return null;
     }
   }
@@ -139,54 +242,9 @@ class CartService {
   private guestUserChecked = false;
 
   async getGuestUser(): Promise<GuestUser | null> {
-    try {
-      const guestToken = this.getGuestToken();
-      if (!guestToken) return null;
-
-      // If we've already checked and failed, don't try again during this session
-      if (this.guestUserChecked) {
-        return null;
-      }
-
-      // Mark that we've checked to prevent repeated calls
-      this.guestUserChecked = true;
-
-      try {
-        // Use a simpler query that's less likely to cause errors
-        const { data, error } = await this.supabase
-          .from('guest_users')
-          .select('id')
-          .limit(1);
-
-        // If there's an error with this simple query, the table likely doesn't exist
-        // or there's a permissions issue
-        if (error) {
-          console.log('Unable to access guest_users table:', error.message);
-          return null;
-        }
-
-        // Now try to get the specific guest user
-        // Only do this if the first query succeeded
-        const { data: userData, error: userError } = await this.supabase
-          .from('guest_users')
-          .select('*')
-          .eq('guest_token', guestToken)
-          .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no record is found
-
-        if (userError) {
-          console.log('Error fetching guest user:', userError.message);
-          return null;
-        }
-
-        return userData || null;
-      } catch (error: any) {
-        console.log('Error in guest user fetch:', error.message);
-        return null;
-      }
-    } catch (error) {
-      console.error('Error getting guest user:', error);
-      return null;
-    }
+    // Guest users table was removed in favor of cart_tracking
+    // Return null to indicate no guest user database record
+    return null;
   }
 
   /**
@@ -224,52 +282,8 @@ class CartService {
         }));
       }
 
-      // Check if we have a guest user with cart in database
-      const guestToken = this.getGuestToken();
-      const guestUser = await this.getGuestUser();
-
-      if (guestUser) {
-        try {
-          // Try to get guest cart from database
-          const { data, error } = await this.supabase
-            .from('guest_cart_items')
-            .select(`
-              *,
-              product:product_id (
-                id,
-                name,
-                base_price,
-                image_url
-              )
-            `)
-            .eq('guest_token', guestToken);
-
-          if (error) {
-            // Handle case where the table doesn't exist yet
-            if (error.code === '42P01') {
-              console.log('Guest cart items table does not exist yet. This is expected if guest checkout is not fully set up.');
-            } else {
-              console.error('Error fetching guest cart from database:', error);
-            }
-          } else if (data && data.length > 0) {
-            // Map the data to ensure price compatibility
-            return data.map(item => ({
-              ...item,
-              product: item.product ? {
-                ...item.product,
-                price: item.product.base_price // Map base_price to price for compatibility
-              } : undefined
-            }));
-          }
-        } catch (dbError: any) {
-          // Handle case where the table doesn't exist yet
-          if (dbError.code === '42P01' || dbError.message?.includes('does not exist')) {
-            console.log('Guest cart items table does not exist yet. This is expected if guest checkout is not fully set up.');
-          } else {
-            console.error('Error fetching guest cart from database:', dbError);
-          }
-        }
-      }
+      // Guest users table was removed - skip database guest cart lookup
+      // All guest cart functionality now uses local storage only
 
       // Otherwise, get cart from local storage
       const localCart = this.getLocalCart();
@@ -324,9 +338,10 @@ class CartService {
    * @param productId Product ID
    * @param quantity Quantity to add
    * @param variationData Optional variation data (size, frame, etc.)
+   * @param silent Optional flag to suppress toast notifications
    * @returns Promise resolving to updated cart
    */
-  async addToCart(productId: string, quantity: number = 1, variationData?: any): Promise<CartItem[]> {
+  async addToCart(productId: string, quantity: number = 1, variationData?: any, silent: boolean = false): Promise<CartItem[]> {
     try {
       // Get product details
       const { data: productData, error: productError } = await this.supabase
@@ -342,66 +357,83 @@ class CartService {
       } : null;
 
       if (productError || !product) {
-        toast.error('Product not found');
+        if (!silent) {
+          toast.error('Product not found');
+        }
         return this.getCart();
       }
 
-      // Check if the current cart already has this product
-      const currentCart = await this.getCart();
-      const existingItem = currentCart.find(item => item.product_id === productId);
-      const currentQuantity = existingItem ? existingItem.quantity : 0;
-
-      // Validate stock with the stock service
-      const { hasStock, availableStock, errorMessage } = await stockService.checkCartItemStock(
-        productId,
-        currentQuantity,
-        quantity
-      );
-
-      if (!hasStock) {
-        toast.error(errorMessage || `Only ${availableStock} items available`);
-        return this.getCart();
-      }
+      // Skip stock validation for made-to-order products
+      // These products are manufactured on demand, so no inventory limits apply
 
       const user = await this.getCurrentUser();
 
       // If user is authenticated, add to Supabase
       if (user) {
-        await this.supabase.rpc('add_to_cart', {
-          p_user_id: user.id,
-          p_product_id: productId,
-          p_quantity: quantity
-        });
-
-        toast.success(`${product.name} added to cart`);
-        return this.getCart();
-      }
-
-      // Check if we have a guest user
-      const guestUser = await this.getGuestUser();
-      const guestToken = this.getGuestToken();
-
-      if (guestUser) {
         try {
-          // Add to guest cart in database
-          await this.supabase.rpc('add_to_guest_cart', {
-            p_guest_token: guestToken,
-            p_product_id: productId,
-            p_quantity: quantity
-          });
+          // First, try to find or create a product variation
+          let variationId = variationData?.variation_id;
 
-          toast.success(`${product.name} added to cart`);
+          if (!variationId) {
+            // If no variation provided, try to find a default variation or create one
+            const { data: variations, error: variationError } = await this.supabase
+              .from('product_variations')
+              .select('id')
+              .eq('product_id', productId)
+              .limit(1);
+
+            if (!variationError && variations && variations.length > 0) {
+              variationId = variations[0].id;
+            } else {
+              // Try the old schema function first
+              try {
+                await this.supabase.rpc('add_to_cart', {
+                  p_user_id: user.id,
+                  p_product_id: productId,
+                  p_quantity: quantity
+                });
+
+                // Track cart activity
+                await this.trackCartActivity(user.id);
+
+                toast.success(`${product.name} added to cart`);
+                return this.getCart();
+              } catch (oldSchemaError: any) {
+                console.log('Old schema add_to_cart failed, product variations may be required');
+                throw new Error('Product variation required but not found');
+              }
+            }
+          }
+
+          if (variationId) {
+            // Use the new schema function with product variations
+            await this.supabase.rpc('add_to_cart', {
+              p_user_id: user.id,
+              p_product_variation_id: variationId,
+              p_quantity: quantity
+            });
+          } else {
+            throw new Error('No product variation available');
+          }
+
+          // Track cart activity
+          await this.trackCartActivity(user.id);
+
+          if (!silent) {
+            toast.success(`${product.name} added to cart`);
+          }
           return this.getCart();
         } catch (error: any) {
-          // If the function doesn't exist yet, fall back to local storage
-          if (error.code === '42883' || error.message?.includes('function') || error.message?.includes('does not exist')) {
-            console.log('Guest cart functions not set up yet. Using local storage instead.');
-            // Continue to local storage fallback below
-          } else {
-            throw error;
+          console.error('Error adding to cart in database:', error);
+          // Fall back to local storage if database fails
+          if (!silent) {
+            toast.warning('Added to cart locally. Please refresh to sync with server.');
           }
         }
       }
+
+      // Guest users table was removed - skip database guest operations
+      // All guest cart functionality now uses local storage only
 
       // Otherwise, add to local storage
       const localCart = this.getLocalCart();
@@ -415,7 +447,9 @@ class CartService {
 
       if (existingItemIndex >= 0) {
         localCart[existingItemIndex].quantity += quantity;
-        toast.info(`Increased quantity for ${product.name}`);
+        if (!silent) {
+          toast.info(`Increased quantity for ${product.name}`);
+        }
       } else {
         const cartItem: any = {
           product_id: productId,
@@ -426,23 +460,27 @@ class CartService {
 
         localCart.push(cartItem);
 
-        // Show variation details in toast if available
-        let toastMessage = `${product.name} added to cart`;
-        if (variationData?.size_name || variationData?.frame_name) {
-          toastMessage += ` (${[
-            variationData.size_name ? `Size: ${variationData.size_name}` : '',
-            variationData.frame_name ? `Frame: ${variationData.frame_name}` : ''
-          ].filter(Boolean).join(', ')})`;
-        }
+        if (!silent) {
+          // Show variation details in toast if available
+          let toastMessage = `${product.name} added to cart`;
+          if (variationData?.size_name || variationData?.frame_name) {
+            toastMessage += ` (${[
+              variationData.size_name ? `Size: ${variationData.size_name}` : '',
+              variationData.frame_name ? `Frame: ${variationData.frame_name}` : ''
+            ].filter(Boolean).join(', ')})`;
+          }
 
-        toast.success(toastMessage);
+          toast.success(toastMessage);
+        }
       }
 
       this.saveLocalCart(localCart);
       return localCart;
     } catch (error) {
       console.error('Error adding to cart:', error);
-      toast.error('Failed to add item to cart');
+      if (!silent) {
+        toast.error('Failed to add item to cart');
+      }
       return this.getCart();
     }
   }
@@ -465,81 +503,40 @@ class CartService {
         return this.removeFromCart(itemId);
       }
 
-      // Get current cart to check if we're increasing or decreasing quantity
+      // Skip stock validation for made-to-order products
+      // These products are manufactured on demand, so no inventory limits apply
+
+      // Get the actual product_id for database operations
       const currentCart = await this.getCart();
-      // Find item by variation_id if it exists, otherwise by product_id
       const existingItem = currentCart.find(item => {
         const cartItemId = (item as any).variation_id || item.product_id;
         return cartItemId === itemId;
       });
-      const currentQuantity = existingItem ? existingItem.quantity : 0;
-
-      // Get the actual product_id for stock validation
       const productId = existingItem?.product_id || itemId;
-
-      // Only validate stock if we're increasing quantity
-      // This prevents "Product not found" errors when just decreasing quantity
-      if (quantity > currentQuantity) {
-        // Validate stock with the stock service
-        const { hasStock, availableStock, allowedQuantity, errorMessage } = await stockService.checkCartItemStock(
-          productId,
-          0,
-          quantity
-        );
-
-        if (!hasStock) {
-          // Only show error if it's not a "Product not found" error when decreasing
-          if (!errorMessage?.includes('Product not found')) {
-            toast.warning(errorMessage || `Only ${availableStock} items available`);
-          }
-
-          // If there's some stock available, update to the maximum available quantity
-          if (availableStock > 0) {
-            quantity = allowedQuantity;
-            toast.info(`Quantity adjusted to ${quantity}`);
-          } else {
-            return this.getCart();
-          }
-        }
-      }
 
       const user = await this.getCurrentUser();
 
       // If user is authenticated, update in Supabase
       if (user) {
-        await this.supabase.rpc('update_cart_quantity', {
-          p_user_id: user.id,
-          p_product_id: productId,
-          p_quantity: quantity
-        });
-
-        return this.getCart();
-      }
-
-      // Check if we have a guest user
-      const guestUser = await this.getGuestUser();
-      const guestToken = this.getGuestToken();
-
-      if (guestUser) {
         try {
-          // Update guest cart in database
-          await this.supabase.rpc('update_guest_cart_quantity', {
-            p_guest_token: guestToken,
+          await this.supabase.rpc('update_cart_quantity', {
+            p_user_id: user.id,
             p_product_id: productId,
             p_quantity: quantity
           });
 
-          return this.getCart();
+          // Track cart activity
+          await this.trackCartActivity(user.id);
         } catch (error: any) {
-          // If the function doesn't exist yet, fall back to local storage
-          if (error.code === '42883' || error.message?.includes('function') || error.message?.includes('does not exist')) {
-            console.log('Guest cart functions not set up yet. Using local storage instead.');
-            // Continue to local storage fallback below
-          } else {
-            throw error;
-          }
+          console.error('Error updating cart in database:', error);
+          // Continue with local storage fallback
         }
+
+        return this.getCart();
       }
+
+      // Guest users table was removed - skip database guest operations
+      // All guest cart functionality now uses local storage only
 
       // Otherwise, update in local storage
       const localCart = this.getLocalCart();
@@ -574,41 +571,27 @@ class CartService {
 
       // If user is authenticated, remove from Supabase
       if (user) {
-        await this.supabase
-          .from('cart_items')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('product_id', itemId);
+        try {
+          await this.supabase
+            .from('cart_items')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('product_id', itemId);
 
-        toast.info('Item removed from cart');
+          // Track cart activity
+          await this.trackCartActivity(user.id);
+
+          toast.info('Item removed from cart');
+        } catch (error: any) {
+          console.error('Error removing from cart in database:', error);
+          toast.error('Failed to remove item from cart');
+        }
+
         return this.getCart();
       }
 
-      // Check if we have a guest user
-      const guestUser = await this.getGuestUser();
-      const guestToken = this.getGuestToken();
-
-      if (guestUser) {
-        try {
-          // Remove from guest cart in database
-          await this.supabase
-            .from('guest_cart_items')
-            .delete()
-            .eq('guest_token', guestToken)
-            .eq('product_id', itemId);
-
-          toast.info('Item removed from cart');
-          return this.getCart();
-        } catch (error: any) {
-          // If the table doesn't exist yet, fall back to local storage
-          if (error.code === '42P01' || error.message?.includes('does not exist')) {
-            console.log('Guest cart items table does not exist yet. Using local storage instead.');
-            // Continue to local storage fallback below
-          } else {
-            throw error;
-          }
-        }
-      }
+      // Guest users table was removed - skip database guest operations
+      // All guest cart functionality now uses local storage only
 
       // Otherwise, remove from local storage
       const localCart = this.getLocalCart();
@@ -637,32 +620,21 @@ class CartService {
 
       // If user is authenticated, clear from Supabase
       if (user) {
-        await this.supabase
-          .from('cart_items')
-          .delete()
-          .eq('user_id', user.id);
-      }
-
-      // Check if we have a guest user
-      const guestUser = await this.getGuestUser();
-      const guestToken = this.getGuestToken();
-
-      if (guestUser) {
         try {
-          // Clear guest cart in database
           await this.supabase
-            .from('guest_cart_items')
+            .from('cart_items')
             .delete()
-            .eq('guest_token', guestToken);
+            .eq('user_id', user.id);
+
+          // Track cart activity (empty cart)
+          await this.trackCartActivity(user.id);
         } catch (error: any) {
-          // If the table doesn't exist yet, just continue
-          if (error.code === '42P01' || error.message?.includes('does not exist')) {
-            console.log('Guest cart items table does not exist yet. Skipping database clear.');
-          } else {
-            console.error('Error clearing guest cart:', error);
-          }
+          console.error('Error clearing cart in database:', error);
         }
       }
+
+      // Guest users table was removed - skip database guest operations
+      // All guest cart functionality now uses local storage only
 
       // Always clear local storage
       this.saveLocalCart([]);
@@ -684,36 +656,8 @@ class CartService {
       const user = await this.getCurrentUser();
       if (!user) return this.getLocalCart();
 
-      // Check if we have a guest user
-      const guestUser = await this.getGuestUser();
-      const guestToken = this.getGuestToken();
-
-      if (guestUser) {
-        try {
-          // Convert guest user to registered user
-          await this.supabase.rpc('convert_guest_to_user', {
-            p_guest_token: guestToken,
-            p_user_id: user.id
-          });
-
-          // Clear guest token from local storage
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem(GUEST_TOKEN_KEY);
-          }
-
-          toast.success('Guest cart transferred to your account');
-          return this.getCart();
-        } catch (error: any) {
-          // If the function doesn't exist yet, just continue with local cart sync
-          if (error.code === '42883' || error.message?.includes('function') || error.message?.includes('does not exist')) {
-            console.log('Guest to user conversion function not set up yet. Proceeding with local cart sync.');
-            // Continue to local cart sync below
-          } else {
-            console.error('Error converting guest to user:', error);
-            // Continue to local cart sync as fallback
-          }
-        }
-      }
+      // Guest users table was removed - skip database guest operations
+      // All guest cart functionality now uses local storage only
 
       // Otherwise, sync local cart
       const localCart = this.getLocalCart();
@@ -740,13 +684,92 @@ class CartService {
   }
 
   /**
+   * Track cart activity for analytics
+   * @param userId User ID
+   * @param email Optional email
+   * @returns Promise resolving to success status
+   */
+  private async trackCartActivity(userId: string, email?: string): Promise<boolean> {
+    try {
+      const cartItems = await this.getCart();
+
+      if (cartItems.length === 0) {
+        return true; // No items to track
+      }
+
+      // Prepare cart items for tracking
+      const trackingItems = cartItems.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.product?.price || item.product?.base_price || 0,
+        title: item.product?.name || 'Product',
+        image: item.product?.image_url || item.product?.image,
+        size_name: (item as any).size_name,
+        frame_name: (item as any).frame_name,
+        variation_id: (item as any).variation_id || (item as any).product_variation_id
+      }));
+
+      const subtotal = trackingItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      // Try to update existing record first, then insert if not found
+      const { data: existingRecord } = await this.supabase
+        .from('cart_tracking')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      let error;
+      if (existingRecord) {
+        // Update existing record
+        const result = await this.supabase
+          .from('cart_tracking')
+          .update({
+            email: email,
+            cart_items: trackingItems,
+            subtotal: subtotal,
+            last_activity: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+        error = result.error;
+      } else {
+        // Insert new record
+        const result = await this.supabase
+          .from('cart_tracking')
+          .insert({
+            user_id: userId,
+            email: email,
+            cart_items: trackingItems,
+            subtotal: subtotal,
+            last_activity: new Date().toISOString(),
+            checkout_started: false,
+            checkout_completed: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        error = result.error;
+      }
+
+      if (error) {
+        console.error('Error tracking cart activity:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in cart tracking:', error);
+      return false;
+    }
+  }
+
+  /**
    * Convert guest to registered user
    * @param userId User ID
    * @returns Promise resolving to success status
    */
   async convertGuestToUser(userId: string): Promise<boolean> {
     try {
-      const guestToken = this.getGuestToken();
+      const guestToken = this.getGuestTokenPrivate();
       if (!guestToken) return false;
 
       try {

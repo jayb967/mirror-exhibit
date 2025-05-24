@@ -57,7 +57,18 @@ const ProductOptionsModal = ({
       }
       // Reset quantity
       setQuantity(1);
+
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Re-enable body scroll when modal is closed
+      document.body.style.overflow = 'unset';
     }
+
+    // Cleanup function to ensure body scroll is restored
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen, frameTypes, sizes, product.id]);
 
   // Pause/resume carousel when modal opens/closes
@@ -154,16 +165,8 @@ const ProductOptionsModal = ({
       setSelectedSize(sizes[0].id);
     }
 
-    // Close the modal
-    onClose();
-
-    // Ensure the carousel is resumed after adding to cart
-    if (resumeCarousel) {
-      // Add a small delay to ensure the modal is fully closed
-      setTimeout(() => {
-        resumeCarousel();
-      }, 300);
-    }
+    // Close the modal using the handleClose function
+    handleClose();
   };
 
   if (!isOpen) return null;
@@ -175,12 +178,27 @@ const ProductOptionsModal = ({
     sizesCount: sizes.length
   });
 
+  const handleClose = () => {
+    // Resume carousel before closing
+    if (resumeCarousel) {
+      resumeCarousel();
+    }
+    onClose();
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Close modal if clicking on the overlay (not the modal content)
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
   return (
-    <div className="product-options-modal-overlay">
+    <div className="product-options-modal-overlay" onClick={handleOverlayClick}>
       <div className="product-options-modal">
         <div className="modal-header">
           <h4>Select Options</h4>
-          <button className="close-btn" onClick={onClose}>
+          <button className="close-btn" onClick={handleClose}>
             <i className="fal fa-times"></i>
           </button>
         </div>

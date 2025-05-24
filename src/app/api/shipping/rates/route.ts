@@ -6,7 +6,7 @@ import { CartItem } from '@/services/cartService';
 
 /**
  * Get shipping rates based on address and cart items
- * 
+ *
  * Request body:
  * {
  *   address: {
@@ -22,7 +22,7 @@ import { CartItem } from '@/services/cartService';
  *   },
  *   cartItems?: CartItem[]
  * }
- * 
+ *
  * Response:
  * {
  *   options: ShippingOption[];
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     // Get request body
     const body = await req.json();
     const { address, cartItems } = body;
-    
+
     // Validate request
     if (!address || !address.country) {
       return NextResponse.json(
@@ -44,33 +44,33 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    
+
     // Get shipping options
     const options = await shippingService.getShippingOptions(address, cartItems);
-    
+
     // Calculate subtotal
     const subtotal = cartItems?.reduce((sum: number, item: CartItem) => {
-      return sum + (item.product?.price || 0) * item.quantity;
+      return sum + (item.price || item.product?.price || 0) * item.quantity;
     }, 0) || 0;
-    
+
     // Check free shipping eligibility
     const freeShippingEligible = await shippingService.isEligibleForFreeShipping(
       subtotal,
       cartItems,
       address
     );
-    
+
     // Get free shipping threshold
     const freeShippingThreshold = await shippingService.getFreeShippingThreshold(
       address.country
     );
-    
+
     // Get remaining amount for free shipping
     const remainingForFreeShipping = await shippingService.getRemainingForFreeShipping(
       subtotal,
       address.country
     );
-    
+
     return NextResponse.json({
       options,
       freeShippingEligible,

@@ -7,15 +7,16 @@ import React, { useState, useEffect } from 'react';
 import { Autoplay } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { useGetShowingProductsQuery, useGetRandomProductsQuery } from '@/redux/features/productApi';
-import ProductOptionsModal from '@/components/common/ProductOptionsModal';
+import { useGlobalModal } from '@/contexts/GlobalModalContext';
 
 const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => {
   // Try to get random products first, fall back to filtered showing products
   const { data: randomData, isLoading: randomLoading, isError: randomError } = useGetRandomProductsQuery(currentProductId);
   const { data: allData, isLoading: allLoading, isError: allError } = useGetShowingProductsQuery(undefined);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  // Use global modal instead of local state
+  const { openModal } = useGlobalModal();
+
   const [autoplayPaused, setAutoplayPaused] = useState(false);
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [defaultOptions, setDefaultOptions] = useState({
@@ -70,39 +71,41 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
     }
   };
 
-  // Handle opening the product options modal
+  // Handle opening the product options modal using global modal
   const handleOpenModal = (product) => {
-    console.log('OurProductArea: Opening modal for product:', product?.title || product?.name);
+    console.log('OurProductArea: Opening global modal for product:', product?.title || product?.name);
     console.log('OurProductArea: Default options:', defaultOptions);
-    setSelectedProduct(product);
-    setModalOpen(true);
-    pauseCarousel();
+
+    // Get product-specific options or use defaults
+    const productSizes = product?.variations && product.variations.length > 0
+      ? [...new Set(product.variations.map(v => v.size?.name))]
+          .filter(Boolean)
+          .map(name => {
+            const variation = product.variations.find(v => v.size?.name === name);
+            return variation?.size;
+          })
+      : defaultOptions.sizes;
+
+    const productFrameTypes = product?.variations && product.variations.length > 0
+      ? [...new Set(product.variations.map(v => v.frame_type?.name))]
+          .filter(Boolean)
+          .map(name => {
+            const variation = product.variations.find(v => v.frame_type?.name === name);
+            return variation?.frame_type;
+          })
+      : defaultOptions.frameTypes;
+
+    // Open global modal with product data
+    openModal({
+      product,
+      frameTypes: productFrameTypes,
+      sizes: productSizes,
+      pauseCarousel,
+      resumeCarousel
+    });
   };
 
-  // Handle closing the product options modal
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    resumeCarousel();
-  };
 
-  // Use default options or extract from product if available
-  const sizes = selectedProduct?.variations && selectedProduct.variations.length > 0
-    ? [...new Set(selectedProduct.variations.map(v => v.size?.name))]
-      .filter(Boolean)
-      .map(name => {
-        const variation = selectedProduct.variations.find(v => v.size?.name === name);
-        return variation?.size;
-      })
-    : defaultOptions.sizes;
-
-  const frameTypes = selectedProduct?.variations && selectedProduct.variations.length > 0
-    ? [...new Set(selectedProduct.variations.map(v => v.frame_type?.name))]
-      .filter(Boolean)
-      .map(name => {
-        const variation = selectedProduct.variations.find(v => v.frame_type?.name === name);
-        return variation?.frame_type;
-      })
-    : defaultOptions.frameTypes;
 
   return (
     <>
@@ -169,7 +172,12 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
                       <SwiperSlide key={i} className="swiper-slide">
                         <div
                           className="tp-product-2-item"
-                          style={{ cursor: 'pointer' }}
+                          style={{
+                            cursor: 'pointer',
+                            height: '400px',
+                            display: 'flex',
+                            flexDirection: 'column'
+                          }}
                           onClick={(e) => {
                             // Only navigate if the click wasn't on the Add To Cart button
                             if (!(e.target as HTMLElement).closest('.tp-product-2-button-box')) {
@@ -177,13 +185,23 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
                             }
                           }}
                         >
-                          <div className="tp-product-2-thumb-box p-relative">
-                            <div className="tp-product-2-thumb fix p-relative">
+                          <div className="tp-product-2-thumb-box p-relative" style={{ flex: '1', minHeight: '300px' }}>
+                            <div className="tp-product-2-thumb fix p-relative" style={{ height: '100%' }}>
                               <Image
-                                src={product.image}
+                                src={product.image || '/assets/img/logo/ME_Logo.png'}
                                 alt={product.title}
                                 width={400}
                                 height={400}
+                                style={{
+                                  objectFit: 'cover',
+                                  objectPosition: 'center',
+                                  width: '100%',
+                                  height: '100%'
+                                }}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = '/assets/img/logo/ME_Logo.png';
+                                }}
                               />
                               <div className="tp-product-2-button-box">
                                 <button
@@ -199,13 +217,33 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
                               </div>
                             </div>
                           </div>
-                          <div className="tp-product-2-content d-flex justify-content-between align-items-center">
-                            <h4 className="tp-product-2-title mb-0">
+                          <div
+                            className="tp-product-2-content d-flex justify-content-between align-items-center"
+                            style={{
+                              height: '80px',
+                              padding: '15px 0',
+                              flexShrink: 0
+                            }}
+                          >
+                            <h4
+                              className="tp-product-2-title mb-0"
+                              style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                lineHeight: '1.2',
+                                maxHeight: '2.4em',
+                                flex: '1',
+                                marginRight: '10px'
+                              }}
+                            >
                               <Link href={`/product/${product.id}?id=${product.id}`}>
                                 <span>{product.title}</span>
                               </Link>
                             </h4>
-                            <div className="tp-product-2-rate-2">
+                            <div className="tp-product-2-rate-2" style={{ flexShrink: 0 }}>
                               <span>${product.price}</span>
                             </div>
                           </div>
@@ -220,18 +258,7 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
         </div>
       </div>
 
-      {/* Product Options Modal */}
-      {selectedProduct && (
-        <ProductOptionsModal
-          isOpen={modalOpen}
-          onClose={handleCloseModal}
-          product={selectedProduct}
-          frameTypes={frameTypes}
-          sizes={sizes}
-          pauseCarousel={pauseCarousel}
-          resumeCarousel={resumeCarousel}
-        />
-      )}
+
     </>
   );
 };

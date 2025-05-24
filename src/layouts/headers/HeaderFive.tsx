@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import black_logo from "@/assets/img/logo/logo-black.png";
 import Offcanvus from '@/components/common/Offcanvus';
 import ShoppingCart from '@/components/common/ShoppingCart';
+import ProfileButtonComponent from '@/components/common/ProfileButtonComponent';
 import { useSelector } from 'react-redux';
 
 const HeaderFive = () => {
@@ -59,6 +60,7 @@ const HeaderFive = () => {
               </div>
               <div className="col-xl-2 col-lg-8 col-6">
                 <div className="tp-header-right d-flex align-items-center justify-content-end">
+                  <ProfileButtonComponent iconColor="#000" />
                   <div className="tp-header-icon cart d-none d-xl-block">
                     <Link className="cart-icon" href="/cart">
                       <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -106,6 +108,7 @@ const HeaderFive = () => {
               </div>
               <div className="col-xl-2 col-lg-8 col-6">
                 <div className="tp-header-right d-flex align-items-center justify-content-end">
+                  <ProfileButtonComponent iconColor="#000" />
                   <div className="tp-header-icon cart d-none d-xl-block">
                     <Link className="cart-icon" href="/cart">
                       <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -81,7 +81,7 @@ const ProductAreaHomeThree = () => {
                   className="swiper-container tp-product-2-active">
                   {products.map((item, i) => (
                     <SwiperSlide key={i} className="swiper-slide">
-                      <div className="tp-product-2-item">
+                      <div className="tp-product-2-item" style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
                         <div className="tp-product-2-content d-flex justify-content-between">
                           <h4 className="tp-product-2-title">
                             <Link href="/shop-details" dangerouslySetInnerHTML={{ __html: item.title }} >
@@ -94,7 +94,18 @@ const ProductAreaHomeThree = () => {
                         </div>
                         <div className="tp-product-2-thumb-box p-relative">
                           <div className="tp-product-2-thumb fix">
-                            <Image src={item.img} alt="image-here" />
+                            <Image
+                              src={item.img}
+                              alt="image-here"
+                              width={400}
+                              height={400}
+                              style={{
+                                objectFit: 'cover',
+                                objectPosition: 'center',
+                                width: '100%',
+                                height: '100%'
+                              }}
+                            />
                             <div className="tp-product-2-btn">
                               <Link className="tp-btn-black" href="/cart">
                                 <span>Buy Now</span>

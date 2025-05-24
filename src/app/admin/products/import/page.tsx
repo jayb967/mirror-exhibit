@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { toast } from 'react-toastify';
 import Papa from 'papaparse';
 import { FaFileUpload, FaCloudUploadAlt, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
 import SimpleAdminLayout from '@/components/admin/SimpleAdminLayout';
-import { getAdminClient } from '@/utils/supabase/admin';
 import crypto from 'crypto';
 
 // Define the type for CSV product data

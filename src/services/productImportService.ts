@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 import { productCompatibilityService } from './productCompatibilityService';
 
@@ -102,20 +102,18 @@ export interface ImportStats {
 
 class ProductImportService {
   // Regular client for non-admin operations
-  private supabase = createClientComponentClient();
+  private supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   // Admin client with service role for operations that require bypassing RLS
   private getAdminClient() {
     // Create a client with the service role key for admin operations
-    return createClientComponentClient({
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      options: {
-        auth: {
-          persistSession: false,
-        },
-      },
-    });
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
   }
   private stats: ImportStats = {
     totalProducts: 0,

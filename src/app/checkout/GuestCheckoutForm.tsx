@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCart } from '@/contexts/CartContext';
+import { useSelector } from 'react-redux';
 import { cartService, GuestUser } from '@/services/cartService';
 import { toast } from 'react-toastify';
 
@@ -25,14 +25,14 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
     phone: '',
     guest_token: ''
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors(prev => {
@@ -42,14 +42,14 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
       });
     }
   };
-  
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     // Required fields
     if (!formData.email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    
+
     if (!formData.first_name) newErrors.first_name = 'First name is required';
     if (!formData.last_name) newErrors.last_name = 'Last name is required';
     if (!formData.address) newErrors.address = 'Address is required';
@@ -58,32 +58,32 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
     if (!formData.postal_code) newErrors.postal_code = 'Postal code is required';
     if (!formData.country) newErrors.country = 'Country is required';
     if (!formData.phone) newErrors.phone = 'Phone number is required';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fill in all required fields');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       // Create guest user in database
       const guestToken = cartService.getGuestToken();
       const guestData = { ...formData, guest_token: guestToken };
       const guestUser = await cartService.createGuestUser(guestData);
-      
+
       if (!guestUser) {
         toast.error('Failed to create guest account');
         return;
       }
-      
+
       onSubmit(guestUser);
     } catch (error) {
       console.error('Error creating guest account:', error);
@@ -92,14 +92,14 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-6">
       <h2 className="tw-text-xl tw-font-semibold tw-mb-4">Guest Checkout</h2>
       <p className="tw-text-gray-600 tw-mb-6">
         You can checkout as a guest without creating an account. Just fill in your information below.
       </p>
-      
+
       <form onSubmit={handleSubmit}>
         <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
           {/* Email */}
@@ -118,7 +118,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             />
             {errors.email && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.email}</p>}
           </div>
-          
+
           {/* Name */}
           <div>
             <label htmlFor="first_name" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
@@ -134,7 +134,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             />
             {errors.first_name && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.first_name}</p>}
           </div>
-          
+
           <div>
             <label htmlFor="last_name" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
               Last Name <span className="tw-text-red-500">*</span>
@@ -149,7 +149,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             />
             {errors.last_name && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.last_name}</p>}
           </div>
-          
+
           {/* Address */}
           <div className="md:tw-col-span-2">
             <label htmlFor="address" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
@@ -166,7 +166,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             />
             {errors.address && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.address}</p>}
           </div>
-          
+
           <div className="md:tw-col-span-2">
             <label htmlFor="apartment" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
               Apartment, suite, etc. (optional)
@@ -180,7 +180,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
               className="tw-w-full tw-px-3 tw-py-2 tw-border tw-border-gray-300 tw-rounded-md"
             />
           </div>
-          
+
           {/* City, State, Zip */}
           <div>
             <label htmlFor="city" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
@@ -196,7 +196,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             />
             {errors.city && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.city}</p>}
           </div>
-          
+
           <div>
             <label htmlFor="state" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
               State/Province <span className="tw-text-red-500">*</span>
@@ -211,7 +211,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             />
             {errors.state && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.state}</p>}
           </div>
-          
+
           <div>
             <label htmlFor="postal_code" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
               Postal Code <span className="tw-text-red-500">*</span>
@@ -226,7 +226,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             />
             {errors.postal_code && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.postal_code}</p>}
           </div>
-          
+
           <div>
             <label htmlFor="country" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
               Country <span className="tw-text-red-500">*</span>
@@ -241,7 +241,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             />
             {errors.country && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.country}</p>}
           </div>
-          
+
           {/* Phone */}
           <div className="md:tw-col-span-2">
             <label htmlFor="phone" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
@@ -259,7 +259,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
             {errors.phone && <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.phone}</p>}
           </div>
         </div>
-        
+
         <div className="tw-flex tw-justify-between tw-mt-6">
           <button
             type="button"
@@ -268,7 +268,7 @@ const GuestCheckoutForm: React.FC<GuestCheckoutFormProps> = ({ onSubmit, onCance
           >
             Back to Login
           </button>
-          
+
           <button
             type="submit"
             disabled={loading}

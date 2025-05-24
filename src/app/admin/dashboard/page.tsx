@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import BasicAdminLayout from "@/components/admin/BasicAdminLayout";
 
 // Stats card component
@@ -45,11 +45,11 @@ export default function Dashboard() {
     lowStockProducts: 0,
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const supabase = createClientComponentClient();
 
         // Fetch products count
         const { count: productsCount, error: productsError } = await supabase

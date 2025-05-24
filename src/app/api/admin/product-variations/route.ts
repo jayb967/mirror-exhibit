@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
+import { verifyAdminAccess } from '@/utils/admin-auth';
 
 // Create a Supabase client with the service role key
 const getAdminClient = () => {
@@ -22,30 +21,13 @@ const getAdminClient = () => {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
+    // Verify admin access using centralized utility
+    const authResult = await verifyAdminAccess({
+      operation: 'create/update product variations'
+    });
 
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Get user role
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
-    // Only allow admins to create/update product variations
-    if (!userData || userData.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
-      );
+    if (!authResult.success) {
+      return authResult.error;
     }
 
     // Get request body
@@ -160,6 +142,70 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error in product variation API:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'An unknown error occurred' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * API endpoint to delete product variations with admin privileges
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    // Verify admin access using centralized utility
+    const authResult = await verifyAdminAccess({
+      operation: 'delete product variations'
+    });
+
+    if (!authResult.success) {
+      return authResult.error;
+    }
+
+    // Get request body
+    const body = await request.json();
+    const { id, productId, sizeId, frameTypeId } = body;
+
+    if (!id && (!productId || !sizeId || !frameTypeId)) {
+      return NextResponse.json(
+        { error: 'Either variation ID or product ID + size ID + frame type ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get admin client
+    const adminClient = getAdminClient();
+
+    let deleteQuery = adminClient.from('product_variations').delete();
+
+    if (id) {
+      // Delete by ID
+      deleteQuery = deleteQuery.eq('id', id);
+    } else {
+      // Delete by combination
+      deleteQuery = deleteQuery
+        .eq('product_id', productId)
+        .eq('size_id', sizeId)
+        .eq('frame_type_id', frameTypeId);
+    }
+
+    const { error: deleteError } = await deleteQuery;
+
+    if (deleteError) {
+      console.error('Error deleting variation:', deleteError);
+      return NextResponse.json(
+        { error: `Failed to delete variation: ${deleteError.message}` },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      message: 'Successfully deleted variation'
+    });
+
+  } catch (error) {
+    console.error('Error in product variation DELETE API:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'An unknown error occurred' },
       { status: 500 }

@@ -1,4 +1,3 @@
-declare module '@supabase/auth-helpers-nextjs';
 declare module 'stripe';
 declare module 'react-toastify';
 declare module 'papaparse';
@@ -11,4 +10,4 @@ declare module 'next/image' {
     className?: string;
     style?: React.CSSProperties;
   }
-} 
+}

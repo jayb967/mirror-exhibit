@@ -6,12 +6,15 @@ import NiceSelect from '@/ui/NiceSelect';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useClerkAuth';
+import { useClerk } from '@clerk/nextjs';
 import { shippingService, ShippingOption } from '@/services/shippingService';
 import { cartService } from '@/services/cartService';
+import { cartTrackingService } from '@/services/cartTrackingService';
+import { couponService, Coupon } from '@/services/couponService';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 
 const CheckoutArea = () => {
   const router = useRouter();
@@ -19,18 +22,41 @@ const CheckoutArea = () => {
 
   // Authentication and cart hooks
   const { isAuthenticated, user, isLoading } = useAuth();
-  const { cartItems, subtotal, total: cartTotal, loading: cartLoading } = useCart();
+  const { openSignIn } = useClerk();
+
+  // Redux cart data
+  const cartItems = useSelector((state: any) => state.cart.cart);
+  const cartLoading = useSelector((state: any) => state.cart.isLoading);
+
+  // Calculate cart totals
+  const subtotal = cartItems.reduce((sum: number, item: any) => {
+    return sum + ((item.price || item.product?.price || 0) * item.quantity);
+  }, 0);
+
+  const cartTotal = subtotal;
 
   // UI state
   const [activeLogin, setActiveLopin] = useState(false)
   const handleActiveLogin = () => {
-    setActiveLopin(!activeLogin)
+    // Use Clerk modal instead of dropdown
+    openSignIn({ redirectUrl: '/checkout' });
   }
 
   const [activeCoupon, setActiveCoupon] = useState(false)
   const handleActiveCoupon = () => {
     setActiveCoupon(!activeCoupon)
   }
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  // Form validation state
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Payment method state
   const [bankOpen, setBankOpen] = useState<boolean>(false)
@@ -63,14 +89,236 @@ const CheckoutArea = () => {
   // Processing state
   const [processing, setProcessing] = useState(false);
 
+  // Anonymous user and auto-save state
+  const [anonymousUser, setAnonymousUser] = useState<any>(null);
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
   // Redux compatibility (for existing components that might depend on it)
   const productItem = useSelector((state: any) => state.cart.cart);
   const dispatch = useDispatch();
   const { total } = UseCartInfo();
 
+  // Tax state
+  const [taxRate, setTaxRate] = useState(0);
+  const [taxEnabled, setTaxEnabled] = useState(true);
+
   // Calculate totals
-  const tax = subtotal * 0.1; // 10% tax
-  const finalTotal = subtotal + shippingCost + tax;
+  const tax = taxEnabled ? subtotal * taxRate : 0;
+  const finalTotal = subtotal + shippingCost + tax - couponDiscount;
+
+  // Form validation functions
+  const validateEmail = (email: string): string | null => {
+    if (!email.trim()) return 'Email is required';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    return null;
+  };
+
+  const validateRequired = (value: string, fieldName: string): string | null => {
+    if (!value.trim()) return `${fieldName} is required`;
+    return null;
+  };
+
+  const validatePhone = (phone: string): string | null => {
+    if (!phone.trim()) return 'Phone number is required';
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+      return 'Please enter a valid phone number';
+    }
+    return null;
+  };
+
+  const validateForm = (): boolean => {
+    const errors: {[key: string]: string} = {};
+
+    // Email validation
+    const emailError = validateEmail(formData.email);
+    if (emailError) errors.email = emailError;
+
+    // Required field validation
+    const firstNameError = validateRequired(formData.firstName, 'First name');
+    if (firstNameError) errors.firstName = firstNameError;
+
+    const lastNameError = validateRequired(formData.lastName, 'Last name');
+    if (lastNameError) errors.lastName = lastNameError;
+
+    const addressError = validateRequired(formData.address, 'Address');
+    if (addressError) errors.address = addressError;
+
+    const cityError = validateRequired(formData.city, 'City');
+    if (cityError) errors.city = cityError;
+
+    const stateError = validateRequired(formData.state, 'State');
+    if (stateError) errors.state = stateError;
+
+    const postalCodeError = validateRequired(formData.postalCode, 'Postal code');
+    if (postalCodeError) errors.postalCode = postalCodeError;
+
+    // Phone validation
+    const phoneError = validatePhone(formData.phone);
+    if (phoneError) errors.phone = phoneError;
+
+    // Shipping option validation
+    if (!selectedShippingOption || shippingOptions.length === 0) {
+      errors.shipping = 'Please select a shipping option';
+    }
+
+    // Terms validation
+    if (!termsAccepted) {
+      errors.terms = 'You must accept the terms and conditions';
+    }
+
+    setFormErrors(errors);
+
+    // Scroll to first error if any
+    if (Object.keys(errors).length > 0) {
+      const firstErrorField = Object.keys(errors)[0];
+      let element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+
+      // Special cases for non-form fields
+      if (firstErrorField === 'shipping') {
+        element = document.querySelector('.tp-order-info-list-shipping') as HTMLElement;
+      } else if (firstErrorField === 'terms') {
+        element = document.querySelector('#read_all') as HTMLElement;
+      }
+
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (element.focus) element.focus();
+      }
+
+      // Show error message
+      const errorMessages = Object.values(errors);
+      toast.error(`Please fix the following: ${errorMessages[0]}`);
+      return false;
+    }
+
+    return true;
+  };
+
+  // Load tax settings from database
+  useEffect(() => {
+    const loadTaxSettings = async () => {
+      try {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        const { data: settings, error } = await supabase
+          .from('site_settings')
+          .select('tax_rate, tax_enabled')
+          .single();
+
+        if (error) {
+          console.error('Error loading tax settings:', error);
+          // Use default values if settings can't be loaded
+          setTaxRate(0.0875); // Default 8.75%
+          setTaxEnabled(true);
+        } else if (settings) {
+          setTaxRate(settings.tax_rate || 0);
+          setTaxEnabled(settings.tax_enabled !== false);
+        }
+      } catch (error) {
+        console.error('Error loading tax settings:', error);
+        // Use default values
+        setTaxRate(0.0875);
+        setTaxEnabled(true);
+      }
+    };
+
+    loadTaxSettings();
+  }, []);
+
+  // Initialize anonymous user on mount (Clerk version)
+  useEffect(() => {
+    const initializeAnonymousUser = async () => {
+      if (!isAuthenticated && cartItems.length > 0) {
+        try {
+          // For Clerk, create a pseudo-anonymous user using guest token
+          const guestToken = cartService.getGuestToken();
+          const anonymousUserId = `guest_${guestToken}`;
+
+          // Set anonymous user state
+          setAnonymousUser({ id: anonymousUserId, is_anonymous: true });
+
+          // Create Supabase client for guest operations
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          );
+
+          // Guest user data is now handled by cart_tracking table
+          console.log('Anonymous user initialized, cart tracking will handle guest data');
+
+          // Track cart activity
+          await cartTrackingService.trackCartActivity(cartItems, formData.email, true, false);
+        } catch (error) {
+          console.error('Error initializing anonymous user:', error);
+        }
+      }
+    };
+
+    initializeAnonymousUser();
+  }, [isAuthenticated, cartItems.length]);
+
+  // Auto-save guest user data on form field blur
+  const handleAutoSave = async (fieldName: string, value: string) => {
+    if (!isAuthenticated && anonymousUser) {
+      // Clear existing timeout
+      if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
+      }
+
+      // Set new timeout for auto-save
+      const timeout = setTimeout(async () => {
+        try {
+          const guestData: any = {};
+
+          // Map form fields to guest user fields
+          switch (fieldName) {
+            case 'firstName':
+              guestData.first_name = value;
+              break;
+            case 'lastName':
+              guestData.last_name = value;
+              break;
+            case 'email':
+              guestData.email = value;
+              break;
+            case 'phone':
+              guestData.phone = value;
+              break;
+            case 'address':
+              guestData.address = value;
+              break;
+            case 'city':
+              guestData.city = value;
+              break;
+            case 'state':
+              guestData.state = value;
+              break;
+            case 'postalCode':
+              guestData.postal_code = value;
+              break;
+            case 'country':
+              guestData.country = value;
+              break;
+          }
+
+          // Save guest user data
+          await cartTrackingService.trackGuestUserData(guestData);
+
+          // Update cart tracking
+          await cartTrackingService.trackCartActivity(cartItems, formData.email, true, false);
+        } catch (error) {
+          console.error('Error auto-saving guest data:', error);
+        }
+      }, 1000); // Auto-save after 1 second of inactivity
+
+      setAutoSaveTimeout(timeout);
+    }
+  };
 
   // Load shipping options on mount and when address changes
   useEffect(() => {
@@ -89,16 +337,36 @@ const CheckoutArea = () => {
         };
 
         try {
-          const options = await shippingService.getShippingOptions(address, cartItems);
-          setShippingOptions(options);
+          console.log('Loading shipping options for address:', address);
+
+          // Call the API route instead of the service directly
+          const response = await fetch('/api/shipping/rates', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              address,
+              cartItems
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch shipping rates');
+          }
+
+          const data = await response.json();
+          console.log('Received shipping options:', data.options);
+          setShippingOptions(data.options);
 
           // Calculate shipping cost for selected option
-          const cost = await shippingService.calculateShippingCost(
-            cartItems,
-            selectedShippingOption,
-            address
-          );
-          setShippingCost(cost);
+          if (data.options.length > 0) {
+            const selectedOption = data.options.find(option => option.id === selectedShippingOption) || data.options[0];
+            setShippingCost(selectedOption.price);
+            if (!selectedShippingOption) {
+              setSelectedShippingOption(selectedOption.id);
+            }
+          }
         } catch (error) {
           console.error('Error loading shipping options:', error);
         }
@@ -119,10 +387,75 @@ const CheckoutArea = () => {
     }));
   };
 
+  // Handle form input blur for auto-save
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    handleAutoSave(name, value);
+  };
+
   // Handle shipping option change
   const handleShippingChange = async (optionId: string, price: number) => {
     setSelectedShippingOption(optionId);
     setShippingCost(price);
+  };
+
+  // Handle coupon submission
+  const handleCouponSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!couponCode.trim() || appliedCoupon) return;
+
+    setCouponLoading(true);
+    setCouponError(null);
+
+    try {
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          subtotal,
+          shippingAddress: {
+            country: formData.country,
+            state: formData.state,
+            city: formData.city,
+            postalCode: formData.postalCode,
+            address: formData.address,
+            address2: formData.apartment
+          }
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid coupon code');
+      }
+
+      // Coupon is valid
+      setAppliedCoupon(data.coupon);
+      setCouponDiscount(data.discount);
+      setCouponCode('');
+      toast.success(`Coupon applied: ${data.coupon.discount_type === 'percentage'
+        ? `${data.coupon.discount_value}% off`
+        : `$${data.coupon.discount_value.toFixed(2)} off`}`);
+    } catch (error) {
+      console.error('Error applying coupon:', error);
+      setCouponError((error as Error).message);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // Handle coupon removal
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+    setCouponCode('');
+    setCouponError(null);
+    toast.success('Coupon removed');
   };
 
   // Handle form submission
@@ -134,8 +467,8 @@ const CheckoutArea = () => {
       return;
     }
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.address || !formData.city || !formData.state || !formData.postalCode || !formData.phone) {
-      toast.error('Please fill in all required fields');
+    // Validate form data
+    if (!validateForm()) {
       return;
     }
 
@@ -145,11 +478,11 @@ const CheckoutArea = () => {
       // Create order data
       const orderData = {
         items: cartItems.map(item => ({
-          id: item.product_id,
-          name: item.product?.name || 'Product',
-          price: item.product?.price || 0,
+          id: item.product_id || item.id,
+          name: item.title || item.product?.name || 'Product',
+          price: item.price || item.product?.price || 0,
           quantity: item.quantity,
-          image: item.product?.image_url
+          image: item.image || item.product?.image_url
         })),
         customer: {
           email: formData.email,
@@ -224,6 +557,9 @@ const CheckoutArea = () => {
       }
 
       const { url } = await checkoutResponse.json();
+
+      // Track checkout completion
+      await cartTrackingService.updateCheckoutStatus(true, false, formData.email);
 
       // Clear cart and redirect to Stripe
       await cartService.clearCart();
@@ -312,12 +648,43 @@ const CheckoutArea = () => {
                   </p>
 
                   <div id="tpCheckoutCouponForm" className="tp-return-customer" style={{ display: `${activeCoupon ? 'block' : 'none'}` }}>
-                    <form onSubmit={e => e.preventDefault()}>
+                    <form onSubmit={handleCouponSubmit}>
                       <div className="tp-return-customer-input">
                         <label>Coupon Code :</label>
-                        <input type="text" placeholder="Coupon" />
+                        <input
+                          type="text"
+                          placeholder="Coupon"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          disabled={couponLoading}
+                        />
                       </div>
-                      <button type="submit" className="tp-btn-theme"><span>Apply</span></button>
+                      {couponError && (
+                        <div style={{ color: 'red', fontSize: '14px', marginBottom: '10px' }}>
+                          {couponError}
+                        </div>
+                      )}
+                      {appliedCoupon && appliedCoupon.discount_type && (
+                        <div style={{ color: 'green', fontSize: '14px', marginBottom: '10px' }}>
+                          Coupon applied: {appliedCoupon.discount_type === 'percentage'
+                            ? `${appliedCoupon.discount_value}% off`
+                            : `$${appliedCoupon.discount_value.toFixed(2)} off`}
+                          <button
+                            type="button"
+                            onClick={handleRemoveCoupon}
+                            style={{ marginLeft: '10px', color: 'red', background: 'none', border: 'none', cursor: 'pointer' }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                      <button
+                        type="submit"
+                        className="tp-btn-theme"
+                        disabled={couponLoading || !couponCode.trim() || !!appliedCoupon}
+                      >
+                        <span>{couponLoading ? 'Applying...' : 'Apply'}</span>
+                      </button>
                     </form>
                   </div>
                 </div>
@@ -338,6 +705,7 @@ const CheckoutArea = () => {
                               name="firstName"
                               value={formData.firstName}
                               onChange={handleInputChange}
+                              onBlur={handleInputBlur}
                               placeholder="First Name"
                               required
                             />
@@ -351,6 +719,7 @@ const CheckoutArea = () => {
                               name="lastName"
                               value={formData.lastName}
                               onChange={handleInputChange}
+                              onBlur={handleInputBlur}
                               placeholder="Last Name"
                               required
                             />
@@ -463,9 +832,18 @@ const CheckoutArea = () => {
                               name="email"
                               value={formData.email}
                               onChange={handleInputChange}
+                              onBlur={handleInputBlur}
                               placeholder="Email Address"
                               required
+                              style={{
+                                borderColor: formErrors.email ? 'red' : undefined
+                              }}
                             />
+                            {formErrors.email && (
+                              <div style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                                {formErrors.email}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="col-md-12">
@@ -526,10 +904,10 @@ const CheckoutArea = () => {
                     {cartItems.map((item, index) => (
                       <li key={index} className="tp-order-info-list-desc">
                         <p>
-                          {item.product?.name || 'Product'}
-                          <span> ${item.product?.price || 0} x {item.quantity}</span>
+                          {item.title || item.product?.name || 'Product'}
+                          <span> ${item.price || item.product?.price || 0} x {item.quantity}</span>
                         </p>
-                        <span>${((item.product?.price || 0) * item.quantity).toFixed(2)}</span>
+                        <span>${((item.price || item.product?.price || 0) * item.quantity).toFixed(2)}</span>
                       </li>
                     ))}
 
@@ -552,43 +930,37 @@ const CheckoutArea = () => {
                                 onChange={() => handleShippingChange(option.id, option.price)}
                               />
                               <label htmlFor={`shipping_${option.id}`}>
-                                {option.name}: <span>${option.price.toFixed(2)}</span>
+                                {option.name}:
+                                <span>
+                                  {option.isFreeShipping ? (
+                                    <>
+                                      <span style={{ textDecoration: 'line-through', color: '#999' }}>
+                                        ${option.originalPrice?.toFixed(2)}
+                                      </span>
+                                      {' '}
+                                      <span style={{ color: '#28a745', fontWeight: 'bold' }}>FREE</span>
+                                    </>
+                                  ) : (
+                                    `$${option.price.toFixed(2)}`
+                                  )}
+                                </span>
+                                {option.estimatedDays && (
+                                  <span style={{ fontSize: '0.9em', color: '#666', marginLeft: '8px' }}>
+                                    ({option.estimatedDays} days)
+                                  </span>
+                                )}
                               </label>
                             </span>
                           ))
                         ) : (
-                          <>
-                            <span>
-                              <input
-                                id="flat_rate"
-                                type="radio"
-                                name="shipping"
-                                checked={selectedShippingOption === 'flat_rate'}
-                                onChange={() => handleShippingChange('flat_rate', 20)}
-                              />
-                              <label htmlFor="flat_rate">Flat rate: <span>$20.00</span></label>
-                            </span>
-                            <span>
-                              <input
-                                id="local_pickup"
-                                type="radio"
-                                name="shipping"
-                                checked={selectedShippingOption === 'local_pickup'}
-                                onChange={() => handleShippingChange('local_pickup', 25)}
-                              />
-                              <label htmlFor="local_pickup">Local pickup: <span>$25.00</span></label>
-                            </span>
-                            <span>
-                              <input
-                                id="free_shipping"
-                                type="radio"
-                                name="shipping"
-                                checked={selectedShippingOption === 'free_shipping'}
-                                onChange={() => handleShippingChange('free_shipping', 0)}
-                              />
-                              <label htmlFor="free_shipping">Free shipping</label>
-                            </span>
-                          </>
+                          <span style={{ color: '#666', fontStyle: 'italic' }}>
+                            Please enter a complete shipping address to see available shipping options.
+                          </span>
+                        )}
+                        {formErrors.shipping && (
+                          <div style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                            {formErrors.shipping}
+                          </div>
                         )}
                       </div>
                     </li>
@@ -597,6 +969,13 @@ const CheckoutArea = () => {
                       <span>Tax</span>
                       <span>${tax.toFixed(2)}</span>
                     </li>
+
+                    {appliedCoupon && couponDiscount > 0 && (
+                      <li className="tp-order-info-list-subtotal">
+                        <span>Discount ({appliedCoupon.code})</span>
+                        <span style={{ color: '#28a745' }}>-${couponDiscount.toFixed(2)}</span>
+                      </li>
+                    )}
 
                     <li className="tp-order-info-list-total">
                       <span>Total</span>
@@ -614,6 +993,8 @@ const CheckoutArea = () => {
                       <p>Pay securely with your credit card. Your payment information is processed securely by Stripe.</p>
                     </div>
                   </div>
+                  {/* Other payment methods commented out - only Stripe for now */}
+                  {/*
                   <div className="tp-checkout-payment-item">
                     <input type="radio" id="back_transfer" name="payment" />
                     <label htmlFor="back_transfer"
@@ -632,7 +1013,7 @@ const CheckoutArea = () => {
                       Cheque Payment
                     </label>
                     <div className="tp-checkout-payment-desc cheque-payment" style={{ display: chequeOpen ? 'block' : '' }}>
-                      <p>Please send a check to our store address. Your order will not be shipped until we receive and process your payment.</p>
+                      <p>Please send a check to our store address. Your order will not be shipping until we receive and process your payment.</p>
                     </div>
                   </div>
                   <div className="tp-checkout-payment-item">
@@ -646,21 +1027,38 @@ const CheckoutArea = () => {
                     <input type="radio" id="paypal" name="payment" />
                     <label htmlFor="paypal">PayPal <img src="assets/img/icon/payment-option.png" alt="" /> <a href="#">What is PayPal?</a></label>
                   </div>
+                  */}
                 </div>
                 <div className="tp-checkout-agree">
                   <div className="tp-checkout-option">
-                    <input id="read_all" type="checkbox" required />
+                    <input
+                      id="read_all"
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      required
+                    />
                     <label htmlFor="read_all">I have read and agree to the website terms and conditions.</label>
                   </div>
+                  {formErrors.terms && (
+                    <div style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                      {formErrors.terms}
+                    </div>
+                  )}
                 </div>
                 <div className="tp-checkout-btn-wrapper">
                   <button
                     type="submit"
                     className="tp-btn-theme text-center w-100"
-                    disabled={processing || cartLoading}
+                    disabled={processing || cartLoading || shippingOptions.length === 0 || !termsAccepted}
                     onClick={handleSubmit}
                   >
-                    <span>{processing ? 'Processing...' : 'Place Order'}</span>
+                    <span>
+                      {processing ? 'Processing...' :
+                       shippingOptions.length === 0 ? 'Enter shipping address to continue' :
+                       !termsAccepted ? 'Please accept terms and conditions' :
+                       'Place Order'}
+                    </span>
                   </button>
                 </div>
               </div>

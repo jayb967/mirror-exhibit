@@ -34,12 +34,14 @@ class StockService {
         };
       }
 
-      const availableStock = product.stock_quantity || 0;
+      // For made-to-order products, stock_quantity might be null or undefined
+      // In this case, we assume unlimited stock is available
+      const availableStock = product.stock_quantity ?? 999999; // Use nullish coalescing
       const hasStock = availableStock >= requestedQuantity;
 
       return {
         hasStock,
-        availableStock,
+        availableStock: product.stock_quantity === null || product.stock_quantity === undefined ? 999999 : availableStock,
         errorMessage: hasStock ? undefined : `Only ${availableStock} items available`
       };
     } catch (error) {

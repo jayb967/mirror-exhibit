@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import ProductOptionsModal from './ProductOptionsModal';
+import { useGlobalModal } from '@/contexts/GlobalModalContext';
 import { toast } from 'react-toastify';
 
 interface ProductCardProps {
@@ -14,7 +14,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }: ProductCardProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openModal: openGlobalModal } = useGlobalModal();
   const [defaultOptions, setDefaultOptions] = useState<{
     sizes: Array<{id: string, name: string}>,
     frameTypes: Array<{id: string, name: string}>
@@ -79,23 +79,19 @@ const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }:
     return defaultOptions.sizes;
   }, [product.variations, defaultOptions.sizes]);
 
-  const openModal = (e?: React.MouseEvent) => {
+  const handleOpenModal = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
     }
-    setIsModalOpen(true);
-  };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-
-    // Ensure the carousel is resumed after the modal is closed
-    if (resumeCarousel) {
-      // Add a small delay to ensure the modal is fully closed
-      setTimeout(() => {
-        resumeCarousel();
-      }, 300);
-    }
+    // Open the global modal with product data
+    openGlobalModal({
+      product,
+      frameTypes: frameTypes,
+      sizes: sizes,
+      pauseCarousel,
+      resumeCarousel
+    });
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -154,22 +150,12 @@ const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }:
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            openModal(e);
+            handleOpenModal(e);
           }}
         >
           ADD TO CART
         </button>
       </div>
-
-      <ProductOptionsModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        product={product}
-        frameTypes={frameTypes}
-        sizes={sizes}
-        pauseCarousel={pauseCarousel}
-        resumeCarousel={resumeCarousel}
-      />
     </>
   );
 };

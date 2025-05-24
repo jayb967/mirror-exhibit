@@ -1,6 +1,7 @@
 import './globals.css';
 import '@/styles/custom-fixes.css';
 import { Inter } from "next/font/google";
+import { ClerkProvider } from '@clerk/nextjs';
 import { AppWrapper } from '@/components/AppWrapper';
 
 const inter = Inter({ subsets: ["latin"] });
@@ -18,12 +19,14 @@ export default function RootLayout({
   const [supabaseClient] = useState(() => supabase)
 
   return (
-    <html lang="en">
-      <body suppressHydrationWarning={true} className={inter.className}>
-        <AppWrapper>
-          {children}
-        </AppWrapper>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body suppressHydrationWarning={true} className={inter.className}>
+          <AppWrapper>
+            {children}
+          </AppWrapper>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 import SimpleAdminLayout from '@/components/admin/SimpleAdminLayout';
 import { format } from 'date-fns';
@@ -37,7 +37,7 @@ export default function GuestManagementPage() {
   } | null>(null);
   const [daysOld, setDaysOld] = useState(30);
 
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     fetchGuestUsers();

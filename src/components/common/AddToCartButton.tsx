@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useCart } from '@/contexts/CartContext';
+import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { addToCartWithAuth } from '@/redux/features/cartSlice';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface AddToCartButtonProps {
   productId: string;
@@ -22,7 +24,37 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
 }) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
-  const { addToCart } = useCart();
+  const [product, setProduct] = useState<any>(null);
+  const dispatch = useDispatch();
+  const supabase = createClientComponentClient();
+
+  // Fetch product information
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, name, base_price, image_url')
+          .eq('id', productId)
+          .single();
+
+        if (error) throw error;
+
+        setProduct({
+          ...data,
+          title: data.name,
+          price: data.base_price,
+          image: data.image_url
+        });
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      }
+    };
+
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId, supabase]);
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
@@ -42,14 +74,41 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   };
 
   const handleAddToCart = async () => {
+    if (!product) {
+      console.error('Product information not available');
+      return;
+    }
+
     try {
       setLoading(true);
-      await addToCart(productId, quantity);
+
+      console.log('🛒 AddToCartButton: Starting add to cart process');
+      console.log('🛒 Product ID:', productId);
+      console.log('🛒 Product:', product);
+
+      // Create product object for Redux
+      const cartProduct = {
+        id: productId,
+        product_id: productId,
+        title: product.title,
+        quantity: quantity,
+        price: product.price,
+        image: product.image,
+        silent: false
+      };
+
+      console.log('🛒 Cart Product:', cartProduct);
+
+      // Use the new async action that ensures anonymous user is signed in
+      console.log('🛒 Dispatching addToCartWithAuth...');
+      const result = await dispatch(addToCartWithAuth(cartProduct));
+      console.log('🛒 addToCartWithAuth result:', result);
+
       if (onAddedToCart) {
         onAddedToCart();
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error('🛒 Error adding to cart:', error);
     } finally {
       setLoading(false);
     }
@@ -92,8 +151,8 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
       <button
         type="button"
         onClick={handleAddToCart}
-        disabled={loading}
-        className={`add-to-cart-btn ${loading ? 'tw-opacity-70 tw-cursor-not-allowed' : ''}`}
+        disabled={loading || !product}
+        className={`add-to-cart-btn ${(loading || !product) ? 'tw-opacity-70 tw-cursor-not-allowed' : ''}`}
         style={width ? { width } : {}}
       >
         {loading ? (
@@ -104,6 +163,8 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
             </svg>
             Adding...
           </span>
+        ) : !product ? (
+          'Loading...'
         ) : (
           buttonText
         )}

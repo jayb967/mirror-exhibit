@@ -11,7 +11,9 @@ import {
   addToCart as reduxAddToCart,
   decrease_quantity as reduxDecreaseQuantity,
   remove_cart_product as reduxRemoveProduct,
-  clear_cart as reduxClearCart
+  clear_cart as reduxClearCart,
+  apply_coupon,
+  remove_coupon
 } from '@/redux/features/cartSlice';
 import '@/styles/mobile-cart.css';
 
@@ -20,6 +22,8 @@ const CartPage = () => {
 
   // Get Redux cart data
   const cartItems = useSelector((state: any) => state.cart.cart);
+  const appliedCoupon = useSelector((state: any) => state.cart.appliedCoupon);
+  const discount = useSelector((state: any) => state.cart.discount);
 
   // Calculate totals from Redux cart
   const subtotal = cartItems.reduce((sum: number, item: any) => {
@@ -30,8 +34,6 @@ const CartPage = () => {
   const total = subtotal + tax;
 
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [discount, setDiscount] = useState(0);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
   // Removed shipping options - will be handled on checkout page
@@ -139,8 +141,9 @@ const CartPage = () => {
 
       const successMessage = `Coupon applied: ${formatDiscount(data.coupon)}`;
       setCouponSuccess(successMessage);
-      setAppliedCoupon(data.coupon);
-      setDiscount(data.discount);
+
+      // Apply coupon to Redux store
+      dispatch(apply_coupon({ coupon: data.coupon, discount: data.discount }));
       setCouponCode('');
 
       // Show success toast
@@ -160,8 +163,9 @@ const CartPage = () => {
     setCouponCode('');
     setCouponError(null);
     setCouponSuccess(null);
-    setAppliedCoupon(null);
-    setDiscount(0);
+
+    // Remove coupon from Redux store
+    dispatch(remove_coupon());
   };
 
   // Calculate final total (shipping will be added on checkout page)

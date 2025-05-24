@@ -9,13 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.19.5",
     "@heroicons/react": "^2.0.18",
     "@hookform/resolvers": "^3.3.4",
     "@popperjs/core": "^2.11.8",
     "@reduxjs/toolkit": "^2.2.2",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.3.0",
-    "@supabase/auth-helpers-nextjs": "^0.7.4",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.1",
     "@types/jquery": "^3.5.29",

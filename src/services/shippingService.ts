@@ -1,6 +1,6 @@
 import { CartItem } from './cartService';
 import { easyshipService, EasyshipAddress, EasyshipPackage, EasyshipRate } from './easyshipService';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { ENABLE_EASYSHIP_INTEGRATION, ENABLE_FREE_SHIPPING_RULES } from '@/config/featureFlags';
 
 // Shipping option types
@@ -14,6 +14,9 @@ export interface ShippingOption {
   courier_name?: string;
   courier_logo?: string;
   service_type?: string;
+  // Free shipping display fields
+  isFreeShipping?: boolean;
+  originalPrice?: number;
 }
 
 // Shipping address type
@@ -159,37 +162,67 @@ class ShippingService {
     address?: ShippingAddress,
     cartItems?: CartItem[]
   ): Promise<ShippingOption[]> {
-    // If no address or invalid address, return standard options
+    // If no address or invalid address, return empty array
     if (!address || !this.isValidAddress(address)) {
-      return this.standardOptions;
+      console.log('Invalid address provided for shipping options');
+      return [];
     }
 
-    // If Easyship integration is disabled, use fallback
+    // If Easyship integration is disabled, return empty array
     if (!this.useEasyship || !process.env.EASYSHIP_API_KEY) {
-      return this.getFallbackShippingOptions(address);
+      console.log('Easyship integration disabled or API key missing');
+      return [];
     }
 
     try {
       // Convert address to Easyship format
       const destinationAddress = this.convertToEasyshipAddress(address);
+      console.log('Converted address for Easyship:', destinationAddress);
 
       // Get package details from cart items
       const packages = this.getPackagesFromCart(cartItems);
+      console.log('Package details for Easyship:', packages);
+
+      // Get origin address from admin settings
+      const originAddress = await this.getOriginAddressFromSettings();
+      console.log('Origin address for Easyship:', originAddress);
 
       // Get rates from Easyship
       const rates = await easyshipService.getRates({
-        origin_address: this.storeAddress,
+        origin_address: originAddress,
         destination_address: destinationAddress,
         packages: packages,
         output_currency: 'USD'
       });
 
+      console.log('Received rates from Easyship:', rates);
+
       // Convert Easyship rates to shipping options
-      return this.convertRatesToOptions(rates);
+      const options = this.convertRatesToOptions(rates);
+
+      // Apply free shipping if eligible
+      const subtotal = cartItems?.reduce((sum, item) => {
+        return sum + (item.price || item.product?.price || 0) * item.quantity;
+      }, 0) || 0;
+
+      const isEligible = await this.isEligibleForFreeShipping(subtotal, cartItems, address);
+
+      if (isEligible) {
+        // Mark standard shipping as free but still show all options
+        options.forEach(option => {
+          if (this.isStandardShipping(option.id) || option.service_type === 'standard') {
+            option.originalPrice = option.price;
+            option.price = 0;
+            option.isFreeShipping = true;
+          }
+        });
+      }
+
+      return options;
     } catch (error) {
       console.error('Error getting shipping options from Easyship:', error);
-      // Fallback to standard options
-      return this.getFallbackShippingOptions(address);
+      // Return empty array instead of fallback options
+      return [];
     }
   }
 
@@ -441,77 +474,144 @@ class ShippingService {
         return subtotal >= this.freeShippingThreshold;
       }
 
-      // If free shipping rules are disabled, just check against the default threshold
-      if (!ENABLE_FREE_SHIPPING_RULES) {
-        return subtotal >= this.freeShippingThreshold;
-      }
-
-      // Create Supabase client
-      const supabase = createClientComponentClient();
-
-      // Get active shipping rules
-      const { data: rules, error } = await supabase
-        .from('shipping_rules')
-        .select('*')
-        .eq('is_active', true)
-        .order('priority', { ascending: false });
-
-      if (error || !rules || rules.length === 0) {
-        // Fallback to default threshold if no rules found
-        return subtotal >= this.freeShippingThreshold;
-      }
-
-      // Check country-specific rules first
-      const countryCode = this.getCountryCode(address.country);
-
-      // Check each rule in order of priority
-      for (const rule of rules) {
-        // Skip rules that don't apply to this country
-        if (rule.country_codes && rule.country_codes.length > 0) {
-          if (!rule.country_codes.includes(countryCode)) {
-            continue;
-          }
-        }
-
-        // Check rule type
-        switch (rule.rule_type) {
-          case 'threshold':
-            // Check if subtotal meets the threshold
-            if (subtotal >= rule.threshold_amount) {
-              return true;
-            }
-            break;
-
-          case 'category_specific':
-            // Check if any items in the cart belong to the specified category
-            if (rule.category_id && cartItems.some(item =>
-              item.product?.category_id === rule.category_id &&
-              (item.product?.price || 0) * item.quantity >= rule.threshold_amount
-            )) {
-              return true;
-            }
-            break;
-
-          case 'product_specific':
-            // Check if the specified product is in the cart
-            if (rule.product_id && cartItems.some(item =>
-              item.product_id === rule.product_id
-            )) {
-              return true;
-            }
-            break;
-
-          default:
-            break;
-        }
-      }
-
-      // If no rules matched, check against the default threshold
-      return subtotal >= this.freeShippingThreshold;
+      // Get free shipping threshold from admin settings
+      const threshold = await this.getFreeShippingThresholdFromSettings();
+      return subtotal >= threshold;
     } catch (error) {
       console.error('Error checking free shipping eligibility:', error);
       // Fallback to default threshold
       return subtotal >= this.freeShippingThreshold;
+    }
+  }
+
+  /**
+   * Process shipping rules to determine free shipping eligibility
+   * @param rules Shipping rules from database
+   * @param subtotal Order subtotal
+   * @param cartItems Cart items
+   * @param address Shipping address
+   * @returns Boolean indicating if eligible for free shipping
+   */
+  private processShippingRules(
+    rules: any[],
+    subtotal: number,
+    cartItems?: CartItem[],
+    address?: ShippingAddress
+  ): boolean {
+    // Check country-specific rules first
+    const countryCode = address ? this.getCountryCode(address.country) : 'US';
+
+    // Check each rule in order of priority
+    for (const rule of rules) {
+      // Skip rules that don't apply to this country
+      if (rule.country_codes && rule.country_codes.length > 0) {
+        if (!rule.country_codes.includes(countryCode)) {
+          continue;
+        }
+      }
+
+      // Check rule type
+      switch (rule.rule_type) {
+        case 'threshold':
+          // Check if subtotal meets the threshold
+          if (subtotal >= rule.threshold_amount) {
+            return true;
+          }
+          break;
+
+        case 'category_specific':
+          // Check if any items in the cart belong to the specified category
+          if (rule.category_id && cartItems && cartItems.some(item =>
+            item.product?.category_id === rule.category_id &&
+            (item.product?.price || 0) * item.quantity >= rule.threshold_amount
+          )) {
+            return true;
+          }
+          break;
+
+        case 'product_specific':
+          // Check if the specified product is in the cart
+          if (rule.product_id && cartItems && cartItems.some(item =>
+            item.product_id === rule.product_id
+          )) {
+            return true;
+          }
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    // If no rules matched, check against the default threshold
+    return subtotal >= this.freeShippingThreshold;
+  }
+
+  /**
+   * Get free shipping threshold from admin settings
+   * @returns Free shipping threshold amount
+   */
+  private async getFreeShippingThresholdFromSettings(): Promise<number> {
+    try {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const { data: settings, error } = await supabase
+        .from('site_settings')
+        .select('free_shipping_threshold')
+        .single();
+
+      if (error || !settings) {
+        console.log('No admin settings found, using default threshold');
+        return this.freeShippingThreshold;
+      }
+
+      return settings.free_shipping_threshold || this.freeShippingThreshold;
+    } catch (error) {
+      console.log('Error fetching admin settings, using default threshold:', error);
+      return this.freeShippingThreshold;
+    }
+  }
+
+  /**
+   * Get origin address from admin settings
+   * @returns Origin address for shipping
+   */
+  private async getOriginAddressFromSettings(): Promise<EasyshipAddress> {
+    try {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const { data: settings, error } = await supabase
+        .from('site_settings')
+        .select('origin_address')
+        .single();
+
+      if (error || !settings || !settings.origin_address) {
+        console.log('No origin address found in admin settings, using default');
+        return this.storeAddress;
+      }
+
+      const originAddress = settings.origin_address;
+      return {
+        line_1: originAddress.address || this.storeAddress.line_1,
+        line_2: originAddress.address2 || '',
+        city: originAddress.city || this.storeAddress.city,
+        state: originAddress.state || this.storeAddress.state,
+        postal_code: originAddress.postalCode || this.storeAddress.postal_code,
+        country_alpha2: this.getCountryCode(originAddress.country || 'US'),
+        contact_name: originAddress.name || this.storeAddress.contact_name,
+        company_name: originAddress.company || 'Mirror Exhibit',
+        phone_number: originAddress.phone || this.storeAddress.phone_number,
+        email: originAddress.email || ''
+      };
+    } catch (error) {
+      console.log('Error fetching origin address from admin settings, using default:', error);
+      return this.storeAddress;
     }
   }
 
@@ -537,55 +637,40 @@ class ShippingService {
    */
   async getFreeShippingThreshold(countryCode?: string): Promise<number> {
     try {
-      // If no country code, return default threshold
-      if (!countryCode) {
-        return this.freeShippingThreshold;
-      }
-
-      // If free shipping rules are disabled, just return the default threshold
-      if (!ENABLE_FREE_SHIPPING_RULES) {
-        return this.freeShippingThreshold;
-      }
-
-      // Create Supabase client
-      const supabase = createClientComponentClient();
-
-      // Get active threshold-based shipping rules for this country
-      const { data: rules, error } = await supabase
-        .from('shipping_rules')
-        .select('*')
-        .eq('is_active', true)
-        .eq('rule_type', 'threshold')
-        .order('priority', { ascending: false });
-
-      if (error || !rules || rules.length === 0) {
-        // Fallback to default threshold if no rules found
-        return this.freeShippingThreshold;
-      }
-
-      // Find country-specific rule
-      const countryRule = rules.find(rule =>
-        rule.country_codes &&
-        rule.country_codes.includes(countryCode)
-      );
-
-      // Find global rule (no country restriction)
-      const globalRule = rules.find(rule =>
-        !rule.country_codes ||
-        rule.country_codes.length === 0
-      );
-
-      // Return threshold from country-specific rule, global rule, or default
-      if (countryRule && countryRule.threshold_amount) {
-        return countryRule.threshold_amount;
-      } else if (globalRule && globalRule.threshold_amount) {
-        return globalRule.threshold_amount;
-      } else {
-        return this.freeShippingThreshold;
-      }
+      // Use admin settings for free shipping threshold
+      return await this.getFreeShippingThresholdFromSettings();
     } catch (error) {
       console.error('Error getting free shipping threshold:', error);
       // Fallback to default threshold
+      return this.freeShippingThreshold;
+    }
+  }
+
+  /**
+   * Process threshold rules to find the appropriate threshold
+   * @param rules Threshold rules from database
+   * @param countryCode Country code
+   * @returns Threshold amount
+   */
+  private processThresholdRules(rules: any[], countryCode: string): number {
+    // Find country-specific rule
+    const countryRule = rules.find(rule =>
+      rule.country_codes &&
+      rule.country_codes.includes(countryCode)
+    );
+
+    // Find global rule (no country restriction)
+    const globalRule = rules.find(rule =>
+      !rule.country_codes ||
+      rule.country_codes.length === 0
+    );
+
+    // Return threshold from country-specific rule, global rule, or default
+    if (countryRule && countryRule.threshold_amount) {
+      return countryRule.threshold_amount;
+    } else if (globalRule && globalRule.threshold_amount) {
+      return globalRule.threshold_amount;
+    } else {
       return this.freeShippingThreshold;
     }
   }
@@ -656,9 +741,12 @@ class ShippingService {
         value_currency: 'USD'
       }));
 
+      // Get origin address from settings
+      const originAddress = await this.getOriginAddressFromSettings();
+
       // Create shipment in Easyship
       const shipment = await easyshipService.createShipment({
-        origin_address: this.storeAddress,
+        origin_address: originAddress,
         destination_address: easyshipAddress,
         packages: easyshipPackages,
         selected_courier_id: selectedCourierId,

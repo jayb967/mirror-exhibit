@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
-import { useCart } from '@/contexts/CartContext';
+import { useSelector } from 'react-redux';
 import { cartService } from '@/services/cartService';
 
 interface OneClickCheckoutProps {
@@ -34,7 +34,13 @@ interface SavedPaymentMethod {
 }
 
 const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disabled = false }) => {
-  const { cartItems, subtotal } = useCart();
+  // Redux cart data
+  const cartItems = useSelector((state: any) => state.cart.cart);
+
+  // Calculate subtotal
+  const subtotal = cartItems.reduce((sum: number, item: any) => {
+    return sum + (item.price * item.quantity);
+  }, 0);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [hasOneClickSetup, setHasOneClickSetup] = useState(false);
@@ -47,15 +53,15 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
     const fetchSavedData = async () => {
       try {
         setLoading(true);
-        
+
         // Check if user is authenticated
         const { data: { user } } = await supabase.auth.getUser();
-        
+
         if (!user) {
           setHasOneClickSetup(false);
           return;
         }
-        
+
         // Fetch default address
         const { data: addresses, error: addressError } = await supabase
           .from('shipping_addresses')
@@ -64,11 +70,11 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
           .eq('is_default', true)
           .limit(1)
           .single();
-          
+
         if (addressError && addressError.code !== 'PGRST116') {
           console.error('Error fetching default address:', addressError);
         }
-        
+
         // Fetch default payment method
         const { data: paymentMethods, error: paymentError } = await supabase
           .from('payment_methods')
@@ -77,14 +83,14 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
           .eq('is_default', true)
           .limit(1)
           .single();
-          
+
         if (paymentError && paymentError.code !== 'PGRST116') {
           console.error('Error fetching default payment method:', paymentError);
         }
-        
+
         setDefaultAddress(addresses || null);
         setDefaultPaymentMethod(paymentMethods || null);
-        
+
         // Check if one-click checkout is available
         setHasOneClickSetup(!!addresses && !!paymentMethods);
       } catch (error) {
@@ -93,7 +99,7 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
         setLoading(false);
       }
     };
-    
+
     fetchSavedData();
   }, [supabase]);
 
@@ -103,18 +109,18 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
       toast.error('One-click checkout is not set up');
       return;
     }
-    
+
     try {
       setProcessing(true);
-      
+
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         toast.error('Please sign in to use one-click checkout');
         return;
       }
-      
+
       // Create order in the database
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -144,11 +150,11 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
         })
         .select('id')
         .single();
-        
+
       if (orderError) throw orderError;
-      
+
       if (!order) throw new Error('Failed to create order');
-      
+
       // Create order items
       const orderItems = cartItems.map(item => ({
         order_id: order.id,
@@ -156,13 +162,13 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
         quantity: item.quantity,
         price: item.product?.price || 0
       }));
-      
+
       const { error: orderItemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
-        
+
       if (orderItemsError) throw orderItemsError;
-      
+
       // Process payment with saved payment method
       const response = await fetch('/api/process-one-click-payment', {
         method: 'POST',
@@ -174,17 +180,17 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
           paymentMethodId: defaultPaymentMethod.id
         }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to process payment');
       }
-      
+
       // Clear cart after successful checkout
       await cartService.clearCart();
-      
+
       toast.success('Order placed successfully!');
-      
+
       // Redirect to order confirmation
       window.location.href = `/order/success?order_id=${order.id}`;
     } catch (error) {
@@ -250,7 +256,7 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
           </>
         )}
       </button>
-      
+
       <div className="tw-mt-2 tw-flex tw-items-center tw-justify-center tw-text-xs tw-text-gray-500">
         <div className="tw-flex tw-items-center">
           <span>Using saved card:</span>

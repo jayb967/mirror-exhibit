@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from '@/contexts/CartContext';
+import { useSelector } from 'react-redux';
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 interface CartButtonProps {
@@ -10,7 +10,14 @@ interface CartButtonProps {
 }
 
 export default function CartButton({ className = "" }: CartButtonProps) {
-  const { itemCount } = useCart();
+  // Redux cart data
+  const cartItems = useSelector((state: any) => state.cart.cart);
+
+  // Calculate item count
+  const itemCount = cartItems.reduce((sum: number, item: any) => {
+    return sum + item.quantity;
+  }, 0);
+
   const router = useRouter();
   const supabase = createClientComponentClient();
 

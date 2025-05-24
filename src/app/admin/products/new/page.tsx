@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import SimpleAdminLayout from '@/components/admin/SimpleAdminLayout';
 
 export default function AddProductPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
   const [saving, setSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

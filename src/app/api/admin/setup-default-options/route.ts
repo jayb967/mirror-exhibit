@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
-import { getAdminClient } from '@/lib/supabase-admin';
+import { getAdminClient } from '@/utils/supabase/admin';
 
 /**
  * API endpoint to set up default product sizes and frame types
@@ -13,21 +13,21 @@ export async function POST(request: NextRequest) {
     // Check authentication
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
-    
+
     // Get user role
     const { data: userData } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
       .single();
-    
+
     // Only allow admins to run this setup
     if (!userData || userData.role !== 'admin') {
       return NextResponse.json(
@@ -35,10 +35,10 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
-    
+
     // Get admin client
     const adminClient = getAdminClient();
-    
+
     // Default sizes to create
     const defaultSizes = [
       {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         price_adjustment: 40
       }
     ];
-    
+
     // Default frame types to create
     const defaultFrameTypes = [
       {
@@ -92,22 +92,22 @@ export async function POST(request: NextRequest) {
         price_adjustment: 35
       }
     ];
-    
+
     // Check if sizes already exist
     const { data: existingSizes } = await adminClient
       .from('product_sizes')
       .select('count')
       .single();
-    
+
     // Check if frame types already exist
     const { data: existingFrameTypes } = await adminClient
       .from('frame_types')
       .select('count')
       .single();
-    
+
     const sizeCount = existingSizes?.count || 0;
     const frameTypeCount = existingFrameTypes?.count || 0;
-    
+
     // Only create default sizes if none exist
     if (sizeCount === 0) {
       for (const size of defaultSizes) {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
             ...size,
             is_active: true
           });
-        
+
         if (error) {
           console.error('Error creating size:', error);
           return NextResponse.json(
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    
+
     // Only create default frame types if none exist
     if (frameTypeCount === 0) {
       for (const frameType of defaultFrameTypes) {
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
             ...frameType,
             is_active: true
           });
-        
+
         if (error) {
           console.error('Error creating frame type:', error);
           return NextResponse.json(
@@ -149,13 +149,13 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    
+
     return NextResponse.json({
       message: 'Default product options set up successfully',
       sizes_created: sizeCount === 0 ? defaultSizes.length : 0,
       frame_types_created: frameTypeCount === 0 ? defaultFrameTypes.length : 0
     });
-    
+
   } catch (error) {
     console.error('Error in setup default options API:', error);
     return NextResponse.json(

@@ -7,7 +7,7 @@ import shop_sm_img_1 from "@/assets/img/blog/details-sm-1-1.jpg";
 import shop_sm_img_2 from "@/assets/img/blog/details-sm-1-2.jpg";
 import shop_sm_img_3 from "@/assets/img/blog/details-sm-1-3.jpg";
 import { useDispatch } from 'react-redux';
-import { addToCart } from '@/redux/features/cartSlice';
+import { addToCartWithAuth } from '@/redux/features/cartSlice';
 import ReactPaginate from 'react-paginate';
 import InputRange from '@/ui/InputRange';
 // Commented out RTK Query hook to use direct fetch instead
@@ -188,11 +188,13 @@ const ProductArea = () => {
   };
 
   const dispatch = useDispatch();
-  const handleAddToCart = (item) => {
-    dispatch(addToCart({
+  const handleAddToCart = (item: any) => {
+    // Use proper product data structure for Redux
+    (dispatch as any)(addToCartWithAuth({
       id: item._id || item.id,
+      product_id: item._id || item.id,
       title: item.title || item.name,
-      price: item.price,
+      price: item.base_price || item.price,
       image: item.image || item.image_url,
       quantity: 1,
     }));

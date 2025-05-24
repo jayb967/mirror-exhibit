@@ -5,6 +5,8 @@
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
@@ -13,6 +15,8 @@
   animation: fadeIn 0.3s ease;
   /* Ensure the modal is always centered regardless of carousel position */
   transform: translateZ(0);
+  /* Prevent any scrolling or positioning issues */
+  overflow: hidden;
 }
 
 .product-options-modal {
@@ -24,6 +28,9 @@
   overflow-y: auto;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease;
+  /* Ensure the modal itself is properly positioned */
+  position: relative;
+  margin: auto;
 }
 
 .modal-header {
@@ -289,25 +296,147 @@
   background-color: #333;
 }
 
+/* Global Product Modal Styles - Rendered at body level */
+.global-product-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* Higher than any other element */
+  animation: fadeIn 0.3s ease;
+  /* Ensure the modal is always centered regardless of page scroll */
+  transform: translateZ(0);
+  /* Prevent any scrolling or positioning issues */
+  overflow: hidden;
+}
+
+.global-product-modal {
+  background-color: #fff;
+  border-radius: 0;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  /* Ensure the modal itself is properly positioned */
+  position: relative;
+  margin: auto;
+}
+
+/* Copy all the existing modal styles for the global modal */
+.global-product-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.global-product-modal .modal-header h4 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.global-product-modal .modal-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #777;
+  transition: color 0.2s;
+}
+
+.global-product-modal .modal-header .close-btn:hover {
+  color: #000;
+}
+
+.global-product-modal .modal-body {
+  padding: 20px;
+}
+
+.global-product-modal .product-info {
+  margin-bottom: 20px;
+}
+
+.global-product-modal .product-info h5 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.global-product-modal .product-info .price {
+  font-size: 20px;
+  font-weight: 600;
+  color: #222;
+}
+
+.global-product-modal .product-options .option-group {
+  margin-bottom: 20px;
+}
+
+.global-product-modal .product-options label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.global-product-modal .modal-footer {
+  padding: 15px 20px 20px;
+  text-align: center;
+}
+
+.global-product-modal .add-to-cart-btn {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%;
+  border-radius: 0;
+}
+
+.global-product-modal .add-to-cart-btn:hover {
+  background-color: #333;
+}
+
 /* Responsive Styles */
 @media (max-width: 576px) {
-  .product-options-modal {
+  .product-options-modal,
+  .global-product-modal {
     width: 95%;
   }
 
-  .modal-header h4 {
+  .modal-header h4,
+  .global-product-modal .modal-header h4 {
     font-size: 18px;
   }
 
-  .product-info h5 {
+  .product-info h5,
+  .global-product-modal .product-info h5 {
     font-size: 16px;
   }
 
-  .product-info .price {
+  .product-info .price,
+  .global-product-modal .product-info .price {
     font-size: 18px;
   }
 
-  .modal-footer .tp-btn-theme {
+  .modal-footer .tp-btn-theme,
+  .global-product-modal .add-to-cart-btn {
     padding: 10px 20px;
     font-size: 14px;
   }

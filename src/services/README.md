@@ -19,24 +19,17 @@ The core service that handles all cart operations:
 - `clearCart()`: Clears the entire cart
 - `syncCartAfterLogin()`: Synchronizes local cart with database after login
 
-### 2. Cart Context (`src/contexts/CartContext.tsx`)
+### 2. Redux Cart Management (`src/redux/features/cartSlice.ts`)
 
-A React context that provides cart functionality throughout the application:
+Redux-based cart state management with database synchronization:
 
-- Manages cart state (items, totals, loading state)
-- Provides cart operations to components
-- Handles cart synchronization on login/logout
-- Listens for real-time updates to cart data in Supabase
+- Manages cart state (items, totals, loading state) in Redux store
+- Provides cart operations through Redux actions
+- Handles cart synchronization with database after login/logout
+- Supports both authenticated and anonymous users
+- Auto-saves cart data to cart_tracking table for analytics
 
-### 3. Cart Hook (`src/hooks/useCartService.ts`)
-
-A custom hook for using the cart service directly:
-
-- Provides cart data and operations with loading state
-- Calculates cart totals (subtotal, tax, total)
-- Manages cart item count
-
-### 4. Cart Components
+### 3. Cart Components
 
 - `CartPage.tsx`: The main cart page component
 - `AddToCartButton.tsx`: A reusable button for adding products to cart
@@ -199,16 +192,24 @@ A service that ensures compatibility between imported products and existing prod
 
 ### Cart Usage
 
-#### Adding to Cart
+#### Adding to Cart with Redux
 
 ```tsx
-import { useCart } from '@/contexts/CartContext';
+import { useDispatch } from 'react-redux';
+import { addToCartWithAuth } from '@/redux/features/cartSlice';
 
 function ProductComponent({ product }) {
-  const { addToCart } = useCart();
+  const dispatch = useDispatch();
 
-  const handleAddToCart = () => {
-    addToCart(product.id, 1);
+  const handleAddToCart = async () => {
+    await dispatch(addToCartWithAuth({
+      id: product.id,
+      product_id: product.id,
+      title: product.name,
+      quantity: 1,
+      price: product.price,
+      image: product.image
+    }));
   };
 
   return (
@@ -235,27 +236,27 @@ function ProductComponent({ product }) {
 }
 ```
 
-#### Displaying Cart Items
+#### Displaying Cart Items with Redux
 
 ```tsx
-import { useCart } from '@/contexts/CartContext';
+import { useSelector } from 'react-redux';
+import UseCartInfo from '@/hooks/UseCartInfo';
 
 function CartComponent() {
-  const { cartItems, subtotal, tax, total } = useCart();
+  const cartItems = useSelector((state: any) => state.cart.cart);
+  const { total, quantity } = UseCartInfo();
 
   return (
     <div>
-      <h2>Your Cart</h2>
+      <h2>Your Cart ({quantity} items)</h2>
       {cartItems.map(item => (
         <div key={item.id}>
-          <p>{item.product.name}</p>
+          <p>{item.title}</p>
           <p>Quantity: {item.quantity}</p>
-          <p>Price: ${item.product.price}</p>
+          <p>Price: ${item.price}</p>
         </div>
       ))}
       <div>
-        <p>Subtotal: ${subtotal}</p>
-        <p>Tax: ${tax}</p>
         <p>Total: ${total}</p>
       </div>
     </div>

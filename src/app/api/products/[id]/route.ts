@@ -8,17 +8,17 @@ export async function GET(
 ) {
   try {
     const id = params.id;
-    
+
     if (!id) {
       return NextResponse.json(
         { error: 'Product ID is required' },
         { status: 400 }
       );
     }
-    
+
     const supabase = createRouteHandlerClient({ cookies });
-    
-    // Fetch the product with its variations, sizes, and frame types
+
+    // Fetch the product with its variations, sizes, frame types, and images
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -29,11 +29,12 @@ export async function GET(
           *,
           size:product_sizes(*),
           frame_type:frame_types(*)
-        )
+        ),
+        product_images(*)
       `)
       .eq('id', id)
       .single();
-    
+
     if (error) {
       console.error('Error fetching product:', error);
       return NextResponse.json(
@@ -41,14 +42,14 @@ export async function GET(
         { status: 500 }
       );
     }
-    
+
     if (!data) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
       );
     }
-    
+
     // Transform the data to match the expected format
     const transformedData = {
       success: true,
@@ -61,10 +62,11 @@ export async function GET(
         brand: data.brand?.name || 'Unknown Brand',
         category: data.category?.name || 'Uncategorized',
         variations: data.variations || [],
+        product_images: data.product_images || [],
         is_featured: data.is_featured || false
       }
     };
-    
+
     return NextResponse.json(transformedData);
   } catch (error) {
     console.error('Error in product API:', error);

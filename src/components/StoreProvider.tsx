@@ -6,7 +6,9 @@ import { configureStore } from '@reduxjs/toolkit'
 import cartSlice, { get_cart_products, syncCartWithDatabase, loadCartFromDatabase } from '@/redux/features/cartSlice'
 import productSlice from '@/redux/features/productSlice'
 import { productApi } from '@/redux/features/productApi'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useAuth } from '@/hooks/useClerkAuth'
+import { createClient } from '@supabase/supabase-js'
+import { cartTrackingService } from '@/services/cartTrackingService'
 
 // Middleware to sync cart changes to database with debouncing and error handling
 let syncTimeout: NodeJS.Timeout | null = null;
@@ -67,33 +69,48 @@ type StoreType = ReturnType<typeof createStore>
 // Component to initialize cart and handle auth state changes
 function CartInitializer() {
   const dispatch = useDispatch()
-  const supabase = createClientComponentClient()
+  const { isAuthenticated, user, isLoading } = useAuth()
+  const prevAuthState = useRef(isAuthenticated)
 
   useEffect(() => {
     // Load cart from localStorage on app startup
     dispatch(get_cart_products())
+  }, [dispatch])
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        // User just logged in - load cart from database and merge with local cart
+  useEffect(() => {
+    // Handle auth state changes
+    if (isLoading) return // Don't do anything while auth is loading
+
+    const wasAuthenticated = prevAuthState.current
+    const isNowAuthenticated = isAuthenticated
+
+    const handleAuthChange = async () => {
+      if (!wasAuthenticated && isNowAuthenticated && user) {
+        // User just logged in - convert guest cart and sync
+        console.log('User logged in, converting guest cart and syncing...')
         try {
-          await dispatch(loadCartFromDatabase())
+          // Convert guest cart to user cart in cart_tracking
+          await cartTrackingService.convertGuestToUser(user.id)
+
+          // Load cart from database and merge with local cart
+          dispatch(loadCartFromDatabase())
           // Sync any local cart items to database
-          await dispatch(syncCartWithDatabase())
+          dispatch(syncCartWithDatabase())
         } catch (error) {
           console.error('Error syncing cart after login:', error)
         }
-      } else if (event === 'SIGNED_OUT') {
+      } else if (wasAuthenticated && !isNowAuthenticated) {
         // User logged out - continue with local storage only
+        console.log('User logged out, using local cart...')
         dispatch(get_cart_products())
       }
-    })
 
-    return () => {
-      subscription.unsubscribe()
+      // Update previous auth state
+      prevAuthState.current = isAuthenticated
     }
-  }, [dispatch, supabase])
+
+    handleAuthChange()
+  }, [isAuthenticated, user, isLoading, dispatch])
 
   return null
 }

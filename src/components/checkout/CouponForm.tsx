@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Coupon, couponService } from '@/services/couponService';
-import { useCart } from '@/contexts/CartContext';
+import { useSelector } from 'react-redux';
 import { shippingService, ShippingAddress } from '@/services/shippingService';
 
 interface CouponFormProps {
@@ -22,7 +22,8 @@ const CouponForm: React.FC<CouponFormProps> = ({
   shippingAddress,
   showFreeShippingWarning = false
 }) => {
-  const { cartItems } = useCart();
+  // Redux cart data
+  const cartItems = useSelector((state: any) => state.cart.cart);
   const [couponCode, setCouponCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

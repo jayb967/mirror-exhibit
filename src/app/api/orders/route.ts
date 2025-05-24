@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { auth } from '@clerk/nextjs/server';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -139,16 +139,16 @@ export async function POST(req: Request) {
       // For now, we'll just store the flag in the order
       await supabase
         .from('orders')
-        .update({ 
-          notes: `${notes || ''}\n[CREATE_ACCOUNT_REQUESTED]`.trim() 
+        .update({
+          notes: `${notes || ''}\n[CREATE_ACCOUNT_REQUESTED]`.trim()
         })
         .eq('id', orderId);
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       orderId,
       order,
-      message: 'Order created successfully' 
+      message: 'Order created successfully'
     });
 
   } catch (error) {
@@ -165,15 +165,15 @@ export async function POST(req: Request) {
  */
 export async function GET(req: Request) {
   try {
-    // Create Supabase client
-    const supabase = createRouteHandlerClient({ cookies });
+    // Check authentication with Clerk
+    const { userId } = await auth();
 
-    // Check if user is authenticated
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Create Supabase client with Clerk auth
+    const supabase = await createServerSupabaseClient();
 
     // Get user's orders
     const { data: orders, error } = await supabase
@@ -193,7 +193,7 @@ export async function GET(req: Request) {
         ),
         shipping_address:shipping_addresses(*)
       `)
-      .eq('user_id', session.user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {

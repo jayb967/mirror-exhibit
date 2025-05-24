@@ -8,6 +8,16 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import AddToCartButton from '@/components/common/AddToCartButton';
 
+interface ProductImage {
+  id: string;
+  product_id: string;
+  image_url: string;
+  alt_text?: string | null;
+  sort_order: number;
+  is_primary: boolean;
+  created_at: string;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -21,6 +31,7 @@ interface Product {
   is_featured: boolean;
   created_at: string;
   updated_at: string;
+  product_images?: ProductImage[];
 }
 
 interface ProductDetailProps {
@@ -31,8 +42,36 @@ interface ProductDetailProps {
 export default function ProductDetail({ product, relatedProducts }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const supabase = createClientComponentClient();
   const router = useRouter();
+
+  // Get all available images (product_images + fallback to main image_url)
+  const allImages = React.useMemo(() => {
+    const images: ProductImage[] = [];
+
+    // Add images from product_images table
+    if (product.product_images && product.product_images.length > 0) {
+      images.push(...product.product_images.sort((a, b) => a.sort_order - b.sort_order));
+    }
+
+    // If no product_images but has main image_url, add it as fallback
+    if (images.length === 0 && product.image_url) {
+      images.push({
+        id: 'main',
+        product_id: product.id,
+        image_url: product.image_url,
+        alt_text: product.name,
+        sort_order: 1,
+        is_primary: true,
+        created_at: product.created_at
+      });
+    }
+
+    return images;
+  }, [product]);
+
+  const currentImage = allImages[selectedImageIndex] || null;
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -91,20 +130,53 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   return (
     <>
       <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-8 tw-mb-12">
-        {/* Product Image */}
-        <div className="tw-relative tw-h-96 md:tw-h-[500px] tw-rounded-lg tw-overflow-hidden tw-bg-gray-100">
-          {product.image_url ? (
-            <Image
-              src={product.image_url}
-              alt={product.name}
-              className="tw-object-contain tw-object-center"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-            />
-          ) : (
-            <div className="tw-flex tw-items-center tw-justify-center tw-h-full tw-bg-gray-200">
-              <span className="tw-text-gray-400 tw-text-lg">No image available</span>
+        {/* Product Images */}
+        <div className="tw-space-y-4">
+          {/* Main Image */}
+          <div className="tw-relative tw-h-96 md:tw-h-[500px] tw-rounded-lg tw-overflow-hidden tw-bg-gray-100">
+            {currentImage ? (
+              <Image
+                src={currentImage.image_url}
+                alt={currentImage.alt_text || product.name}
+                className="tw-object-contain tw-object-center"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+            ) : (
+              <div className="tw-flex tw-items-center tw-justify-center tw-h-full tw-bg-gray-200">
+                <span className="tw-text-gray-400 tw-text-lg">No image available</span>
+              </div>
+            )}
+          </div>
+
+          {/* Image Thumbnails */}
+          {allImages.length > 1 && (
+            <div className="tw-flex tw-space-x-2 tw-overflow-x-auto tw-pb-2">
+              {allImages.map((image, index) => (
+                <button
+                  key={image.id}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`tw-relative tw-flex-shrink-0 tw-w-20 tw-h-20 tw-rounded-md tw-overflow-hidden tw-border-2 tw-transition-colors ${
+                    index === selectedImageIndex
+                      ? 'tw-border-blue-500'
+                      : 'tw-border-gray-200 hover:tw-border-gray-300'
+                  }`}
+                >
+                  <Image
+                    src={image.image_url}
+                    alt={image.alt_text || `${product.name} ${index + 1}`}
+                    className="tw-object-cover tw-object-center"
+                    fill
+                    sizes="80px"
+                  />
+                  {image.is_primary && (
+                    <div className="tw-absolute tw-top-1 tw-left-1 tw-bg-green-500 tw-text-white tw-text-xs tw-px-1 tw-rounded">
+                      Main
+                    </div>
+                  )}
+                </button>
+              ))}
             </div>
           )}
         </div>

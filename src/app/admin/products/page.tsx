@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import SimpleAdminLayout from '@/components/admin/SimpleAdminLayout';
+import ProductModal from '@/components/admin/ProductModal';
+import { useSearchParams } from 'next/navigation';
 
 interface Product {
   id: string;
@@ -13,14 +15,19 @@ interface Product {
   description: string | null;
   price: number;
   base_price: number;
+  cost?: number | null;
+  discount_price?: number | null;
   stock_quantity: number;
   category: string | null;
+  category_id: string | null;
   image_url: string | null;
   dimensions: string | null;
   material: string | null;
   is_featured: boolean;
+  is_active: boolean;
   meta_title: string | null;
   meta_description: string | null;
+  meta_keywords: string | null;
   created_at: string;
   updated_at: string;
   status?: string | null; // Made optional since it might be missing in some products
@@ -28,7 +35,36 @@ interface Product {
   variations_count?: { count: number }[]; // Array of count objects from Supabase aggregation
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+interface Size {
+  id: string;
+  name: string;
+  dimensions: string;
+  code: string;
+  price_adjustment: number;
+  is_active: boolean;
+}
+
+interface FrameType {
+  id: string;
+  name: string;
+  material: string;
+  color: string | null;
+  description: string | null;
+  price_adjustment: number;
+  is_active: boolean;
+}
+
+
+
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,15 +74,74 @@ export default function ProductsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<string>('');
-  const productsPerPage = 10;
+  const [productsPerPage, setProductsPerPage] = useState(10);
 
-  const supabase = createClientComponentClient();
+  // Filter states
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [showMissingSeoOnly, setShowMissingSeoOnly] = useState(false);
 
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Options data
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [sizes, setSizes] = useState<Size[]>([]);
+  const [frameTypes, setFrameTypes] = useState<FrameType[]>([]);
+
+  const supabase = useSupabaseClient();
+
+  // Handle URL parameters for modal (simplified - no automatic state changes)
   useEffect(() => {
-    fetchProducts();
-  }, [currentPage, sortField, sortDirection]);
+    const editId = searchParams.get('edit');
+    if (editId && products.length > 0 && !isModalOpen) {
+      const product = products.find(p => p.id === editId);
+      if (product) {
+        setEditingProduct(product);
+        setIsModalOpen(true);
+      }
+    }
+  }, [searchParams, products.length]); // Remove isModalOpen dependency to prevent loops
 
-  const fetchProducts = async () => {
+  // Fetch options data
+  const fetchOptionsData = useCallback(async () => {
+    try {
+      // Fetch categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('product_categories')
+        .select('id, name, description')
+        .order('name');
+
+      if (categoriesError) throw categoriesError;
+      setCategories(categoriesData || []);
+
+      // Fetch sizes
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('id, name, dimensions, code, price_adjustment, is_active')
+        .eq('is_active', true)
+        .order('name');
+
+      if (sizesError) throw sizesError;
+      setSizes(sizesData || []);
+
+      // Fetch frame types
+      const { data: frameTypesData, error: frameTypesError } = await supabase
+        .from('frame_types')
+        .select('id, name, material, color, description, price_adjustment, is_active')
+        .eq('is_active', true)
+        .order('name');
+
+      if (frameTypesError) throw frameTypesError;
+      setFrameTypes(frameTypesData || []);
+
+    } catch (error) {
+      console.error('Error fetching options data:', error);
+      toast.error('Failed to load product options');
+    }
+  }, []); // Remove supabase from dependencies to prevent infinite loop
+
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -65,6 +160,11 @@ export default function ProductsPage() {
       // Add search filter if search term exists
       if (searchTerm) {
         query = query.ilike('name', `%${searchTerm}%`);
+      }
+
+      // Add category filter if selected
+      if (selectedCategory) {
+        query = query.eq('category_id', selectedCategory);
       }
 
       // Add sorting with special handling for status field
@@ -86,7 +186,16 @@ export default function ProductsPage() {
 
       if (error) throw error;
 
-      setProducts(data || []);
+      let filteredData = data || [];
+
+      // Apply client-side SEO filter
+      if (showMissingSeoOnly) {
+        filteredData = filteredData.filter(product =>
+          !product.meta_title && !product.meta_description
+        );
+      }
+
+      setProducts(filteredData);
 
       if (count !== null) {
         setTotalPages(Math.ceil(count / productsPerPage));
@@ -97,7 +206,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, productsPerPage, searchTerm, sortField, sortDirection, selectedCategory, showMissingSeoOnly]); // Add filter dependencies
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -292,6 +401,36 @@ export default function ProductsPage() {
     }
   };
 
+  // Modal functions - simplified for instant response
+  const openEditModal = useCallback((product: Product) => {
+    setEditingProduct(product);
+    setIsModalOpen(true);
+  }, []);
+
+  const openCreateModal = useCallback(() => {
+    setEditingProduct(null); // null indicates create mode
+    setIsModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setEditingProduct(null);
+  }, []);
+
+
+
+
+
+  // Fetch options data on component mount only
+  useEffect(() => {
+    fetchOptionsData();
+  }, []); // Only run once on mount
+
+  // Separate effect for fetching products to avoid double calls
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]); // Keep fetchProducts dependency but it's now stable
+
   return (
     <SimpleAdminLayout>
       <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
@@ -304,33 +443,89 @@ export default function ProductsPage() {
             >
               Import Products
             </Link>
-            <Link
-              href="/admin/products/new"
+            <button
+              onClick={openCreateModal}
               className="tw-bg-[#A6A182] tw-text-white tw-px-4 tw-py-2 hover:tw-bg-[#8F8A6F] tw-transition-colors"
             >
               Add Product
-            </Link>
+            </button>
           </div>
         </div>
 
         {/* Search and filters */}
         <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-4 tw-mb-6">
-          <form onSubmit={handleSearch} className="tw-flex tw-flex-col md:tw-flex-row tw-gap-4">
-            <div className="tw-flex-1">
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="tw-w-full tw-px-4 tw-py-2 tw-border tw-border-gray-300 tw-rounded-md"
-                value={searchTerm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-              />
+          <form onSubmit={handleSearch} className="tw-space-y-4">
+            {/* First row: Search and Category */}
+            <div className="tw-flex tw-flex-col md:tw-flex-row tw-gap-4">
+              <div className="tw-flex-1">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  className="tw-w-full tw-px-4 tw-py-2 tw-border tw-border-gray-300 tw-rounded-md"
+                  value={searchTerm}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="tw-w-full md:tw-w-48">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setCurrentPage(1); // Reset to first page when filter changes
+                  }}
+                  className="tw-w-full tw-px-4 tw-py-2 tw-border tw-border-gray-300 tw-rounded-md"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="tw-bg-black tw-text-white tw-px-4 tw-py-2 hover:tw-bg-gray-800 tw-whitespace-nowrap"
+              >
+                Search
+              </button>
             </div>
-            <button
-              type="submit"
-              className="tw-bg-black tw-text-white tw-px-4 tw-py-2 hover:tw-bg-gray-800"
-            >
-              Search
-            </button>
+
+            {/* Second row: Filters and Page Size */}
+            <div className="tw-flex tw-flex-col md:tw-flex-row tw-gap-4 tw-items-center">
+              <div className="tw-flex tw-items-center tw-space-x-4">
+                <label className="tw-flex tw-items-center tw-space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={showMissingSeoOnly}
+                    onChange={(e) => {
+                      setShowMissingSeoOnly(e.target.checked);
+                      setCurrentPage(1); // Reset to first page when filter changes
+                    }}
+                    className="tw-h-4 tw-w-4 tw-rounded tw-border-gray-300 tw-text-[#A6A182] focus:tw-ring-[#A6A182]"
+                  />
+                  <span className="tw-text-sm tw-text-gray-700">Show only missing SEO</span>
+                </label>
+              </div>
+
+              <div className="tw-flex tw-items-center tw-space-x-2 tw-ml-auto">
+                <span className="tw-text-sm tw-text-gray-700">Show:</span>
+                <select
+                  value={productsPerPage}
+                  onChange={(e) => {
+                    setProductsPerPage(Number(e.target.value));
+                    setCurrentPage(1); // Reset to first page when page size changes
+                  }}
+                  className="tw-px-3 tw-py-1 tw-border tw-border-gray-300 tw-rounded-md tw-text-sm"
+                >
+                  <option value={5}>5 per page</option>
+                  <option value={10}>10 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+              </div>
+            </div>
           </form>
         </div>
 
@@ -411,21 +606,8 @@ export default function ProductsPage() {
                         Price {renderSortIcon('price')}
                       </div>
                     </th>
-                    <th
-                      className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider tw-cursor-pointer"
-                      onClick={() => handleSort('stock_quantity')}
-                    >
-                      <div className="tw-flex tw-items-center">
-                        Stock {renderSortIcon('stock_quantity')}
-                      </div>
-                    </th>
-                    <th
-                      className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider tw-cursor-pointer"
-                      onClick={() => handleSort('status')}
-                    >
-                      <div className="tw-flex tw-items-center">
-                        Status {renderSortIcon('status')}
-                      </div>
+                    <th className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">
+                      Status
                     </th>
                     <th
                       className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider tw-cursor-pointer"
@@ -445,8 +627,15 @@ export default function ProductsPage() {
                 </thead>
                 <tbody className="tw-bg-white tw-divide-y tw-divide-gray-200">
                   {products.map((product) => (
-                    <tr key={product.id} className="hover:tw-bg-gray-50">
-                      <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap">
+                    <tr
+                      key={product.id}
+                      className="hover:tw-bg-gray-50 tw-cursor-pointer"
+                      onClick={() => openEditModal(product)}
+                    >
+                      <td
+                        className="tw-px-6 tw-py-4 tw-whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()} // Prevent row click when clicking checkbox
+                      >
                         <input
                           type="checkbox"
                           checked={selectedProducts.includes(product.id)}
@@ -457,9 +646,9 @@ export default function ProductsPage() {
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap">
                         <div className="tw-flex tw-items-center">
                           <div className="tw-flex-shrink-0 tw-h-10 tw-w-10 tw-relative">
-                            {product.main_image_url ? (
+                            {product.image_url ? (
                               <Image
-                                src={product.main_image_url}
+                                src={product.image_url}
                                 alt={product.name}
                                 fill
                                 className="tw-rounded-md tw-object-cover"
@@ -482,55 +671,106 @@ export default function ProductsPage() {
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">
                         {formatCurrency(product.base_price || product.price || 0)}
                       </td>
-                      <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">
-                        <span className={`tw-font-medium ${
-                          // Check if we have variations to show stock
-                          product.variations_count && product.variations_count.length > 0 ?
-                            (product.variations_count[0].count > 0 ? 'tw-text-gray-900' : 'tw-text-red-600') :
-                            (product.stock_quantity < 5 ? 'tw-text-red-600' : 'tw-text-gray-900')
-                        }`}>
-                          {product.variations_count && product.variations_count.length > 0
-                            ? product.variations_count[0].count
-                            : product.stock_quantity || 0}
-                        </span>
-                      </td>
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap">
-                        <span className={`tw-px-2 tw-inline-flex tw-text-xs tw-leading-5 tw-font-semibold tw-rounded-full ${
-                          !product.status
-                            ? 'tw-bg-gray-100 tw-text-gray-800' // Default style for undefined/null status
-                            : product.status === 'active'
-                              ? 'tw-bg-green-100 tw-text-green-800'
-                              : product.status === 'draft'
-                                ? 'tw-bg-gray-100 tw-text-gray-800'
-                                : 'tw-bg-red-100 tw-text-red-800'
-                        }`}>
-                          {product.status
-                            ? product.status.charAt(0).toUpperCase() + product.status.slice(1)
-                            : 'Unknown'}
-                        </span>
+                        {(() => {
+                          const issues = [];
+
+                          // Check for missing description
+                          if (!product.description || product.description.trim() === '') {
+                            issues.push('No desc');
+                          }
+
+                          // Check for missing image
+                          if (!product.image_url && !product.main_image_url) {
+                            issues.push('No image');
+                          }
+
+                          // Check for missing product options (variations)
+                          if (!product.variations_count || product.variations_count.length === 0 || product.variations_count[0].count === 0) {
+                            issues.push('No options');
+                          }
+
+                          if (issues.length > 0) {
+                            return (
+                              <div className="tw-flex tw-flex-wrap tw-gap-1">
+                                {issues.map((issue, index) => (
+                                  <span
+                                    key={index}
+                                    style={{
+                                      backgroundColor: '#fee2e2',
+                                      color: '#dc2626',
+                                      padding: '2px 8px',
+                                      fontSize: '12px',
+                                      borderRadius: '4px',
+                                      fontWeight: '500'
+                                    }}
+                                  >
+                                    {issue}
+                                  </span>
+                                ))}
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <span
+                                style={{
+                                  backgroundColor: '#dcfce7',
+                                  color: '#16a34a',
+                                  padding: '2px 8px',
+                                  fontSize: '12px',
+                                  borderRadius: '4px',
+                                  fontWeight: '500'
+                                }}
+                              >
+                                Complete
+                              </span>
+                            );
+                          }
+                        })()}
                       </td>
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">
                         {formatDate(product.created_at)}
                       </td>
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap">
                         {product.meta_title || product.meta_description ? (
-                          <span className="tw-text-green-600 tw-text-sm">
+                          <span
+                            style={{
+                              backgroundColor: '#dcfce7',
+                              color: '#16a34a',
+                              padding: '2px 8px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              fontWeight: '500'
+                            }}
+                          >
                             ✓ Set up
                           </span>
                         ) : (
-                          <span className="tw-text-red-600 tw-text-sm">
+                          <span
+                            style={{
+                              backgroundColor: '#fee2e2',
+                              color: '#dc2626',
+                              padding: '2px 8px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              fontWeight: '500'
+                            }}
+                          >
                             Not set
                           </span>
                         )}
                       </td>
-                      <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-font-medium">
+                      <td
+                        className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-font-medium"
+                        onClick={(e) => e.stopPropagation()} // Prevent row click when clicking action buttons
+                      >
                         <div className="tw-flex tw-space-x-2">
-                          <Link
-                            href={`/admin/products/edit/${product.id}`}
+                          <button
+                            onClick={() => openEditModal(product)}
                             className="tw-text-[#A6A182] hover:tw-text-black"
                           >
                             Edit
-                          </Link>
+                          </button>
                           <Link
                             href={`/product/${product.id}`}
                             target="_blank"
@@ -549,6 +789,20 @@ export default function ProductsPage() {
         </div>
         {renderPagination()}
       </div>
+
+      {/* Product Modal (Create/Edit) */}
+      <ProductModal
+        isOpen={isModalOpen}
+        product={editingProduct}
+        categories={categories}
+        sizes={sizes}
+        frameTypes={frameTypes}
+        onClose={closeModal}
+        onSave={() => {
+          fetchProducts();
+          closeModal();
+        }}
+      />
     </SimpleAdminLayout>
   );
 }

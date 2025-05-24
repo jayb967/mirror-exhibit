@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
+import { verifyAdminAccess } from '@/utils/admin-auth';
 import { v4 as uuidv4 } from 'uuid';
 
 // Create a Supabase client with the service role key
 const getAdminClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  
+
   if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error('Missing Supabase environment variables for admin client');
   }
-  
+
   return createClient(supabaseUrl, supabaseServiceKey);
 };
 
@@ -22,46 +21,29 @@ const getAdminClient = () => {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Verify admin access using centralized utility
+    const authResult = await verifyAdminAccess({
+      operation: 'create/update products'
+    });
+
+    if (!authResult.success) {
+      return authResult.error;
     }
-    
-    // Get user role
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-    
-    // Only allow admins to create/update products
-    if (!userData || userData.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
-      );
-    }
-    
+
     // Get request body
     const body = await request.json();
     const { products, action = 'create' } = body;
-    
+
     if (!products || !Array.isArray(products) || products.length === 0) {
       return NextResponse.json(
         { error: 'Products array is required' },
         { status: 400 }
       );
     }
-    
+
     // Get admin client
     const adminClient = getAdminClient();
-    
+
     // Process products based on action
     if (action === 'create') {
       // Add IDs to products if not provided
@@ -71,13 +53,13 @@ export async function POST(request: NextRequest) {
         created_at: product.created_at || new Date().toISOString(),
         updated_at: product.updated_at || new Date().toISOString(),
       }));
-      
+
       // Insert products
       const { data, error } = await adminClient
         .from('products')
         .insert(productsWithIds)
         .select('id');
-      
+
       if (error) {
         console.error('Error creating products:', error);
         return NextResponse.json(
@@ -85,7 +67,7 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
-      
+
       return NextResponse.json({
         message: `Successfully created ${data?.length || 0} products`,
         ids: data?.map(item => item.id) || []
@@ -97,27 +79,27 @@ export async function POST(request: NextRequest) {
           if (!product.id) {
             return { success: false, error: 'Product ID is required for updates' };
           }
-          
+
           const { id, ...updateData } = product;
           updateData.updated_at = new Date().toISOString();
-          
+
           const { data, error } = await adminClient
             .from('products')
             .update(updateData)
             .eq('id', id)
             .select('id');
-          
+
           if (error) {
             return { success: false, id, error: error.message };
           }
-          
+
           return { success: true, id };
         })
       );
-      
+
       const successful = results.filter(r => r.success).length;
       const failed = results.filter(r => !r.success);
-      
+
       return NextResponse.json({
         message: `Updated ${successful} products, ${failed.length} failed`,
         results
