@@ -3,7 +3,7 @@
  * Handles coupon validation and application
  */
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { ENABLE_FREE_SHIPPING_RULES } from '@/config/featureFlags';
 import { shippingService } from './shippingService';
 
@@ -40,7 +40,7 @@ export interface CouponValidationResult {
  * Handles coupon validation and application
  */
 class CouponService {
-  private supabase = createClientComponentClient();
+  private supabase = useSupabaseClient();
 
   /**
    * Validate a coupon code

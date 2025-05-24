@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import SimpleAdminLayout from '@/components/admin/SimpleAdminLayout';
 import { toast } from 'react-toastify';
 
@@ -32,7 +32,7 @@ export default function ProductOptionsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('sizes');
 
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     fetchData();

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { ShippingAddress } from '@/services/shippingService';
 
 interface SavedAddressesProps {
@@ -35,7 +35,7 @@ const SavedAddresses: React.FC<SavedAddressesProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     fetchAddresses();

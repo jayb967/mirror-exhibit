@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { addToCartWithAuth } from '@/redux/features/cartSlice';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 
 interface AddToCartButtonProps {
   productId: string;
@@ -26,7 +26,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const dispatch = useDispatch();
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   // Fetch product information
   useEffect(() => {

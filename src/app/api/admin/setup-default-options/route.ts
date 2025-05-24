@@ -1,5 +1,7 @@
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { cookies } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
 import { getAdminClient } from '@/utils/supabase/admin';
@@ -11,7 +13,7 @@ import { getAdminClient } from '@/utils/supabase/admin';
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {

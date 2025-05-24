@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 
 // Function to return the company logo as placeholder image
 function getPlaceholderImage(): string {
@@ -11,7 +13,7 @@ function getPlaceholderImage(): string {
 export async function GET() {
   try {
     // Create a Supabase client for server-side use
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
 
     // Add cache headers for better performance
     const headers = new Headers();
@@ -97,6 +99,9 @@ export async function GET() {
   } catch (error) {
     console.error('Error in products API:', error);
     // Even on error, return a valid response with cache headers
+    const errorHeaders = new Headers();
+    errorHeaders.set('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+
     return NextResponse.json(
       {
         success: true,
@@ -105,7 +110,7 @@ export async function GET() {
       },
       {
         status: 200, // Return 200 with empty products to avoid breaking the UI
-        headers     // Include cache headers
+        headers: errorHeaders     // Include cache headers
       }
     );
   }

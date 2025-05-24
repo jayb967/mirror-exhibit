@@ -1,6 +1,8 @@
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { cookies } from 'next/headers';
 
 // Configure Cloudinary
@@ -14,7 +16,7 @@ cloudinary.config({
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {

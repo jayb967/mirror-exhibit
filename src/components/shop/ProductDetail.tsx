@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { useRouter } from 'next/navigation';
 import AddToCartButton from '@/components/common/AddToCartButton';
 
@@ -43,7 +43,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
   const router = useRouter();
 
   // Get all available images (product_images + fallback to main image_url)

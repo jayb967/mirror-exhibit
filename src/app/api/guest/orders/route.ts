@@ -1,5 +1,7 @@
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { cookies } from 'next/headers';
 
 /**
@@ -21,7 +23,7 @@ export async function GET(req: Request) {
       );
     }
     
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
     
     let query = supabase
       .from('orders')
@@ -95,7 +97,7 @@ export async function POST(req: Request) {
       );
     }
     
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
     
     // Get order with order items and shipping address
     const { data, error } = await supabase

@@ -1,5 +1,7 @@
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Also create regular client to get user info if available
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
 
     // Parse request body
     const body: TrackingRequest = await request.json();

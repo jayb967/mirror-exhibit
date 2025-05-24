@@ -1,6 +1,8 @@
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 
 /**
  * Validate a coupon code
@@ -48,7 +50,7 @@ export async function POST(req: Request) {
     }
     
     // Create Supabase client
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
     
     // Fetch coupon from database
     const { data, error } = await supabase

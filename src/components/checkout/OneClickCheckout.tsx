@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
@@ -46,7 +46,7 @@ const OneClickCheckout: React.FC<OneClickCheckoutProps> = ({ onCheckout, disable
   const [hasOneClickSetup, setHasOneClickSetup] = useState(false);
   const [defaultAddress, setDefaultAddress] = useState<SavedAddress | null>(null);
   const [defaultPaymentMethod, setDefaultPaymentMethod] = useState<SavedPaymentMethod | null>(null);
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   // Fetch saved addresses and payment methods
   useEffect(() => {

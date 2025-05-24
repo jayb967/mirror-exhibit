@@ -1,11 +1,11 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 
 /**
  * Stock validation service
  * Provides methods for checking product stock availability
  */
 class StockService {
-  private supabase = createClientComponentClient();
+  private supabase = useSupabaseClient();
 
   /**
    * Check if a product has enough stock

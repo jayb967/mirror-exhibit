@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 
 /**
  * ProductCompatibilityService
@@ -10,7 +10,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
  * display, ordering, and editing functionality.
  */
 class ProductCompatibilityService {
-  private supabase = createClientComponentClient();
+  private supabase = useSupabaseClient();
 
   /**
    * Normalize product data to ensure compatibility with existing product display

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 
 interface Product {
   id: string;
@@ -120,7 +120,7 @@ export default function ProductEditModal({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   // Populate form when product changes
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import Stripe from 'stripe';
 
 // Initialize Stripe with the secret key
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     const { items, orderId, shipping, tax, customer, guestToken } = body;
 
     // Create a Supabase client
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
 
     // Check if user is authenticated
     const { data: { session: userSession } } = await supabase.auth.getSession();

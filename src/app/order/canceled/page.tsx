@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from "react-toastify";
 
 function OrderCanceledContent() {
@@ -12,7 +12,7 @@ function OrderCanceledContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderIdParam = searchParams.get("order_id");
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     async function handleCanceledOrder() {

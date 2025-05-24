@@ -1,5 +1,7 @@
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { cookies } from 'next/headers';
 
 /**
@@ -9,7 +11,7 @@ import { cookies } from 'next/headers';
 export async function GET() {
   try {
     // Create a Supabase client for server-side use
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
     
     // Fetch sizes
     const { data: sizes, error: sizesError } = await supabase

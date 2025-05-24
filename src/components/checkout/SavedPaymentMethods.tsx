@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@/utils/supabase-client';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
 
@@ -24,7 +24,7 @@ const SavedPaymentMethods: React.FC<SavedPaymentMethodsProps> = ({ onSelect, onA
   const [paymentMethods, setPaymentMethods] = useState<SavedPaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   // Fetch saved payment methods
   useEffect(() => {

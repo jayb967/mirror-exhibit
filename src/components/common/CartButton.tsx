@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from 'react-redux';
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useSupabaseClient } from '@/utils/supabase-client';
 
 interface CartButtonProps {
   className?: string;
@@ -19,7 +19,7 @@ export default function CartButton({ className = "" }: CartButtonProps) {
   }, 0);
 
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = useSupabaseClient();
 
   const handleClick = () => {
     router.push('/cart');

@@ -1,5 +1,7 @@
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerSupabaseClient } from '@/utils/clerk-supabase';
 import { cookies } from 'next/headers';
 
 /**
@@ -68,7 +70,7 @@ export async function POST(req: Request) {
     
     if (!orderId) {
       // If no order ID in metadata, try to find order by tracking number
-      const supabase = createRouteHandlerClient({ cookies });
+      const supabase = await createServerSupabaseClient();
       
       const { data: order, error } = await supabase
         .from('orders')
@@ -112,7 +114,7 @@ async function updateOrderStatus(
   shippingStatus: string,
   trackingEvents: any[]
 ) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createServerSupabaseClient();
   
   // Map shipping status to order status
   let orderStatus = 'processing';

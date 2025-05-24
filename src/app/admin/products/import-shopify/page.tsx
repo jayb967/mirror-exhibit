@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 import Papa from 'papaparse';
