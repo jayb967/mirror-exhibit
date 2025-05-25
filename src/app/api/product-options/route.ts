@@ -1,7 +1,8 @@
-// Force dynamic rendering for this route
-export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createPublicSupabaseClient } from '@/utils/clerk-supabase';
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
 
 /**
  * API endpoint to fetch product options (sizes and frame types)

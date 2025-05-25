@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabaseClient, createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
 import { auth } from '@clerk/nextjs/server';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/brands
  * Fetch all brands with optional filtering

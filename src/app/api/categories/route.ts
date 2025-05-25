@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicSupabaseClient } from '@/utils/clerk-supabase';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/categories
  * Fetch all active product categories

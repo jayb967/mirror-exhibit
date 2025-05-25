@@ -23,6 +23,12 @@ const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
+  // Force all API routes to be dynamic
+  async rewrites() {
+    return [];
+  },
+  // Ensure API routes are not statically generated
+  trailingSlash: false,
 }
 
 module.exports = nextConfig
