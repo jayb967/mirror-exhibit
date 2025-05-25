@@ -9,7 +9,7 @@ import FloatingCartButton from "@/components/common/FloatingCartButton";
 
 import { scrollSmother } from "@/utils/scrollSmother";
 import animationTitle from "@/utils/animationTitle";
-import performanceMonitor from "@/utils/performanceMonitor";
+
 
 import { ScrollSmoother, ScrollToPlugin, ScrollTrigger, SplitText } from "@/plugins";
 gsap.registerPlugin(ScrollSmoother, ScrollTrigger, ScrollToPlugin, SplitText);
@@ -88,7 +88,7 @@ const Wrapper = ({ children }: any) => {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const config = getScrollSmootherConfig();
-      console.log(`🚀 Initializing ScrollSmoother with ${performanceLevel.current} performance config:`, config);
+
 
       ScrollSmoother.create(config);
     }
@@ -113,20 +113,17 @@ const Wrapper = ({ children }: any) => {
       // Initialize animations based on performance level
       if (performanceLevel.current !== "low") {
         scheduleWork(() => {
-          console.log("🎨 Initializing animations...");
+
           animationTitle();
           scrollSmother();
         });
 
-        // Defer WebGL effects for high-performance devices only
-        if (performanceLevel.current === "high") {
-          scheduleWork(() => {
-            console.log("🎮 Initializing WebGL effects...");
-            hoverWebGl().catch(err => {
-              console.warn("WebGL initialization failed:", err);
-            });
+        // Initialize WebGL effects for all devices
+        scheduleWork(() => {
+          hoverWebGl().catch(err => {
+            console.warn("WebGL initialization failed:", err);
           });
-        }
+        });
       }
 
       animationsInitialized.current = true;
@@ -138,30 +135,7 @@ const Wrapper = ({ children }: any) => {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // Initialize performance monitoring
-  useEffect(() => {
-    if (typeof window === "undefined") return;
 
-    // Start monitoring scroll performance
-    const cleanupScrollMonitor = performanceMonitor.monitorScrollPerformance();
-
-    // Monitor memory usage periodically
-    const memoryInterval = setInterval(() => {
-      performanceMonitor.monitorMemoryUsage();
-    }, 30000); // Every 30 seconds
-
-    // Log performance summary after page load
-    const summaryTimeout = setTimeout(() => {
-      performanceMonitor.logSummary();
-    }, 5000);
-
-    return () => {
-      cleanupScrollMonitor();
-      clearInterval(memoryInterval);
-      clearTimeout(summaryTimeout);
-      performanceMonitor.cleanup();
-    };
-  }, []);
 
   // Cart initialization is now handled in StoreProvider
 

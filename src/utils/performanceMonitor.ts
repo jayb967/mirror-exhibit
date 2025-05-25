@@ -26,7 +26,7 @@ class PerformanceMonitor {
           for (const entry of list.getEntries()) {
             if (entry.name === 'first-contentful-paint') {
               this.metrics.fcp = entry.startTime;
-              console.log(`🎨 First Contentful Paint: ${entry.startTime.toFixed(2)}ms`);
+              // console.log(`🎨 First Contentful Paint: ${entry.startTime.toFixed(2)}ms`);
             }
           }
         });
@@ -38,7 +38,7 @@ class PerformanceMonitor {
           const entries = list.getEntries();
           const lastEntry = entries[entries.length - 1];
           this.metrics.lcp = lastEntry.startTime;
-          console.log(`🖼️ Largest Contentful Paint: ${lastEntry.startTime.toFixed(2)}ms`);
+          // console.log(`🖼️ Largest Contentful Paint: ${lastEntry.startTime.toFixed(2)}ms`);
         });
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
         this.observers.push(lcpObserver);
@@ -47,7 +47,7 @@ class PerformanceMonitor {
         const fidObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             this.metrics.fid = (entry as any).processingStart - entry.startTime;
-            console.log(`⚡ First Input Delay: ${this.metrics.fid.toFixed(2)}ms`);
+            // console.log(`⚡ First Input Delay: ${this.metrics.fid.toFixed(2)}ms`);
           }
         });
         fidObserver.observe({ entryTypes: ['first-input'] });
@@ -62,7 +62,7 @@ class PerformanceMonitor {
             }
           }
           this.metrics.cls = clsValue;
-          console.log(`📐 Cumulative Layout Shift: ${clsValue.toFixed(4)}`);
+          // console.log(`📐 Cumulative Layout Shift: ${clsValue.toFixed(4)}`);
         });
         clsObserver.observe({ entryTypes: ['layout-shift'] });
         this.observers.push(clsObserver);
@@ -78,7 +78,7 @@ class PerformanceMonitor {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
         if (navigation) {
           this.metrics.ttfb = navigation.responseStart - navigation.requestStart;
-          console.log(`🌐 Time to First Byte: ${this.metrics.ttfb.toFixed(2)}ms`);
+          // console.log(`🌐 Time to First Byte: ${this.metrics.ttfb.toFixed(2)}ms`);
         }
       });
     }
@@ -94,18 +94,18 @@ class PerformanceMonitor {
       scrollCount++;
       const currentTime = performance.now();
       const timeDiff = currentTime - lastScrollTime;
-      
+
       // Detect frame drops (assuming 60fps = 16.67ms per frame)
       if (timeDiff > 32) { // More than 2 frames
         frameDrops++;
       }
-      
+
       lastScrollTime = currentTime;
 
       // Log performance every 100 scroll events
       if (scrollCount % 100 === 0) {
         const frameDropRate = (frameDrops / scrollCount) * 100;
-        console.log(`📊 Scroll Performance - Events: ${scrollCount}, Frame drops: ${frameDrops} (${frameDropRate.toFixed(1)}%)`);
+        // console.log(`📊 Scroll Performance - Events: ${scrollCount}, Frame drops: ${frameDrops} (${frameDropRate.toFixed(1)}%)`);
       }
     };
 
@@ -123,9 +123,9 @@ class PerformanceMonitor {
       const usedMB = Math.round(memory.usedJSHeapSize / 1048576);
       const totalMB = Math.round(memory.totalJSHeapSize / 1048576);
       const limitMB = Math.round(memory.jsHeapSizeLimit / 1048576);
-      
-      console.log(`🧠 Memory Usage: ${usedMB}MB / ${totalMB}MB (Limit: ${limitMB}MB)`);
-      
+
+      // console.log(`🧠 Memory Usage: ${usedMB}MB / ${totalMB}MB (Limit: ${limitMB}MB)`);
+
       // Warn if memory usage is high
       if (usedMB / limitMB > 0.8) {
         console.warn('⚠️ High memory usage detected!');
@@ -140,13 +140,13 @@ class PerformanceMonitor {
 
   // Log performance summary
   public logSummary() {
-    console.group('🚀 Performance Summary');
-    console.log('First Contentful Paint:', this.metrics.fcp ? `${this.metrics.fcp.toFixed(2)}ms` : 'Not measured');
-    console.log('Largest Contentful Paint:', this.metrics.lcp ? `${this.metrics.lcp.toFixed(2)}ms` : 'Not measured');
-    console.log('First Input Delay:', this.metrics.fid ? `${this.metrics.fid.toFixed(2)}ms` : 'Not measured');
-    console.log('Cumulative Layout Shift:', this.metrics.cls ? this.metrics.cls.toFixed(4) : 'Not measured');
-    console.log('Time to First Byte:', this.metrics.ttfb ? `${this.metrics.ttfb.toFixed(2)}ms` : 'Not measured');
-    console.groupEnd();
+    // console.group('🚀 Performance Summary');
+    // console.log('First Contentful Paint:', this.metrics.fcp ? `${this.metrics.fcp.toFixed(2)}ms` : 'Not measured');
+    // console.log('Largest Contentful Paint:', this.metrics.lcp ? `${this.metrics.lcp.toFixed(2)}ms` : 'Not measured');
+    // console.log('First Input Delay:', this.metrics.fid ? `${this.metrics.fid.toFixed(2)}ms` : 'Not measured');
+    // console.log('Cumulative Layout Shift:', this.metrics.cls ? this.metrics.cls.toFixed(4) : 'Not measured');
+    // console.log('Time to First Byte:', this.metrics.ttfb ? `${this.metrics.ttfb.toFixed(2)}ms` : 'Not measured');
+    // console.groupEnd();
   }
 
   // Cleanup observers

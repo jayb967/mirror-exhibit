@@ -308,7 +308,7 @@ function OrderSuccessContent() {
         </Link>
 
         {orderDetails.user_id ? (
-          <Link href="/account/orders" className="tw-bg-gray-200 hover:tw-bg-gray-300 tw-text-gray-800 tw-px-6 tw-py-3 tw-rounded-md tw-font-medium tw-text-center">
+          <Link href="/dashboard/orders" className="tw-bg-gray-200 hover:tw-bg-gray-300 tw-text-gray-800 tw-px-6 tw-py-3 tw-rounded-md tw-font-medium tw-text-center">
             View All Orders
           </Link>
         ) : (

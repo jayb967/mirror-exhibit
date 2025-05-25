@@ -25,3 +25,74 @@
   width: 50px !important;
   height: 50px !important;
 }
+
+/* Mobile carousel enhancements for better discoverability */
+@media (max-width: 767px) {
+  .product-carousel-wrapper {
+    position: relative;
+    /* Add subtle gradient hints on mobile to show more content */
+  }
+
+  .product-carousel-wrapper::before,
+  .product-carousel-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 50px; /* Account for pagination */
+    width: 15px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .product-carousel-wrapper::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(255,255,255,0.9), transparent);
+  }
+
+  .product-carousel-wrapper::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+  }
+
+  .product-carousel-wrapper .swiper-slide {
+    /* Add subtle scale effect for non-active slides on mobile */
+    transform: scale(0.92);
+    opacity: 0.6;
+    transition: all 0.4s ease;
+  }
+
+  .product-carousel-wrapper .swiper-slide-active {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .product-carousel-wrapper .swiper-slide-next,
+  .product-carousel-wrapper .swiper-slide-prev {
+    opacity: 0.8;
+    transform: scale(0.96);
+  }
+
+  /* Hide navigation arrows on mobile since we have swipe */
+  .product-carousel-wrapper .swiper-nav-button {
+    display: none !important;
+  }
+
+  /* Add a subtle hint text for mobile users */
+  .product-carousel-wrapper::after {
+    content: '';
+  }
+}
+
+/* Add smooth autoplay animation */
+.product-carousel-wrapper .swiper-slide {
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}
+
+/* Enhance the visual feedback for autoplay */
+@media (max-width: 767px) {
+  .product-carousel-wrapper .swiper-container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}

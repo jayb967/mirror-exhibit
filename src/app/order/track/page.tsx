@@ -21,14 +21,14 @@ type FormData = {
 export default function TrackOrderPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  
+
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema)
   });
-  
+
   const onSubmit = async (data: FormData) => {
     setLoading(true);
-    
+
     try {
       // Call the API to verify the order
       const response = await fetch('/api/guest/orders', {
@@ -41,12 +41,12 @@ export default function TrackOrderPage() {
           orderId: data.orderId
         })
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to find order');
       }
-      
+
       // Redirect to order details page
       router.push(`/order/${data.orderId}?email=${encodeURIComponent(data.email)}`);
     } catch (error: any) {
@@ -55,16 +55,16 @@ export default function TrackOrderPage() {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="tw-container tw-mx-auto tw-px-4 tw-py-12 tw-max-w-2xl">
       <div className="tw-bg-white tw-rounded-lg tw-shadow-md tw-p-8">
         <h1 className="tw-text-3xl tw-font-bold tw-mb-6 tw-text-center">Track Your Order</h1>
-        
+
         <p className="tw-text-gray-600 tw-mb-8 tw-text-center">
           Enter your email address and order ID to track your order status.
         </p>
-        
+
         <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-6">
           <div>
             <label htmlFor="email" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
@@ -81,7 +81,7 @@ export default function TrackOrderPage() {
               <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.email.message}</p>
             )}
           </div>
-          
+
           <div>
             <label htmlFor="orderId" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
               Order ID
@@ -97,7 +97,7 @@ export default function TrackOrderPage() {
               <p className="tw-text-red-500 tw-text-xs tw-mt-1">{errors.orderId.message}</p>
             )}
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
@@ -106,11 +106,11 @@ export default function TrackOrderPage() {
             {loading ? 'Searching...' : 'Track Order'}
           </button>
         </form>
-        
+
         <div className="tw-mt-8 tw-text-center tw-text-sm tw-text-gray-500">
           <p>
             If you created an account, you can view all your orders in your{' '}
-            <a href="/account/orders" className="tw-text-blue-600 hover:tw-underline">
+            <a href="/dashboard/orders" className="tw-text-blue-600 hover:tw-underline">
               account dashboard
             </a>.
           </p>

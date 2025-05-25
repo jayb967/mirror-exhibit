@@ -2,19 +2,22 @@
 
 import Link from 'next/link';
 import React from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useParams } from 'next/navigation';
 import { useGetSingleProductQuery } from '@/redux/features/productApi';
 
 const ProductBreadcrumb = () => {
   const searchParams = useSearchParams();
-  const productId = searchParams.get('id');
-  
-  const { data, isLoading } = useGetSingleProductQuery(productId);
+  const params = useParams();
+
+  // Get product ID from URL params or search params (for backward compatibility)
+  const productId = params?.id || searchParams.get('id');
+
+  const { data, isLoading, error } = useGetSingleProductQuery(productId);
   const product = data?.product;
 
   // Fallback product title if API fails or is loading
-  const productTitle = isLoading ? 'Loading...' : (product?.title || 'Product Details');
-  
+  const productTitle = isLoading ? 'Loading...' : (product?.title || product?.name || 'Elegant Wall Mirror');
+
   return (
     <>
       <div className="breadcrumb__pt">
@@ -30,7 +33,7 @@ const ProductBreadcrumb = () => {
                   <div className="breadcrumb__list">
                     <span><Link href="/">Home</Link></span>
                     <span className="dvdr"><i className="fa-solid fa-angle-right"></i></span>
-                    <span>Product Details</span>
+                    <span>{productTitle}</span>
                   </div>
                 </div>
               </div>

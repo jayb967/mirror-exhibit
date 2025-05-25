@@ -228,43 +228,53 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
   // Performance state
   const [isScrolling, setIsScrolling] = useState(false);
   const [shouldPauseAutoplay, setShouldPauseAutoplay] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Performance-optimized API queries - only fetch when component is in view
-  const shouldFetch = hasIntersected; // Only fetch after component has been seen
+  // Simplified API queries - use a single query based on productType
+  const shouldUseDefault = productType === 'all' && !category;
+
+  const defaultQuery = useGetShowingProductsQuery(
+    undefined,
+    { skip: !shouldUseDefault }
+  );
 
   const filteredQuery = useGetFilteredProductsQuery(
     { type: productType, category, limit },
-    { skip: !shouldFetch || !(category && productType !== 'all') }
+    { skip: shouldUseDefault || (category && productType !== 'all') }
   );
+
   const categoryQuery = useGetProductsByCategoryQuery(
     { category: category!, limit },
-    { skip: !shouldFetch || !category || productType !== 'all' }
+    { skip: shouldUseDefault || !category || productType !== 'all' }
   );
+
   const featuredQuery = useGetFeaturedProductsQuery(
     { limit },
-    { skip: !shouldFetch || productType !== 'featured' || !!category }
+    { skip: shouldUseDefault || productType !== 'featured' || !!category }
   );
+
   const popularQuery = useGetPopularProductsQuery(
     { limit },
-    { skip: !shouldFetch || productType !== 'popular' || !!category }
+    { skip: shouldUseDefault || productType !== 'popular' || !!category }
   );
+
   const mostViewedQuery = useGetMostViewedProductsQuery(
     { limit },
-    { skip: !shouldFetch || productType !== 'most-viewed' || !!category }
+    { skip: shouldUseDefault || productType !== 'most-viewed' || !!category }
   );
+
   const newArrivalsQuery = useGetNewArrivalsQuery(
     { limit },
-    { skip: !shouldFetch || productType !== 'new-arrivals' || !!category }
+    { skip: shouldUseDefault || productType !== 'new-arrivals' || !!category }
   );
+
   const trendingQuery = useGetTrendingProductsQuery(
     { limit },
-    { skip: !shouldFetch || productType !== 'trending' || !!category }
+    { skip: shouldUseDefault || productType !== 'trending' || !!category }
   );
-  const defaultQuery = useGetShowingProductsQuery(
-    undefined,
-    { skip: !shouldFetch || productType !== 'all' || !!category }
-  );
+
+
 
   // Select the active query result with fallback logic
   const { data, isError, isLoading } = useMemo(() => {
@@ -299,31 +309,55 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
 
     // Check if primary query has no products and implement fallback
     if (primaryQuery.data && Array.isArray(primaryQuery.data.products) && primaryQuery.data.products.length === 0) {
-      console.log(`🔄 No products found for ${productType}, falling back to default products`);
       return defaultQuery;
     }
 
     return primaryQuery;
   }, [
-    productType, category, filteredQuery, categoryQuery, featuredQuery,
-    popularQuery, mostViewedQuery, newArrivalsQuery, trendingQuery, defaultQuery
+    productType,
+    category,
+    filteredQuery.data?.products?.length,
+    categoryQuery.data?.products?.length,
+    featuredQuery.data?.products?.length,
+    popularQuery.data?.products?.length,
+    mostViewedQuery.data?.products?.length,
+    newArrivalsQuery.data?.products?.length,
+    trendingQuery.data?.products?.length,
+    defaultQuery.data?.products?.length
   ]);
   const [swiperRef, setSwiperRef] = useState<any>(null);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Scroll detection for performance optimization
   const handleScroll = useThrottle(() => {
     setIsScrolling(true);
-    setShouldPauseAutoplay(true);
+    // Only pause autoplay on desktop during scroll, keep it running on mobile
+    if (!isMobile) {
+      setShouldPauseAutoplay(true);
+    }
 
     // Clear existing timeout
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
 
-    // Resume autoplay after scroll stops
+    // Resume autoplay after scroll stops (only affects desktop)
     scrollTimeoutRef.current = setTimeout(() => {
       setIsScrolling(false);
-      setShouldPauseAutoplay(false);
+      if (!isMobile) {
+        setShouldPauseAutoplay(false);
+      }
     }, 150);
   }, 50);
 
@@ -346,7 +380,7 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
 
   // Memoize the products array to prevent unnecessary recalculations
   const products = useMemo(() => {
-    if (data?.success && data.products && data.products.length > 0) {
+    if (data?.success && data?.products && Array.isArray(data.products) && data.products.length > 0) {
       // Add priority flag to the first 4 products for optimized loading
       return data.products.map((product: any, index: number) => ({
         ...product,
@@ -356,49 +390,41 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
 
     // Return empty array if there's an error or no products
     return [];
-  }, [data, isError]);
+  }, [data?.success, data?.products?.length]);
 
-  // Navigation arrow handlers with analytics
-  const handlePrev = () => {
+  // Navigation arrow handlers with analytics - memoized to prevent re-renders
+  const handlePrev = useCallback(() => {
     swiperRef?.slidePrev();
     analytics.trackCarouselInteraction('prev', sectionId, {
       source: `${sectionId}_carousel`
     });
-  };
+  }, [swiperRef, sectionId]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     swiperRef?.slideNext();
     analytics.trackCarouselInteraction('next', sectionId, {
       source: `${sectionId}_carousel`
     });
-  };
+  }, [swiperRef, sectionId]);
 
-  // Carousel control functions with analytics
-  const pauseCarousel = () => {
-    console.log('🎠 Pausing carousel...', swiperRef);
+  // Carousel control functions with analytics - memoized to prevent re-renders
+  const pauseCarousel = useCallback(() => {
     if (swiperRef && swiperRef.autoplay) {
       swiperRef.autoplay.stop();
       analytics.trackCarouselInteraction('pause', sectionId, {
         source: `${sectionId}_carousel`
       });
-      console.log('🎠 Carousel paused successfully');
-    } else {
-      console.log('🎠 No swiper ref or autoplay available');
     }
-  };
+  }, [swiperRef, sectionId]);
 
-  const resumeCarousel = () => {
-    console.log('🎠 Resuming carousel...', swiperRef);
+  const resumeCarousel = useCallback(() => {
     if (swiperRef && swiperRef.autoplay) {
       swiperRef.autoplay.start();
       analytics.trackCarouselInteraction('resume', sectionId, {
         source: `${sectionId}_carousel`
       });
-      console.log('🎠 Carousel resumed successfully');
-    } else {
-      console.log('🎠 No swiper ref or autoplay available');
     }
-  };
+  }, [swiperRef, sectionId]);
 
   // Create an array of skeleton loaders for loading state or error state
   const skeletonItems = Array(8).fill(0).map((_, i) => (
@@ -550,12 +576,14 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                   <Swiper
                     speed={isScrolling ? 500 : 1000} // Faster transitions during scroll
                     loop={true}
-                    slidesPerView={4}
-                    spaceBetween={40}
-                    autoplay={autoplay && !shouldPauseAutoplay && isIntersecting ? {
-                      delay: autoplayDelay,
+                    slidesPerView={isMobile ? 1.2 : 4} // Show partial next slide on mobile for discoverability
+                    spaceBetween={isMobile ? 20 : 40}
+                    centeredSlides={isMobile} // Center slides on mobile
+                    autoplay={autoplay && (!shouldPauseAutoplay || isMobile) && isIntersecting ? {
+                      delay: isMobile ? autoplayDelay * 0.8 : autoplayDelay, // Slightly faster on mobile
                       disableOnInteraction: false,
-                      pauseOnMouseEnter: true,
+                      pauseOnMouseEnter: !isMobile, // Don't pause on hover for mobile
+                      waitForTransition: true,
                     } : false}
                     mousewheel={{
                       forceToAxis: true,
@@ -563,9 +591,13 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                       releaseOnEdges: true,
                     }}
                     keyboard={{
-                      enabled: isIntersecting, // Only enable when visible
+                      enabled: isIntersecting && !isMobile, // Disable keyboard on mobile
                       onlyInViewport: true,
                     }}
+                    touchRatio={isMobile ? 1.5 : 1} // More sensitive touch on mobile
+                    touchAngle={45} // Allow diagonal swipes
+                    grabCursor={true}
+                    touchStartPreventDefault={false}
                     modules={[Autoplay, Pagination, Navigation, Mousewheel, Keyboard]}
                     navigation={{
                       nextEl: '.swiper-button-next',
@@ -577,35 +609,41 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                       loadPrevNextAmount: 2,
                     }}
                     watchSlidesProgress={true}
-                    preloadImages={false}
                     breakpoints={{
                       '1600': {
                         slidesPerView: 4,
                         spaceBetween: 40,
+                        centeredSlides: false,
                       },
                       '1400': {
                         slidesPerView: 4,
                         spaceBetween: 40,
+                        centeredSlides: false,
                       },
                       '1200': {
                         slidesPerView: 3,
                         spaceBetween: 30,
+                        centeredSlides: false,
                       },
                       '992': {
                         slidesPerView: 3,
                         spaceBetween: 30,
+                        centeredSlides: false,
                       },
                       '768': {
                         slidesPerView: 2,
                         spaceBetween: 20,
+                        centeredSlides: false,
                       },
                       '576': {
-                        slidesPerView: 2,
+                        slidesPerView: 1.3, // Show partial next slide for discoverability
                         spaceBetween: 20,
+                        centeredSlides: true,
                       },
                       '0': {
-                        slidesPerView: 1,
-                        spaceBetween: 10,
+                        slidesPerView: 1.2, // Show partial next slide for discoverability
+                        spaceBetween: 15,
+                        centeredSlides: true,
                       },
                     }}
                     className="swiper-container tp-product-2-active"
@@ -615,10 +653,7 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                       overflow: 'visible',
                     }}
                   >
-                  {!hasIntersected ? (
-                    // Show placeholder until component is in view
-                    skeletonItems
-                  ) : isLoading ? (
+                  {isLoading ? (
                     skeletonItems
                   ) : hasError ? (
                     // Show error message when there's an error or no products

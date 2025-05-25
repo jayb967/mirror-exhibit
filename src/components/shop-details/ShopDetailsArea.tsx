@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useParams } from 'next/navigation';
 import { useGetSingleProductQuery } from '@/redux/features/productApi';
 import { useDispatch } from 'react-redux';
 import { addToCartWithAuth } from '@/redux/features/cartSlice';
@@ -24,10 +24,14 @@ function getContrastColor(hexColor: string): string {
 
 const ShopDetailsArea = () => {
   const searchParams = useSearchParams();
-  const productId = searchParams.get('id');
+  const params = useParams();
+
+  // Get product ID from URL params or search params (for backward compatibility)
+  const productId = params?.id || searchParams.get('id');
   const dispatch = useDispatch();
 
   const { data, isLoading, isError } = useGetSingleProductQuery(productId);
+
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedFrame, setSelectedFrame] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -128,7 +132,9 @@ const ShopDetailsArea = () => {
 
   // Calculate price with adjustments
   const calculatedPrice = useMemo(() => {
-    const basePrice = product?.price || product?.base_price || 0;
+    // Use productToUse to ensure we have fallback data
+    const basePrice = product?.price || product?.base_price || productToUse?.price || productToUse?.base_price || 199.99;
+
     if (selectedVariation) {
       return selectedVariation.price;
     }
@@ -137,7 +143,7 @@ const ShopDetailsArea = () => {
     const sizeAdjustment = selectedSizeObj?.price_adjustment || 0;
     const frameAdjustment = selectedFrameObj?.price_adjustment || 0;
     return basePrice + sizeAdjustment + frameAdjustment;
-  }, [product?.price, product?.base_price, selectedVariation, selectedSize, selectedFrame, sizes, frameTypes]);
+  }, [product?.price, product?.base_price, productToUse?.price, productToUse?.base_price, selectedVariation, selectedSize, selectedFrame, sizes, frameTypes]);
 
   // Get all available images with fallback to logo
   const allImages = useMemo(() => {

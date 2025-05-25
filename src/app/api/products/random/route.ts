@@ -22,13 +22,13 @@ export async function GET(
     // Create a Supabase client for server-side use
     const supabase = await createServerSupabaseClient();
 
-    // Build the query
+    // Build the query - fix relationship ambiguity
     let query = supabase
       .from('products')
       .select(`
         *,
         category:product_categories(id, name),
-        brand:brands(id, name),
+        brand:brands!fk_products_brand_id(id, name),
         variations:product_variations(
           id, price, stock_quantity,
           size:product_sizes(id, name),

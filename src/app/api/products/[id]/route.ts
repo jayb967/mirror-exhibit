@@ -20,7 +20,7 @@ export async function GET(
 
     const supabase = await createServerSupabaseClient();
 
-    // Fetch the product with brand and category data
+    // Fetch the product with brand and category data - fix relationship ambiguity
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -40,7 +40,7 @@ export async function GET(
         updated_at,
         brand_id,
         category_id,
-        brands(id, name, slug, logo_url, website_url),
+        brands!fk_products_brand_id(id, name, slug, logo_url, website_url),
         product_categories(id, name)
       `)
       .eq('id', id)

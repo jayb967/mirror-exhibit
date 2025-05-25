@@ -15,7 +15,7 @@ const {subtitle, title} = testimonial_content
 const TestimonialAreaHomeTwo = () => {
 
 
-  
+
   return (
     <>
       <div id="testimonial-one-page" className="tp-testimonial-2-area p-relative fix pt-140 pb-140 grey-bg">
@@ -36,25 +36,27 @@ const TestimonialAreaHomeTwo = () => {
               <div className="tp-testimonial-2-thumb">
                 <div className="tp-hover-distort-wrapper">
                   <div className="canvas"></div>
-                  <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
-                    <img className="tp-hover-distort-img front" 
+                  <div className="tp-hover-distort" data-displacementimage="/assets/img/webgl/10.jpg">
+                    <img className="tp-hover-distort-img front"
                     style={{
+                      display: 'block',
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
                       objectPosition: 'center',
                       aspectRatio: '1 / 1'
                     }}
-                    src="assets/img/testimonial/IMG_7200.jpg" alt="image-here" />
-                    <img className="tp-hover-distort-img back" 
+                    src="/assets/img/testimonial/IMG_7200.jpg" alt="image-here" loading="eager" />
+                    <img className="tp-hover-distort-img back"
                     style={{
+                      display: 'none',
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
                       objectPosition: 'center',
                       aspectRatio: '1 / 1'
                     }}
-                    src="assets/img/testimonial/IMG_7200.jpg" alt="image-here" />
+                    src="/assets/img/testimonial/IMG_7200.jpg" alt="image-here" loading="eager" />
                   </div>
                 </div>
               </div>

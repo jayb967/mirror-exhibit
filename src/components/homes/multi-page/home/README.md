@@ -27,11 +27,21 @@ A comprehensive performance optimization suite for the Mirror Exhibit home page,
 - **Conditional API calls** only when components are visible
 
 ### Product Carousel Performance
-- **Scroll-based autoplay pausing** during user interaction
+- **Scroll-based autoplay pausing** during user interaction (desktop only)
+- **Mobile autoplay enabled** for discoverability - continues during scroll
 - **Throttled scroll detection** (50ms) to reduce event frequency
 - **Intersection Observer** for API calls optimization
 - **Image lazy loading** with priority flags for first 4 products
 - **Virtual loading** with skeleton placeholders
+
+### Mobile Carousel Enhancements
+- **Partial slide preview** (1.2 slides visible) to indicate swipeability
+- **Centered slides** with scale effects for active slide emphasis
+- **Faster autoplay** (20% faster than desktop) for better engagement
+- **Enhanced touch sensitivity** (1.5x) for easier swiping
+- **Visual gradient hints** to show additional content
+- **Scale animations** for active/inactive slides
+- **Touch-optimized** with diagonal swipe support
 
 ## 🔧 Recent Updates (2025) - Performance Optimization
 

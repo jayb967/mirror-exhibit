@@ -13,7 +13,7 @@ interface ProductCardProps {
   resumeCarousel?: () => void;
 }
 
-const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }: ProductCardProps) => {
+const ProductCard = React.memo(({ product, className = '', pauseCarousel, resumeCarousel }: ProductCardProps) => {
   const { openModal: openGlobalModal } = useGlobalModal();
   const [defaultOptions, setDefaultOptions] = useState<{
     sizes: Array<{id: string, name: string, price_adjustment?: number}>,
@@ -23,6 +23,10 @@ const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }:
     frameTypes: []
   });
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  // Get the image URL with fallback
+  const imageUrl = product?.image || product?.image_url || '/assets/img/logo/ME_Logo.png';
 
   // Fetch default options if needed
   useEffect(() => {
@@ -128,19 +132,21 @@ const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }:
           <div className="tp-product-2-thumb fix p-relative">
             <div style={{ width: '100%', height: '300px', position: 'relative' }}>
               <Image
-                src={product.image || product.image_url || '/assets/img/logo/ME_Logo.png'}
-                alt={product.title || product.name}
+                src={imageError ? '/assets/img/logo/ME_Logo.png' : imageUrl}
+                alt={product?.title || product?.name || 'Product Image'}
                 fill={true}
-                priority={product.priority === true}
-                loading={product.priority === true ? "eager" : "lazy"}
+                priority={product?.priority === true}
+                loading={product?.priority === true ? "eager" : "lazy"}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                placeholder="blur"
-                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0iI2YwZjBmMCIvPjwvc3ZnPg=="
                 style={{
                   objectFit: 'cover',
                   objectPosition: 'center',
                   borderRadius: 0
                 }}
+                onError={(e) => {
+                  setImageError(true);
+                }}
+                unoptimized={true} // Disable optimization to fix WebGL image loading issues
               />
             </div>
             <div className="tp-product-2-button-box">
@@ -174,6 +180,8 @@ const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }:
       </div>
     </>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;

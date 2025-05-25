@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 
-// import progressbar   
+// import progressbar
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
@@ -31,11 +31,28 @@ const ExpartFeatureAreaHomeThree = () => {
             <div className="row align-items-center">
               <div className="col-xl-7 col-lg-7 col-md-5">
                 <div className="tp-exp-fea-thumb">
-                  <div className="tp-hover-distort-wrapper">
+                  {/* Fast-loading fallback image */}
+                  <img
+                    src="/assets/img/service/blonde_mirror3.png"
+                    alt="Expert feature"
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      display: 'block',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      zIndex: 1
+                    }}
+                    loading="eager"
+                  />
+
+                  {/* WebGL wrapper - loads in background */}
+                  <div className="tp-hover-distort-wrapper" style={{ position: 'relative', zIndex: 2 }}>
                     <div className="canvas"></div>
-                    <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
-                      <img className="tp-hover-distort-img front" src="assets/img/service/blonde_mirror3.png" alt="image-here" />
-                      <img className="tp-hover-distort-img back" src="assets/img/service/blonde_mirror3.png" alt="image-here" />
+                    <div className="tp-hover-distort" data-displacementimage="/assets/img/webgl/10.jpg">
+                      <img className="tp-hover-distort-img front" src="/assets/img/service/blonde_mirror3.png" alt="image-here" loading="eager" style={{ opacity: 0, width: '100%', height: 'auto' }} />
+                      <img className="tp-hover-distort-img back" src="/assets/img/service/blonde_mirror3.png" alt="image-here" loading="eager" style={{ display: 'none' }} />
                     </div>
                   </div>
                 </div>
@@ -55,7 +72,7 @@ const ExpartFeatureAreaHomeThree = () => {
                   </div>
                   <Link className="tp-btn-black" href="/shop">
                     <span>Shop Now</span>
-                  </Link> 
+                  </Link>
                 </div>
               </div>
             </div>
@@ -75,7 +92,7 @@ const ExpartFeatureAreaHomeThree = () => {
                           value={percentage}
                           text={`${percentage}%`}
                           strokeWidth={7}
-                          className="knob" 
+                          className="knob"
                         />
 
                       </div>
@@ -97,17 +114,34 @@ const ExpartFeatureAreaHomeThree = () => {
 
                   <Link className="tp-btn-black" href="/shop">
                     <span>Shop Now</span>
-                  </Link> 
+                  </Link>
 
                 </div>
               </div>
               <div className="col-xl-7 col-lg-7 col-md-6 order-0 order-md-1">
                 <div className="tp-exp-fea-thumb-2 text-end">
-                  <div className="tp-hover-distort-wrapper">
+                  {/* Fast-loading fallback image */}
+                  <img
+                    src="/assets/img/service/service-1-2.webp"
+                    alt="Expert feature"
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      display: 'block',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      zIndex: 1
+                    }}
+                    loading="eager"
+                  />
+
+                  {/* WebGL wrapper - loads in background */}
+                  <div className="tp-hover-distort-wrapper" style={{ position: 'relative', zIndex: 2 }}>
                     <div className="canvas"></div>
-                    <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
-                      <img className="tp-hover-distort-img front" src="assets/img/service/service-1-2.webp" alt="image-here" />
-                      <img className="tp-hover-distort-img back" src="assets/img/service/service-1-2.webp" alt="image-here" />
+                    <div className="tp-hover-distort" data-displacementimage="/assets/img/webgl/10.jpg">
+                      <img className="tp-hover-distort-img front" src="/assets/img/service/service-1-2.webp" alt="image-here" loading="eager" style={{ opacity: 0, width: '100%', height: 'auto' }} />
+                      <img className="tp-hover-distort-img back" src="/assets/img/service/service-1-2.webp" alt="image-here" loading="eager" style={{ display: 'none' }} />
                     </div>
                   </div>
                 </div>
