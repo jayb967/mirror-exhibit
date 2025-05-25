@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation, Mousewheel, Keyboard } from 'swiper/modules';
@@ -21,6 +21,55 @@ import { useAnalytics } from '@/utils/analytics';
 import '@/styles/product-modal.css';
 import '@/styles/product-carousel.css';
 import Head from 'next/head';
+
+// Performance optimization hook for intersection observer
+const useIntersectionObserver = (options = {}) => {
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const [hasIntersected, setHasIntersected] = useState(false);
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const target = targetRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
+        if (entry.isIntersecting && !hasIntersected) {
+          setHasIntersected(true);
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px',
+        ...options,
+      }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.unobserve(target);
+    };
+  }, [hasIntersected, options]);
+
+  return { targetRef, isIntersecting, hasIntersected };
+};
+
+// Throttle function for scroll events
+const useThrottle = (callback: (...args: any[]) => void, delay: number) => {
+  const lastRun = useRef(Date.now());
+
+  return useCallback(
+    (...args: any[]) => {
+      if (Date.now() - lastRun.current >= delay) {
+        callback(...args);
+        lastRun.current = Date.now();
+      }
+    },
+    [callback, delay]
+  );
+};
 
 // Props interface for the flexible component
 interface ProductAreaHomeFourProps {
@@ -167,41 +216,54 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
   className = '',
   containerClassName = ''
 }) => {
+  // Performance optimization hooks
+  const { targetRef, isIntersecting, hasIntersected } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '100px'
+  });
+
   // Analytics hook
   const analytics = useAnalytics();
 
-  // Call all hooks unconditionally, then select the right data
+  // Performance state
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [shouldPauseAutoplay, setShouldPauseAutoplay] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Performance-optimized API queries - only fetch when component is in view
+  const shouldFetch = hasIntersected; // Only fetch after component has been seen
+
   const filteredQuery = useGetFilteredProductsQuery(
     { type: productType, category, limit },
-    { skip: !(category && productType !== 'all') }
+    { skip: !shouldFetch || !(category && productType !== 'all') }
   );
   const categoryQuery = useGetProductsByCategoryQuery(
     { category: category!, limit },
-    { skip: !category || productType !== 'all' }
+    { skip: !shouldFetch || !category || productType !== 'all' }
   );
   const featuredQuery = useGetFeaturedProductsQuery(
     { limit },
-    { skip: productType !== 'featured' || !!category }
+    { skip: !shouldFetch || productType !== 'featured' || !!category }
   );
   const popularQuery = useGetPopularProductsQuery(
     { limit },
-    { skip: productType !== 'popular' || !!category }
+    { skip: !shouldFetch || productType !== 'popular' || !!category }
   );
   const mostViewedQuery = useGetMostViewedProductsQuery(
     { limit },
-    { skip: productType !== 'most-viewed' || !!category }
+    { skip: !shouldFetch || productType !== 'most-viewed' || !!category }
   );
   const newArrivalsQuery = useGetNewArrivalsQuery(
     { limit },
-    { skip: productType !== 'new-arrivals' || !!category }
+    { skip: !shouldFetch || productType !== 'new-arrivals' || !!category }
   );
   const trendingQuery = useGetTrendingProductsQuery(
     { limit },
-    { skip: productType !== 'trending' || !!category }
+    { skip: !shouldFetch || productType !== 'trending' || !!category }
   );
   const defaultQuery = useGetShowingProductsQuery(
     undefined,
-    { skip: productType !== 'all' || !!category }
+    { skip: !shouldFetch || productType !== 'all' || !!category }
   );
 
   // Select the active query result with fallback logic
@@ -247,6 +309,37 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
     popularQuery, mostViewedQuery, newArrivalsQuery, trendingQuery, defaultQuery
   ]);
   const [swiperRef, setSwiperRef] = useState<any>(null);
+
+  // Scroll detection for performance optimization
+  const handleScroll = useThrottle(() => {
+    setIsScrolling(true);
+    setShouldPauseAutoplay(true);
+
+    // Clear existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Resume autoplay after scroll stops
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsScrolling(false);
+      setShouldPauseAutoplay(false);
+    }, 150);
+  }, 50);
+
+  // Add scroll listener for performance optimization
+  useEffect(() => {
+    if (!hasIntersected) return;
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [handleScroll, hasIntersected]);
 
   // Check if we have an error or no products to determine if we should show error state
   const hasError = isError || (data && (!data.success || !data.products || data.products.length === 0));
@@ -410,7 +503,11 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
         <link rel="preload" as="image" href="/assets/placeholder-product.jpg" />
       </Head>
 
-      <div id={sectionId} className={`tp-product-2-area tp-product-2-style-3 fix pt-20 pb-150 ${className}`}>
+      <div
+        ref={targetRef}
+        id={sectionId}
+        className={`tp-product-2-area tp-product-2-style-3 fix pt-20 pb-150 ${className}`}
+      >
         <div className={`container ${containerClassName}`}>
           <div className="tp-product-2-wrap mb-60">
             <div className="row align-items-end">
@@ -451,13 +548,14 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
 
                 <div ref={carouselRef} style={{ position: 'relative' }} className="product-carousel-wrapper">
                   <Swiper
-                    speed={1000}
+                    speed={isScrolling ? 500 : 1000} // Faster transitions during scroll
                     loop={true}
                     slidesPerView={4}
                     spaceBetween={40}
-                    autoplay={autoplay ? {
+                    autoplay={autoplay && !shouldPauseAutoplay && isIntersecting ? {
                       delay: autoplayDelay,
                       disableOnInteraction: false,
+                      pauseOnMouseEnter: true,
                     } : false}
                     mousewheel={{
                       forceToAxis: true,
@@ -465,7 +563,7 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                       releaseOnEdges: true,
                     }}
                     keyboard={{
-                      enabled: true,
+                      enabled: isIntersecting, // Only enable when visible
                       onlyInViewport: true,
                     }}
                     modules={[Autoplay, Pagination, Navigation, Mousewheel, Keyboard]}
@@ -474,6 +572,12 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                       prevEl: '.swiper-button-prev',
                     }}
                     onSwiper={setSwiperRef}
+                    lazy={{
+                      loadPrevNext: true,
+                      loadPrevNextAmount: 2,
+                    }}
+                    watchSlidesProgress={true}
+                    preloadImages={false}
                     breakpoints={{
                       '1600': {
                         slidesPerView: 4,
@@ -511,7 +615,10 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                       overflow: 'visible',
                     }}
                   >
-                  {isLoading ? (
+                  {!hasIntersected ? (
+                    // Show placeholder until component is in view
+                    skeletonItems
+                  ) : isLoading ? (
                     skeletonItems
                   ) : hasError ? (
                     // Show error message when there's an error or no products
@@ -532,6 +639,7 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                             product={item}
                             pauseCarousel={pauseCarousel}
                             resumeCarousel={resumeCarousel}
+                            priority={item.priority} // Pass priority for image loading
                           />
                         </div>
                       </SwiperSlide>

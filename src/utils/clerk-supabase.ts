@@ -59,6 +59,14 @@ export function createPublicSupabaseClient() {
 }
 
 /**
+ * Create a Supabase client with service role privileges
+ * This is an alias for createAdminSupabaseClient for backward compatibility
+ */
+export function createServiceRoleSupabaseClient() {
+  return createAdminSupabaseClient();
+}
+
+/**
  * Get the current Clerk user ID from server context
  */
 export async function getCurrentUserId(): Promise<string | null> {

@@ -11,12 +11,14 @@ interface Size {
   id: string;
   name: string;
   dimensions?: string;
+  price_adjustment?: number;
 }
 
 interface FrameType {
   id: string;
   name: string;
   material?: string;
+  price_adjustment?: number;
 }
 
 interface ProductOptionsModalProps {

@@ -34,4 +34,105 @@ html {
 :focus-visible {
   outline: 2px solid #0070f3;
   outline-offset: 2px;
-} 
+}
+
+/* Admin Interface Styles */
+.admin-brands-page .table th,
+.admin-tags-page .table th {
+  background-color: #f8f9fa;
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+}
+
+.admin-brands-page .table tbody tr:hover,
+.admin-tags-page .table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.admin-brands-page .card,
+.admin-tags-page .card {
+  border: 1px solid #dee2e6;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.admin-brands-page .btn-group .btn,
+.admin-tags-page .btn-group .btn {
+  border-radius: 0.25rem;
+  margin-right: 0.25rem;
+}
+
+.admin-brands-page .btn-group .btn:last-child,
+.admin-tags-page .btn-group .btn:last-child {
+  margin-right: 0;
+}
+
+/* Tag color preview styles */
+.tag-color-preview {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #dee2e6;
+  margin-right: 8px;
+}
+
+/* Modal improvements */
+.modal-content {
+  border-radius: 0.5rem;
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+/* Form improvements */
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Badge improvements */
+.badge {
+  font-size: 0.75em;
+  font-weight: 500;
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .admin-brands-page .table-responsive,
+  .admin-tags-page .table-responsive {
+    border: none;
+  }
+
+  .admin-brands-page .btn-group,
+  .admin-tags-page .btn-group {
+    flex-direction: column;
+  }
+
+  .admin-brands-page .btn-group .btn,
+  .admin-tags-page .btn-group .btn {
+    margin-bottom: 0.25rem;
+    margin-right: 0;
+  }
+}

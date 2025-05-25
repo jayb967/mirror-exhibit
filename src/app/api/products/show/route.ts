@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createPublicSupabaseClient } from '@/utils/clerk-supabase';
 
 // Force dynamic rendering for this route
@@ -10,20 +10,38 @@ function getPlaceholderImage(): string {
   return '/assets/img/logo/ME_Logo.png';
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Create a public Supabase client for public product access (no auth required)
     const supabase = createPublicSupabaseClient();
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const sortBy = searchParams.get('sortBy') || 'newest';
+    const search = searchParams.get('search') || '';
+    const size = searchParams.get('size') || '';
+    const category = searchParams.get('category') || '';
+    const brand = searchParams.get('brand') || '';
+    const tags = searchParams.get('tags') || ''; // Comma-separated tag names
+    const limit = parseInt(searchParams.get('limit') || '50');
 
     // Add cache headers for better performance
     const headers = new Headers();
     headers.set('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
 
-    console.log('API: /api/products/show - Fetching products - DEBUG');
+    console.log('API: /api/products/show - Fetching products with filters:', {
+      sortBy,
+      search,
+      size,
+      category,
+      brand,
+      tags,
+      limit
+    });
 
-    // Fetch active products with related data - simplified query for debugging
-    // Only select basic fields first to see if products exist
-    const { data, error, count } = await supabase
+    // Build the query with filters - using regular products table with basic fields
+    // We'll fetch brand and category data separately to avoid relationship conflicts
+    let query = supabase
       .from('products')
       .select(`
         id,
@@ -32,11 +50,53 @@ export async function GET() {
         base_price,
         image_url,
         is_featured,
-        meta_keywords
-      `, { count: 'exact' })
-      // Removed is_active filter to see if there are any products at all
-      .order('is_featured', { ascending: false }) // Featured products first
-      .limit(15); // Increased limit to see more products
+        meta_keywords,
+        created_at,
+        brand_id,
+        category_id
+      `, { count: 'exact' });
+
+    // Apply search filter
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,meta_keywords.ilike.%${search}%`);
+    }
+
+    // Apply category filter - we'll implement this with a separate lookup
+    // For now, skip category and brand filtering to get basic products working
+    // TODO: Implement proper filtering with separate queries
+
+    // Note: Tag filtering will be implemented later when we add proper tag joins
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'price_low':
+        query = query.order('base_price', { ascending: true });
+        break;
+      case 'price_high':
+        query = query.order('base_price', { ascending: false });
+        break;
+      case 'name_asc':
+        query = query.order('name', { ascending: true });
+        break;
+      case 'name_desc':
+        query = query.order('name', { ascending: false });
+        break;
+      case 'featured':
+        query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
+        break;
+      case 'oldest':
+        query = query.order('created_at', { ascending: true });
+        break;
+      case 'newest':
+      default:
+        query = query.order('created_at', { ascending: false });
+        break;
+    }
+
+    // Apply limit
+    query = query.limit(limit);
+
+    const { data, error } = await query;
 
     // Handle database errors
     if (error) {
@@ -74,18 +134,31 @@ export async function GET() {
       success: true,
       products: data.map(product => ({
         id: product.id,
-        title: product.name, // Only use name field
+        title: product.name,
         description: product.description,
-        // Use base_price instead of price
         price: product.base_price,
         image: product.image_url || getPlaceholderImage(),
-        brand: 'Unknown Brand', // Simplified for debugging
-        category: 'Uncategorized', // Simplified for debugging
-        variations: [], // Simplified for debugging
+        brand: 'Mirror Exhibit', // Default brand for now
+        brandData: null, // Will be loaded separately
+        category: 'Uncategorized', // Default category for now
+        categoryData: null, // Will be loaded separately
+        tags: [], // Will be loaded separately for now
+        variations: [],
         is_featured: product.is_featured || false,
-        // Use meta_keywords as handle for compatibility
-        handle: product.meta_keywords || ''
-      }))
+        handle: product.meta_keywords || '',
+        created_at: product.created_at,
+        brand_id: product.brand_id,
+        category_id: product.category_id
+      })),
+      filters: {
+        sortBy,
+        search,
+        size,
+        category,
+        brand,
+        tags,
+        total: data.length
+      }
     };
 
     console.log(`API: /api/products/show - Returning ${transformedData.products.length} transformed products`);

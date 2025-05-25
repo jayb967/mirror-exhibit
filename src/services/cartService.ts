@@ -255,31 +255,28 @@ class CartService {
     try {
       const user = await this.getCurrentUser();
 
-      // If user is authenticated, get cart from Supabase
+      // If user is authenticated, get cart from API endpoint (uses service role)
       if (user) {
-        const { data, error } = await this.supabase
-          .from('cart_items')
-          .select(`
-            *,
-            product:product_id (
-              id,
-              name,
-              base_price,
-              image_url
-            )
-          `)
-          .eq('user_id', user.id);
+        try {
+          const response = await fetch('/api/cart/get', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: user.id }),
+          });
 
-        if (error) throw error;
+          if (!response.ok) {
+            throw new Error('Failed to fetch cart');
+          }
 
-        // Map the data to ensure price compatibility
-        return (data || []).map(item => ({
-          ...item,
-          product: item.product ? {
-            ...item.product,
-            price: item.product.base_price // Map base_price to price for compatibility
-          } : undefined
-        }));
+          const { cartItems } = await response.json();
+          return cartItems || [];
+        } catch (error) {
+          console.error('Error fetching cart from API:', error);
+          // Fall back to local storage if API fails
+          return this.getLocalCart();
+        }
       }
 
       // Guest users table was removed - skip database guest cart lookup
@@ -405,16 +402,16 @@ class CartService {
             }
           }
 
-          if (variationId) {
-            // Use the new schema function with product variations
-            await this.supabase.rpc('add_to_cart', {
-              p_user_id: user.id,
-              p_product_variation_id: variationId,
-              p_quantity: quantity
-            });
-          } else {
-            throw new Error('No product variation available');
-          }
+          // Use the add_to_cart RPC function
+          await this.supabase.rpc('add_to_cart', {
+            p_user_id: user.id,
+            p_product_id: productId,
+            p_quantity: quantity,
+            p_variation_id: variationId || null,
+            p_size_name: variationData?.size_name || null,
+            p_frame_name: variationData?.frame_name || null,
+            p_price: product.base_price
+          });
 
           // Track cart activity
           await this.trackCartActivity(user.id);

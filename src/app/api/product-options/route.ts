@@ -12,12 +12,13 @@ export async function GET() {
     // Create a public Supabase client for public product options access
     const supabase = createPublicSupabaseClient();
 
-    // Fetch sizes
+    // Fetch sizes - order by price_adjustment to ensure Small (0) comes first
     const { data: sizes, error: sizesError } = await supabase
       .from('product_sizes')
       .select('id, name, dimensions, code, price_adjustment')
       .eq('is_active', true)
-      .order('name');
+      .order('price_adjustment', { ascending: true })
+      .order('name', { ascending: true });
 
     if (sizesError) {
       console.error('Error fetching sizes:', sizesError);

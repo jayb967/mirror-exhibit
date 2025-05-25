@@ -15,6 +15,7 @@ import { couponService, Coupon } from '@/services/couponService';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { get_cart_products } from '@/redux/features/cartSlice';
 
 const CheckoutArea = () => {
   const router = useRouter();
@@ -47,10 +48,13 @@ const CheckoutArea = () => {
     setActiveCoupon(!activeCoupon)
   }
 
-  // Coupon state
+  // Coupon state - load from Redux if available
+  const reduxAppliedCoupon = useSelector((state: any) => state.cart.appliedCoupon);
+  const reduxDiscount = useSelector((state: any) => state.cart.discount);
+
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(reduxAppliedCoupon || null);
+  const [couponDiscount, setCouponDiscount] = useState(reduxDiscount || 0);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
 
@@ -65,7 +69,7 @@ const CheckoutArea = () => {
 
   // Shipping state
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
-  const [selectedShippingOption, setSelectedShippingOption] = useState<string>('standard');
+  const [selectedShippingOption, setSelectedShippingOption] = useState<string>(''); // No default selection
   const [shippingCost, setShippingCost] = useState<number>(0);
 
   // Form state
@@ -159,8 +163,10 @@ const CheckoutArea = () => {
     if (phoneError) errors.phone = phoneError;
 
     // Shipping option validation
-    if (!selectedShippingOption || shippingOptions.length === 0) {
-      errors.shipping = 'Please select a shipping option';
+    if (shippingOptions.length === 0) {
+      errors.shipping = 'Please enter a complete shipping address to see available shipping options';
+    } else if (!selectedShippingOption) {
+      errors.shipping = 'Please select a shipping method';
     }
 
     // Terms validation
@@ -196,6 +202,80 @@ const CheckoutArea = () => {
     return true;
   };
 
+  // Load cart data from Redux on mount to ensure coupon state is available
+  useEffect(() => {
+    console.log('Loading cart data from localStorage...');
+    // Dispatch the action to load cart data from localStorage
+    dispatch(get_cart_products());
+  }, [dispatch]);
+
+  // Debug effect to track Redux state changes
+  useEffect(() => {
+    console.log('Redux state changed:', {
+      reduxAppliedCoupon,
+      reduxDiscount,
+      cartItemsLength: cartItems.length
+    });
+  }, [reduxAppliedCoupon, reduxDiscount, cartItems]);
+
+  // Initialize coupon state from Redux and expand section if coupon is applied
+  useEffect(() => {
+    console.log('Redux coupon state:', { reduxAppliedCoupon, reduxDiscount });
+    console.log('Current local coupon state:', { appliedCoupon, couponDiscount, activeCoupon });
+
+    if (reduxAppliedCoupon && !appliedCoupon) {
+      console.log('Setting coupon from Redux:', reduxAppliedCoupon);
+      setAppliedCoupon(reduxAppliedCoupon);
+      setCouponDiscount(reduxDiscount || 0);
+      setActiveCoupon(true); // Expand coupon section if coupon is already applied
+
+      // Revalidate the coupon to ensure it's still valid
+      const revalidateCoupon = async () => {
+        try {
+          const response = await fetch('/api/coupons/validate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              code: reduxAppliedCoupon.code,
+              subtotal,
+              shippingAddress: {
+                country: formData.country,
+                state: formData.state,
+                city: formData.city,
+                postalCode: formData.postalCode,
+                address: formData.address,
+                address2: formData.apartment
+              }
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.isValid) {
+            // Coupon is no longer valid, remove it
+            setAppliedCoupon(null);
+            setCouponDiscount(0);
+            setCouponError('Your coupon is no longer valid and has been removed.');
+            // Also remove from Redux
+            dispatch({ type: 'cart/remove_coupon' });
+          } else {
+            // Update discount in case it changed
+            setCouponDiscount(data.discount);
+          }
+        } catch (error) {
+          console.error('Error revalidating coupon:', error);
+        }
+      };
+
+      // Only revalidate if we have address information
+      if (formData.address && formData.city && formData.state && formData.postalCode) {
+        revalidateCoupon();
+      }
+    }
+  }, [reduxAppliedCoupon, reduxDiscount, subtotal, formData.country, formData.state, formData.city, formData.postalCode, formData.address, formData.apartment, dispatch]);
+
   // Load tax settings from database
   useEffect(() => {
     const loadTaxSettings = async () => {
@@ -230,6 +310,72 @@ const CheckoutArea = () => {
     loadTaxSettings();
   }, []);
 
+  // Load user profile data and prefill form for authenticated users
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (isAuthenticated && user) {
+        try {
+          // Use API endpoint to load profile data with service key
+          const response = await fetch('/api/profile/get', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: user.id }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to load profile');
+          }
+
+          const { profile } = await response.json();
+
+          if (profile) {
+            console.log('Profile loaded, prefilling form:', profile);
+            // Prefill form with profile data
+            setFormData(prev => ({
+              ...prev,
+              firstName: profile.first_name || user.full_name?.split(' ')[0] || '',
+              lastName: profile.last_name || user.full_name?.split(' ').slice(1).join(' ') || '',
+              email: user.email || '',
+              phone: profile.phone || user.phone || '',
+              // Handle address data - check if it's JSONB or separate fields
+              address: profile.address?.address_line_1 || profile.address || '',
+              apartment: profile.address?.address_line_2 || profile.apartment || '',
+              city: profile.address?.city || profile.city || '',
+              state: profile.address?.state || profile.state || '',
+              postalCode: profile.address?.postal_code || profile.postal_code || '',
+              country: profile.address?.country || profile.country || 'United States (US)'
+            }));
+          } else {
+            console.log('No profile found, using Clerk data only');
+            // If no profile, at least set email from Clerk
+            setFormData(prev => ({
+              ...prev,
+              firstName: user.full_name?.split(' ')[0] || '',
+              lastName: user.full_name?.split(' ').slice(1).join(' ') || '',
+              email: user.email || ''
+            }));
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          // Fallback to Clerk data
+          setFormData(prev => ({
+            ...prev,
+            firstName: user.full_name?.split(' ')[0] || '',
+            lastName: user.full_name?.split(' ').slice(1).join(' ') || '',
+            email: user.email || ''
+          }));
+        }
+      }
+    };
+
+    // Only load profile once when user is available and form is empty
+    if (isAuthenticated && user && user.id && !formData.firstName && !formData.email) {
+      loadUserProfile();
+    }
+  }, [isAuthenticated, user?.id]); // Only depend on authentication status and user ID
+
   // Initialize anonymous user on mount (Clerk version)
   useEffect(() => {
     const initializeAnonymousUser = async () => {
@@ -241,12 +387,6 @@ const CheckoutArea = () => {
 
           // Set anonymous user state
           setAnonymousUser({ id: anonymousUserId, is_anonymous: true });
-
-          // Create Supabase client for guest operations
-          const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-          );
 
           // Guest user data is now handled by cart_tracking table
           console.log('Anonymous user initialized, cart tracking will handle guest data');
@@ -361,10 +501,15 @@ const CheckoutArea = () => {
 
           // Calculate shipping cost for selected option
           if (data.options.length > 0) {
-            const selectedOption = data.options.find(option => option.id === selectedShippingOption) || data.options[0];
-            setShippingCost(selectedOption.price);
-            if (!selectedShippingOption) {
-              setSelectedShippingOption(selectedOption.id);
+            if (selectedShippingOption) {
+              // If user has already selected an option, find it and set the cost
+              const selectedOption = data.options.find(option => option.id === selectedShippingOption);
+              if (selectedOption) {
+                setShippingCost(selectedOption.price);
+              }
+            } else {
+              // Don't auto-select any shipping option - user must choose
+              setShippingCost(0);
             }
           }
         } catch (error) {
@@ -438,6 +583,8 @@ const CheckoutArea = () => {
       setAppliedCoupon(data.coupon);
       setCouponDiscount(data.discount);
       setCouponCode('');
+      // Also save to Redux store
+      dispatch({ type: 'cart/apply_coupon', payload: { coupon: data.coupon, discount: data.discount } });
       toast.success(`Coupon applied: ${data.coupon.discount_type === 'percentage'
         ? `${data.coupon.discount_value}% off`
         : `$${data.coupon.discount_value.toFixed(2)} off`}`);
@@ -455,6 +602,8 @@ const CheckoutArea = () => {
     setCouponDiscount(0);
     setCouponCode('');
     setCouponError(null);
+    // Also remove from Redux store
+    dispatch({ type: 'cart/remove_coupon' });
     toast.success('Coupon removed');
   };
 
@@ -475,50 +624,39 @@ const CheckoutArea = () => {
     setProcessing(true);
 
     try {
-      // Prepare order data for Stripe metadata (don't create order in DB yet)
+      // Prepare order data to be stored in Stripe metadata (order will be created AFTER payment)
       const orderData = {
-        items: cartItems.map(item => ({
-          id: item.product_id || item.id,
-          name: item.title || item.product?.name || 'Product',
-          price: item.price || item.product?.price || 0,
-          quantity: item.quantity,
-          image: item.image || item.product?.image_url
-        })),
-        customer: {
-          email: formData.email,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phone: formData.phone
-        },
-        shipping: {
+        user_id: isAuthenticated ? user?.id : null,
+        guest_token: !isAuthenticated ? cartService.getGuestToken() : null,
+        guest_email: !isAuthenticated ? formData.email : null,
+        status: 'pending',
+        subtotal,
+        tax_amount: tax,
+        tax_rate: taxRate,
+        shipping_cost: shippingCost,
+        discount_amount: couponDiscount,
+        total_amount: finalTotal,
+        currency: 'USD',
+        shipping_address: {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
           address: formData.address,
           apartment: formData.apartment,
           city: formData.city,
           state: formData.state,
-          postalCode: formData.postalCode,
-          country: formData.country,
-          cost: shippingCost,
-          option: selectedShippingOption
-        },
-        billing: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          company: formData.company,
-          address: formData.address,
-          apartment: formData.apartment,
-          city: formData.city,
-          state: formData.state,
-          postalCode: formData.postalCode,
+          postal_code: formData.postalCode,
           country: formData.country,
           phone: formData.phone,
           email: formData.email
         },
-        subtotal,
-        tax,
-        shippingCost,
-        total: finalTotal,
+        shipping_method: selectedShippingOption,
+        payment_method: 'stripe',
         notes: formData.orderNotes,
-        createAccount: formData.createAccount
+        // Include coupon data if applied
+        coupon_id: appliedCoupon?.id || null,
+        coupon_code: appliedCoupon?.code || null,
+        coupon_discount_amount: couponDiscount,
+        coupon_discount_type: appliedCoupon?.discount_type || null
       };
 
       // Track checkout form completion for marketing
@@ -541,7 +679,7 @@ const CheckoutArea = () => {
         isAuthenticated ? user?.id : undefined
       );
 
-      // Create Stripe checkout session directly (order will be created after payment)
+      // Create Stripe checkout session with order data in metadata (order will be created after payment)
       const checkoutResponse = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -549,10 +687,27 @@ const CheckoutArea = () => {
         },
         body: JSON.stringify({
           orderData, // Pass full order data to be stored in Stripe metadata
-          items: orderData.items,
+          items: cartItems.map(item => ({
+            id: item.product_id || item.id,
+            name: item.title || item.product?.name || 'Product',
+            price: item.price || item.product?.price || 0,
+            quantity: item.quantity,
+            image: item.image || item.product?.image_url,
+            // Include item details for order creation after payment
+            product_id: item.product_id || item.id,
+            variation_id: item.variation_id,
+            size_name: item.size_name,
+            frame_name: item.frame_name
+          })),
           shipping: shippingCost,
           tax,
-          customer: orderData.customer,
+          discount: couponDiscount,
+          customer: {
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone
+          },
           guestToken: !isAuthenticated ? cartService.getGuestToken() : undefined
         }),
       });
@@ -618,46 +773,49 @@ const CheckoutArea = () => {
           <div className="row">
             <div className="col-xl-7 col-lg-7">
               <div className="tp-checkout-verify">
-                <div className="tp-checkout-verify-item">
-                  <p className="tp-checkout-verify-reveal">
-                    Returning customer? {' '}
-                    <button type="button"
-                      onClick={handleActiveLogin}
-                      className="tp-checkout-login-form-reveal-btn"> Click here to login</button>
-                  </p>
+                {/* Only show returning customer section if user is not authenticated */}
+                {!isAuthenticated && (
+                  <div className="tp-checkout-verify-item">
+                    <p className="tp-checkout-verify-reveal">
+                      Returning customer? {' '}
+                      <button type="button"
+                        onClick={handleActiveLogin}
+                        className="tp-checkout-login-form-reveal-btn"> Click here to login</button>
+                    </p>
 
-                  <div id="tpReturnCustomerLoginForm" className="tp-return-customer" style={{ display: `${activeLogin ? 'block' : 'none'}` }}>
-                    <form onSubmit={e => e.preventDefault()}>
+                    <div id="tpReturnCustomerLoginForm" className="tp-return-customer" style={{ display: `${activeLogin ? 'block' : 'none'}` }}>
+                      <form onSubmit={e => e.preventDefault()}>
 
-                      <div className="tp-return-customer-input">
-                        <label>Email</label>
-                        <input type="text" placeholder="Your Email" />
-                      </div>
-                      <div className="tp-return-customer-input">
-                        <label>Password</label>
-                        <input type="password" placeholder="Password" />
-                      </div>
-
-                      <div className="tp-return-customer-suggetions d-sm-flex align-items-center justify-content-between mb-20">
-                        <div className="tp-return-customer-remeber">
-                          <input id="remeber" type="checkbox" />
-                          <label htmlFor="remeber">Remember me</label>
+                        <div className="tp-return-customer-input">
+                          <label>Email</label>
+                          <input type="text" placeholder="Your Email" />
                         </div>
-                        <div className="tp-return-customer-forgot">
-                          <a href="#">Forgot Password?</a>
+                        <div className="tp-return-customer-input">
+                          <label>Password</label>
+                          <input type="password" placeholder="Password" />
                         </div>
-                      </div>
-                      <button type="submit" className="tp-btn-theme"><span>Login</span></button>
-                    </form>
+
+                        <div className="tp-return-customer-suggetions d-sm-flex align-items-center justify-content-between mb-20">
+                          <div className="tp-return-customer-remeber">
+                            <input id="remeber" type="checkbox" />
+                            <label htmlFor="remeber">Remember me</label>
+                          </div>
+                          <div className="tp-return-customer-forgot">
+                            <a href="#">Forgot Password?</a>
+                          </div>
+                        </div>
+                        <button type="submit" className="tp-btn-theme"><span>Login</span></button>
+                      </form>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="tp-checkout-verify-item">
                   <p className="tp-checkout-verify-reveal">
                     Have a coupon?{' '}
                     <button type="button"
                       onClick={handleActiveCoupon}
                       className="tp-checkout-coupon-form-reveal-btn">
-                      Click here to enter your code
+                      {appliedCoupon ? 'Manage your coupon' : 'Click here to enter your code'}
                     </button>
                   </p>
 
@@ -667,10 +825,10 @@ const CheckoutArea = () => {
                         <label>Coupon Code :</label>
                         <input
                           type="text"
-                          placeholder="Coupon"
+                          placeholder={appliedCoupon ? appliedCoupon.code : "Coupon"}
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value)}
-                          disabled={couponLoading}
+                          disabled={couponLoading || !!appliedCoupon}
                         />
                       </div>
                       {couponError && (
@@ -1064,12 +1222,13 @@ const CheckoutArea = () => {
                   <button
                     type="submit"
                     className="tp-btn-theme text-center w-100"
-                    disabled={processing || cartLoading || shippingOptions.length === 0 || !termsAccepted}
+                    disabled={processing || cartLoading || shippingOptions.length === 0 || !selectedShippingOption || !termsAccepted}
                     onClick={handleSubmit}
                   >
                     <span>
                       {processing ? 'Processing...' :
                        shippingOptions.length === 0 ? 'Enter shipping address to continue' :
+                       !selectedShippingOption ? 'Please select a shipping method' :
                        !termsAccepted ? 'Please accept terms and conditions' :
                        'Place Order'}
                     </span>

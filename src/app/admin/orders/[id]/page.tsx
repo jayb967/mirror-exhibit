@@ -35,12 +35,22 @@ interface Order {
   created_at: string;
   updated_at: string;
   status: string;
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
-  user_id: string;
-  shipping_address: {
+  // Handle both naming conventions
+  subtotal?: number;
+  subtotal_amount?: number;
+  shipping?: number;
+  shipping_amount?: number;
+  tax?: number;
+  tax_amount?: number;
+  total?: number;
+  total_amount?: number;
+  user_id?: string;
+  customer_email?: string;
+  guest_email?: string;
+  first_name?: string;
+  last_name?: string;
+  billing_email?: string;
+  shipping_address?: {
     first_name: string;
     last_name: string;
     address: string;
@@ -51,9 +61,10 @@ interface Order {
     country: string;
     phone: string;
   };
-  payment_method: string;
+  payment_method?: string;
   stripe_session_id?: string;
   payment_intent_id?: string;
+  stripe_payment_intent_id?: string;
   items: OrderItem[];
   user?: {
     email: string;
@@ -282,22 +293,30 @@ export default function OrderDetailPage({ params }: OrderParams) {
           <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-3 tw-gap-6">
             <div>
               <h3 className="tw-text-sm tw-font-medium tw-text-gray-500 tw-uppercase tw-mb-2">Customer</h3>
-              <p className="tw-font-medium">{order.shipping_address.first_name} {order.shipping_address.last_name}</p>
-              <p className="tw-text-gray-500">{order.user?.email || 'No email available'}</p>
-              <p className="tw-text-gray-500">{order.shipping_address.phone}</p>
+              <p className="tw-font-medium">
+                {order.shipping_address?.first_name || order.first_name || 'Unknown'} {order.shipping_address?.last_name || order.last_name || 'Customer'}
+              </p>
+              <p className="tw-text-gray-500">{order.user?.email || order.customer_email || order.guest_email || 'No email available'}</p>
+              <p className="tw-text-gray-500">{order.shipping_address?.phone || 'No phone available'}</p>
             </div>
 
             <div>
               <h3 className="tw-text-sm tw-font-medium tw-text-gray-500 tw-uppercase tw-mb-2">Shipping Address</h3>
-              <p className="tw-font-medium">{order.shipping_address.first_name} {order.shipping_address.last_name}</p>
-              <p className="tw-text-gray-500">{order.shipping_address.address}</p>
-              {order.shipping_address.apartment && (
-                <p className="tw-text-gray-500">{order.shipping_address.apartment}</p>
+              {order.shipping_address ? (
+                <>
+                  <p className="tw-font-medium">{order.shipping_address.first_name} {order.shipping_address.last_name}</p>
+                  <p className="tw-text-gray-500">{order.shipping_address.address}</p>
+                  {order.shipping_address.apartment && (
+                    <p className="tw-text-gray-500">{order.shipping_address.apartment}</p>
+                  )}
+                  <p className="tw-text-gray-500">
+                    {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}
+                  </p>
+                  <p className="tw-text-gray-500">{order.shipping_address.country}</p>
+                </>
+              ) : (
+                <p className="tw-text-gray-500">No shipping address available</p>
               )}
-              <p className="tw-text-gray-500">
-                {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}
-              </p>
-              <p className="tw-text-gray-500">{order.shipping_address.country}</p>
             </div>
 
             <div>
@@ -378,7 +397,7 @@ export default function OrderDetailPage({ params }: OrderParams) {
                       Subtotal
                     </td>
                     <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-font-medium tw-text-gray-900 tw-text-right">
-                      ${order.subtotal.toFixed(2)}
+                      ${(order.subtotal_amount || order.subtotal || 0).toFixed(2)}
                     </td>
                   </tr>
                   <tr>
@@ -386,7 +405,7 @@ export default function OrderDetailPage({ params }: OrderParams) {
                       Shipping
                     </td>
                     <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-font-medium tw-text-gray-900 tw-text-right">
-                      ${order.shipping.toFixed(2)}
+                      ${(order.shipping_amount || order.shipping || 0).toFixed(2)}
                     </td>
                   </tr>
                   <tr>
@@ -394,7 +413,7 @@ export default function OrderDetailPage({ params }: OrderParams) {
                       Tax
                     </td>
                     <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-font-medium tw-text-gray-900 tw-text-right">
-                      ${order.tax.toFixed(2)}
+                      ${(order.tax_amount || order.tax || 0).toFixed(2)}
                     </td>
                   </tr>
                   <tr>
@@ -402,7 +421,7 @@ export default function OrderDetailPage({ params }: OrderParams) {
                       Total
                     </td>
                     <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-base tw-font-bold tw-text-gray-900 tw-text-right">
-                      ${order.total.toFixed(2)}
+                      ${(order.total_amount || order.total || 0).toFixed(2)}
                     </td>
                   </tr>
                 </tfoot>
@@ -428,13 +447,19 @@ export default function OrderDetailPage({ params }: OrderParams) {
             <div className="tw-grid tw-grid-cols-2 tw-gap-8 tw-mb-8">
               <div>
                 <h3 className="tw-text-lg tw-font-semibold tw-mb-2">Bill To:</h3>
-                <p className="tw-font-medium">{order.shipping_address.first_name} {order.shipping_address.last_name}</p>
-                <p>{order.shipping_address.address}</p>
-                {order.shipping_address.apartment && <p>{order.shipping_address.apartment}</p>}
-                <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}</p>
-                <p>{order.shipping_address.country}</p>
-                <p>{order.shipping_address.phone}</p>
-                <p>{order.user?.email}</p>
+                {order.shipping_address ? (
+                  <>
+                    <p className="tw-font-medium">{order.shipping_address.first_name} {order.shipping_address.last_name}</p>
+                    <p>{order.shipping_address.address}</p>
+                    {order.shipping_address.apartment && <p>{order.shipping_address.apartment}</p>}
+                    <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}</p>
+                    <p>{order.shipping_address.country}</p>
+                    <p>{order.shipping_address.phone}</p>
+                  </>
+                ) : (
+                  <p>No shipping address available</p>
+                )}
+                <p>{order.user?.email || order.customer_email || order.guest_email}</p>
               </div>
               <div>
                 <h3 className="tw-text-lg tw-font-semibold tw-mb-2">Payment Information:</h3>
@@ -467,19 +492,19 @@ export default function OrderDetailPage({ params }: OrderParams) {
               <tfoot>
                 <tr>
                   <td colSpan={3} className="tw-text-right tw-py-2">Subtotal</td>
-                  <td className="tw-text-right tw-py-2">${order.subtotal.toFixed(2)}</td>
+                  <td className="tw-text-right tw-py-2">${(order.subtotal_amount || order.subtotal || 0).toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td colSpan={3} className="tw-text-right tw-py-2">Shipping</td>
-                  <td className="tw-text-right tw-py-2">${order.shipping.toFixed(2)}</td>
+                  <td className="tw-text-right tw-py-2">${(order.shipping_amount || order.shipping || 0).toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td colSpan={3} className="tw-text-right tw-py-2">Tax</td>
-                  <td className="tw-text-right tw-py-2">${order.tax.toFixed(2)}</td>
+                  <td className="tw-text-right tw-py-2">${(order.tax_amount || order.tax || 0).toFixed(2)}</td>
                 </tr>
                 <tr className="tw-font-bold">
                   <td colSpan={3} className="tw-text-right tw-py-2">Total</td>
-                  <td className="tw-text-right tw-py-2">${order.total.toFixed(2)}</td>
+                  <td className="tw-text-right tw-py-2">${(order.total_amount || order.total || 0).toFixed(2)}</td>
                 </tr>
               </tfoot>
             </table>

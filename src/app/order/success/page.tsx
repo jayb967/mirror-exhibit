@@ -57,88 +57,63 @@ function OrderSuccessContent() {
 
         // Verify user authentication
         const { data: { user } } = await supabase.auth.getUser();
-        const isAuthenticated = !!user;
+        const userId = user?.id;
 
-        // Get order by Stripe session ID - try both authenticated and guest orders
-        let orderData;
-        let orderError;
+        // NEW FLOW: Always create order immediately after payment success
+        console.log('Creating order from successful payment session:', sessionId);
 
-        if (isAuthenticated) {
-          // Try to get order for authenticated user
-          const result = await supabase
-            .from("orders")
-            .select("*")
-            .eq("stripe_session_id", sessionId)
-            .eq("user_id", user.id)
-            .single();
-
-          orderData = result.data;
-          orderError = result.error;
-        }
-
-        // If no order found for authenticated user or user is not authenticated, try guest order
-        if (!orderData) {
-          const result = await supabase
-            .from("orders")
-            .select("*")
-            .eq("stripe_session_id", sessionId)
-            .is("user_id", null)
-            .single();
-
-          orderData = result.data;
-          orderError = result.error;
-        }
-
-        if (orderError || !orderData) {
-          console.error("Error fetching order:", orderError);
-          toast.error("Could not find your order");
-          return;
-        }
-
-        // Get order items with product details
-        const { data: itemsData, error: itemsError } = await supabase
-          .from("order_items")
-          .select(`
-            *,
-            product:product_id (
-              name,
-              image_url
-            )
-          `)
-          .eq("order_id", orderData.id);
-
-        if (itemsError) {
-          console.error("Error fetching order items:", itemsError);
-          toast.error("Could not load order items");
-          return;
-        }
-
-        // Get shipping address
-        const { data: shippingAddressData, error: shippingAddressError } = await supabase
-          .from("shipping_addresses")
-          .select("*")
-          .eq("id", orderData.shipping_address_id)
-          .single();
-
-        if (shippingAddressError) {
-          console.error("Error fetching shipping address:", shippingAddressError);
-        }
-
-        // Update order status to confirmed if it's still pending
-        if (orderData.status === "pending") {
-          await supabase
-            .from("orders")
-            .update({ status: "confirmed" })
-            .eq("id", orderData.id);
-
-          orderData.status = "confirmed";
-        }
-
-        setOrderDetails({
-          ...orderData,
-          items: itemsData || [],
-          shipping_address: shippingAddressData || orderData.shipping_address
+        const createResponse = await fetch('/api/orders/create-from-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionId }),
         });
+
+        if (!createResponse.ok) {
+          const createError = await createResponse.json();
+          console.error("Error creating order:", createError);
+
+          // If order already exists, try to fetch it
+          if (createError.message && createError.message.includes('already exists')) {
+            const fetchResponse = await fetch('/api/orders/get-by-session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ sessionId, userId }),
+            });
+
+            if (fetchResponse.ok) {
+              const fetchData = await fetchResponse.json();
+              if (fetchData.order) {
+                setOrderDetails({
+                  ...fetchData.order,
+                  items: fetchData.order.order_items || []
+                });
+                return;
+              }
+            }
+          }
+
+          toast.error("Failed to process your order. Please contact support.");
+          return;
+        }
+
+        const createData = await createResponse.json();
+        console.log('Order created successfully:', createData);
+
+        if (createData.order) {
+          setOrderDetails({
+            ...createData.order,
+            items: createData.order.order_items || []
+          });
+          toast.success("Your order has been created successfully!");
+        } else {
+          toast.error("Failed to create order details");
+        }
+
+
       } catch (error) {
         console.error("Error processing order success:", error);
         toast.error("Failed to process order information");
@@ -250,9 +225,37 @@ function OrderSuccessContent() {
 
           {/* Order total */}
           <div className="tw-pt-4 tw-border-t tw-border-gray-200">
-            <div className="tw-flex tw-justify-between tw-font-semibold">
-              <span>Total</span>
-              <span className="tw-font-bold">${orderDetails.total.toFixed(2)}</span>
+            <div className="tw-space-y-2">
+              <div className="tw-flex tw-justify-between">
+                <span>Subtotal</span>
+                <span>${orderDetails.subtotal?.toFixed(2) || '0.00'}</span>
+              </div>
+
+              {orderDetails.shipping_cost > 0 && (
+                <div className="tw-flex tw-justify-between">
+                  <span>Shipping</span>
+                  <span>${orderDetails.shipping_cost.toFixed(2)}</span>
+                </div>
+              )}
+
+              {orderDetails.tax_amount > 0 && (
+                <div className="tw-flex tw-justify-between">
+                  <span>Tax</span>
+                  <span>${orderDetails.tax_amount.toFixed(2)}</span>
+                </div>
+              )}
+
+              {orderDetails.coupon_discount_amount > 0 && (
+                <div className="tw-flex tw-justify-between tw-text-green-600">
+                  <span>Discount ({orderDetails.coupon_code})</span>
+                  <span>-${orderDetails.coupon_discount_amount.toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="tw-flex tw-justify-between tw-font-semibold tw-pt-2 tw-border-t tw-border-gray-200">
+                <span>Total</span>
+                <span className="tw-font-bold">${(orderDetails.total_amount || orderDetails.total || 0).toFixed(2)}</span>
+              </div>
             </div>
           </div>
         </div>

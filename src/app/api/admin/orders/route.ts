@@ -41,15 +41,26 @@ export async function GET(request: NextRequest) {
     // Use admin client to bypass RLS
     const adminClient = getAdminClient();
 
-    // Build the query
+    // Build the query - no profiles join since we're using Clerk
     let query = adminClient
       .from('orders')
       .select(`
         *,
-        profiles:user_id (
-          first_name,
-          last_name,
-          email
+        order_items (
+          id,
+          product_id,
+          quantity,
+          price,
+          unit_price,
+          total_price,
+          product_name,
+          size_name,
+          frame_name,
+          products (
+            id,
+            name,
+            image_url
+          )
         )
       `)
       .order('created_at', { ascending: false });
@@ -94,13 +105,44 @@ export async function GET(request: NextRequest) {
       totalCount = countResult || 0;
     }
 
-    // Process orders to include user name
-    const processedOrders = data?.map(order => ({
-      ...order,
-      user_name: order.profiles
-        ? `${order.profiles.first_name || ''} ${order.profiles.last_name || ''}`.trim() || 'Anonymous'
-        : 'Anonymous'
-    })) || [];
+    // Process orders to include customer info (Clerk users vs guests)
+    const processedOrders = data?.map(order => {
+      let customerInfo = {
+        name: 'Unknown Customer',
+        email: 'unknown@example.com',
+        type: 'unknown'
+      };
+
+      if (order.user_id) {
+        // Clerk authenticated user
+        customerInfo = {
+          name: `Clerk User (${order.user_id.slice(-8)})`,
+          email: order.customer_email || order.billing_email || 'clerk-user@example.com',
+          type: 'clerk'
+        };
+      } else if (order.guest_email) {
+        // Guest user
+        customerInfo = {
+          name: `${order.first_name || 'Guest'} ${order.last_name || 'User'}`.trim(),
+          email: order.guest_email,
+          type: 'guest'
+        };
+      } else if (order.customer_email) {
+        // Fallback to customer email
+        customerInfo = {
+          name: order.customer_email.split('@')[0],
+          email: order.customer_email,
+          type: 'customer'
+        };
+      }
+
+      return {
+        ...order,
+        customer_info: customerInfo,
+        user_name: customerInfo.name, // For backward compatibility
+        customer_email: customerInfo.email // For backward compatibility
+      };
+    }) || [];
 
     return NextResponse.json({
       orders: processedOrders,

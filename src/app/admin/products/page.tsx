@@ -119,12 +119,13 @@ function ProductsContent() {
       if (categoriesError) throw categoriesError;
       setCategories(categoriesData || []);
 
-      // Fetch sizes
+      // Fetch sizes - order by price_adjustment to ensure Small (0) comes first
       const { data: sizesData, error: sizesError } = await supabase
         .from('product_sizes')
         .select('id, name, dimensions, code, price_adjustment, is_active')
         .eq('is_active', true)
-        .order('name');
+        .order('price_adjustment', { ascending: true })
+        .order('name', { ascending: true });
 
       if (sizesError) throw sizesError;
       setSizes(sizesData || []);

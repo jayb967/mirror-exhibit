@@ -290,6 +290,35 @@ async function handleConvertGuest(data: any) {
       );
     }
 
+    // Check if a record with this user_id already exists
+    const { data: existingUserRecord } = await supabaseServiceRole
+      .from('cart_tracking')
+      .select('id')
+      .eq('user_id', clerk_user_id)
+      .single();
+
+    if (existingUserRecord) {
+      // User already has a cart tracking record, delete the guest record instead
+      const { error: deleteError } = await supabaseServiceRole
+        .from('cart_tracking')
+        .delete()
+        .eq('guest_token', guest_token);
+
+      if (deleteError) {
+        console.error('Error deleting guest cart record:', deleteError);
+        return NextResponse.json(
+          { error: 'Failed to clean up guest cart' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        action: 'guest_record_deleted',
+        message: 'User already has a cart tracking record'
+      });
+    }
+
     // Update cart_tracking record to convert guest to user
     const { error } = await supabaseServiceRole
       .from('cart_tracking')
@@ -309,7 +338,7 @@ async function handleConvertGuest(data: any) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, action: 'converted' });
   } catch (error) {
     console.error('Error in handleConvertGuest:', error);
     return NextResponse.json(

@@ -9,6 +9,19 @@ import { addToCartWithAuth } from '@/redux/features/cartSlice';
 import { toast } from 'react-toastify';
 import OurProductArea from './OurProductArea';
 
+// Helper function to get contrasting text color
+function getContrastColor(hexColor: string): string {
+  // Convert hex to RGB
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+
+  // Calculate luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+
 const ShopDetailsArea = () => {
   const searchParams = useSearchParams();
   const productId = searchParams.get('id');
@@ -307,6 +320,121 @@ const ShopDetailsArea = () => {
                 <div className="tp-shop-details__text-2">
                   <p>{productToUse.description}</p>
                 </div>
+
+                {/* Brand and Tags Section */}
+                <div className="tp-shop-details__brand-tags mb-30">
+                  {/* Brand Display */}
+                  {productToUse.brandData && (
+                    <div className="tp-shop-details__brand mb-20">
+                      <div className="d-flex align-items-center">
+                        <span className="tp-shop-details__brand-label me-3" style={{
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: '#666',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Brand:
+                        </span>
+                        <div className="tp-shop-details__brand-info d-flex align-items-center">
+                          {productToUse.brandData.logo_url && (
+                            <img
+                              src={productToUse.brandData.logo_url}
+                              alt={productToUse.brandData.name}
+                              style={{
+                                width: '24px',
+                                height: '24px',
+                                objectFit: 'contain',
+                                marginRight: '8px'
+                              }}
+                            />
+                          )}
+                          <span style={{
+                            fontSize: '16px',
+                            fontWeight: '500',
+                            color: '#000'
+                          }}>
+                            {productToUse.brandData.name}
+                          </span>
+                          {productToUse.brandData.website_url && (
+                            <a
+                              href={productToUse.brandData.website_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                marginLeft: '8px',
+                                color: '#D4AF37',
+                                fontSize: '12px'
+                              }}
+                            >
+                              <i className="fas fa-external-link-alt"></i>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags Display */}
+                  {productToUse.tags && productToUse.tags.length > 0 && (
+                    <div className="tp-shop-details__tags">
+                      <div className="d-flex align-items-start">
+                        <span className="tp-shop-details__tags-label me-3" style={{
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: '#666',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          marginTop: '4px'
+                        }}>
+                          Tags:
+                        </span>
+                        <div className="tp-shop-details__tags-list d-flex flex-wrap">
+                          {productToUse.tags.map((tag: any, index: number) => (
+                            <span
+                              key={tag.id || index}
+                              className="tp-shop-details__tag me-2 mb-2"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '4px 12px',
+                                backgroundColor: tag.color || '#f0f0f0',
+                                color: getContrastColor(tag.color || '#f0f0f0'),
+                                borderRadius: '20px',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                textDecoration: 'none',
+                                border: `1px solid ${tag.color || '#ddd'}`,
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: '6px',
+                                  height: '6px',
+                                  borderRadius: '50%',
+                                  backgroundColor: tag.color || '#ddd',
+                                  marginRight: '6px',
+                                  border: '1px solid rgba(255,255,255,0.3)'
+                                }}
+                              ></span>
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="tp-shop-details__product-info">
                   <ul>
                     {frameTypes.length > 0 && (

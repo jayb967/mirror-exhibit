@@ -72,6 +72,26 @@ interface ProductImage {
   created_at: string;
 }
 
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  logo_url: string;
+  website_url: string;
+  is_active: boolean;
+}
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  color: string;
+  category: string;
+  is_active: boolean;
+}
+
 interface ProductModalProps {
   isOpen: boolean;
   product: Product | null; // null for create mode
@@ -103,11 +123,19 @@ export default function ProductModal({
   const [cost, setCost] = useState('');
   const [discountPrice, setDiscountPrice] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [brandId, setBrandId] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
   const [isActive, setIsActive] = useState(true); // Default to true
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
   const [metaKeywords, setMetaKeywords] = useState('');
+
+  // Brands and tags state
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [brandsLoading, setBrandsLoading] = useState(false);
+  const [tagsLoading, setTagsLoading] = useState(false);
 
   // Product options state
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
@@ -122,6 +150,103 @@ export default function ProductModal({
   const supabase = useSupabaseClient();
   const { getToken } = useAuth();
   const isEditMode = !!product;
+
+  // Load brands from API
+  const loadBrands = async () => {
+    try {
+      setBrandsLoading(true);
+      const response = await fetch('/api/brands');
+      const data = await response.json();
+
+      if (data.success) {
+        setBrands(data.brands.filter((brand: Brand) => brand.is_active));
+      } else {
+        console.error('Failed to load brands:', data.error);
+      }
+    } catch (error) {
+      console.error('Error loading brands:', error);
+    } finally {
+      setBrandsLoading(false);
+    }
+  };
+
+  // Load tags from API
+  const loadTags = async () => {
+    try {
+      setTagsLoading(true);
+      const response = await fetch('/api/tags');
+      const data = await response.json();
+
+      if (data.success) {
+        setTags(data.tags.filter((tag: Tag) => tag.is_active));
+      } else {
+        console.error('Failed to load tags:', data.error);
+      }
+    } catch (error) {
+      console.error('Error loading tags:', error);
+    } finally {
+      setTagsLoading(false);
+    }
+  };
+
+  // Load product tags for editing
+  const loadProductTags = async (productId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('product_tags')
+        .select('tag_id')
+        .eq('product_id', productId);
+
+      if (error) {
+        console.error('Error loading product tags:', error);
+      } else {
+        setSelectedTags(data?.map(pt => pt.tag_id) || []);
+      }
+    } catch (error) {
+      console.error('Error loading product tags:', error);
+    }
+  };
+
+  // Update product tags
+  const updateProductTags = async (productId: string) => {
+    try {
+      // First, remove all existing tags for this product
+      const { error: deleteError } = await supabase
+        .from('product_tags')
+        .delete()
+        .eq('product_id', productId);
+
+      if (deleteError) throw deleteError;
+
+      // Then, add the selected tags
+      if (selectedTags.length > 0) {
+        const tagInserts = selectedTags.map(tagId => ({
+          product_id: productId,
+          tag_id: tagId,
+          assigned_by: 'admin' // Service role assignment
+        }));
+
+        const { error: insertError } = await supabase
+          .from('product_tags')
+          .insert(tagInserts);
+
+        if (insertError) throw insertError;
+      }
+
+      console.log('Product tags updated successfully');
+    } catch (error) {
+      console.error('Error updating product tags:', error);
+      throw error;
+    }
+  };
+
+  // Load brands and tags when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadBrands();
+      loadTags();
+    }
+  }, [isOpen]);
 
   // Handle body scroll lock when modal opens/closes
   useEffect(() => {
@@ -158,14 +283,16 @@ export default function ProductModal({
         setCost(product.cost?.toString() || '');
         setDiscountPrice(product.discount_price?.toString() || '');
         setCategoryId(product.category_id || '');
+        setBrandId(product.brand_id || '');
         setIsFeatured(product.is_featured || false);
         setIsActive(product.is_active !== undefined ? product.is_active : true);
         setMetaTitle(product.meta_title || '');
         setMetaDescription(product.meta_description || '');
         setMetaKeywords(product.meta_keywords || '');
 
-        // Load only product-specific data (variations and images)
+        // Load only product-specific data (variations, images, and tags)
         loadProductSpecificData(product.id);
+        loadProductTags(product.id);
       } else {
         // Create mode - reset form
         setName('');
@@ -174,6 +301,7 @@ export default function ProductModal({
         setCost('');
         setDiscountPrice('');
         setCategoryId('');
+        setBrandId('');
         setIsFeatured(false);
         setIsActive(true); // Default to true for new products
         setMetaTitle('');
@@ -181,6 +309,7 @@ export default function ProductModal({
         setMetaKeywords('');
         setSelectedSizes([]);
         setSelectedFrameTypes([]);
+        setSelectedTags([]);
         setProductVariations([]);
         setProductImages([]);
         setModalLoading(false);
@@ -455,6 +584,7 @@ export default function ProductModal({
         cost: cost ? parseFloat(cost) : null,
         discount_price: discountPrice ? parseFloat(discountPrice) : null,
         category_id: categoryId || null,
+        brand_id: brandId || null,
         is_featured: isFeatured,
         is_active: isActive,
         meta_title: metaTitle.trim() || null,
@@ -491,6 +621,10 @@ export default function ProductModal({
 
         // Log the actual updated data from database
         console.log('Product data returned from database:', data);
+
+        // Update product tags
+        await updateProductTags(product.id);
+
         setJustSaved(true); // Prevent form reset after save
         toast.success('Product updated successfully');
       } else {
@@ -500,11 +634,18 @@ export default function ProductModal({
           created_at: new Date().toISOString()
         };
 
-        const { error } = await supabase
+        const { data: newProduct, error } = await supabase
           .from('products')
-          .insert([createData]);
+          .insert([createData])
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Add tags to new product
+        if (newProduct && selectedTags.length > 0) {
+          await updateProductTags(newProduct.id);
+        }
 
         // Log the data being saved for debugging
         console.log('Product data created:', createData);
@@ -650,6 +791,97 @@ export default function ProductModal({
                         </option>
                       ))}
                     </select>
+                  </div>
+                </div>
+
+                {/* Brand and Tags Row */}
+                <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
+                  <div>
+                    <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
+                      Brand
+                    </label>
+                    <select
+                      value={brandId}
+                      onChange={(e) => setBrandId(e.target.value)}
+                      className="tw-block tw-w-full tw-border tw-border-gray-300 tw-rounded-md tw-shadow-sm tw-px-4 tw-py-2 focus:tw-ring-blue-500 focus:tw-border-blue-500"
+                      disabled={brandsLoading}
+                    >
+                      <option value="">Select a brand</option>
+                      {brands.map((brand) => (
+                        <option key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </option>
+                      ))}
+                    </select>
+                    {brandsLoading && (
+                      <p className="tw-mt-1 tw-text-sm tw-text-gray-500">Loading brands...</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
+                      Tags
+                    </label>
+                    <div className="tw-border tw-border-gray-300 tw-rounded-md tw-p-3 tw-max-h-32 tw-overflow-y-auto">
+                      {tagsLoading ? (
+                        <p className="tw-text-sm tw-text-gray-500">Loading tags...</p>
+                      ) : tags.length === 0 ? (
+                        <p className="tw-text-sm tw-text-gray-500">No tags available</p>
+                      ) : (
+                        <div className="tw-space-y-2">
+                          {['fashion', 'emotion', 'style', 'theme'].map(category => {
+                            const categoryTags = tags.filter(tag => tag.category === category);
+                            if (categoryTags.length === 0) return null;
+
+                            return (
+                              <div key={category}>
+                                <h6 className="tw-text-xs tw-font-medium tw-text-gray-600 tw-uppercase tw-mb-1">
+                                  {category}
+                                </h6>
+                                <div className="tw-flex tw-flex-wrap tw-gap-1">
+                                  {categoryTags.map((tag) => (
+                                    <label
+                                      key={tag.id}
+                                      className={`tw-inline-flex tw-items-center tw-px-2 tw-py-1 tw-rounded-full tw-text-xs tw-cursor-pointer tw-transition-colors ${
+                                        selectedTags.includes(tag.id)
+                                          ? 'tw-text-white'
+                                          : 'tw-text-gray-700 tw-bg-gray-100 hover:tw-bg-gray-200'
+                                      }`}
+                                      style={{
+                                        backgroundColor: selectedTags.includes(tag.id) ? tag.color : undefined
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedTags.includes(tag.id)}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setSelectedTags(prev => [...prev, tag.id]);
+                                          } else {
+                                            setSelectedTags(prev => prev.filter(id => id !== tag.id));
+                                          }
+                                        }}
+                                        className="tw-sr-only"
+                                      />
+                                      <span
+                                        className="tw-w-2 tw-h-2 tw-rounded-full tw-mr-1"
+                                        style={{ backgroundColor: tag.color }}
+                                      ></span>
+                                      {tag.name}
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    {selectedTags.length > 0 && (
+                      <p className="tw-mt-1 tw-text-sm tw-text-gray-500">
+                        {selectedTags.length} tag(s) selected
+                      </p>
+                    )}
                   </div>
                 </div>
 

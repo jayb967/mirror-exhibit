@@ -82,8 +82,13 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
           .filter(Boolean)
           .map(name => {
             const variation = product.variations.find(v => v.size?.name === name);
-            return variation?.size;
+            return {
+              id: variation?.size?.id,
+              name: variation?.size?.name,
+              price_adjustment: variation?.size?.price_adjustment
+            };
           })
+          .filter(size => size.id && size.name) // Filter out incomplete entries
       : defaultOptions.sizes;
 
     const productFrameTypes = product?.variations && product.variations.length > 0
@@ -91,8 +96,13 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
           .filter(Boolean)
           .map(name => {
             const variation = product.variations.find(v => v.frame_type?.name === name);
-            return variation?.frame_type;
+            return {
+              id: variation?.frame_type?.id,
+              name: variation?.frame_type?.name,
+              price_adjustment: variation?.frame_type?.price_adjustment
+            };
           })
+          .filter(frameType => frameType.id && frameType.name) // Filter out incomplete entries
       : defaultOptions.frameTypes;
 
     // Open global modal with product data

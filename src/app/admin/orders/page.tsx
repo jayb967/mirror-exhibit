@@ -13,10 +13,37 @@ interface Order {
   id: string;
   created_at: string;
   status: string;
-  total: number;
-  user_id: string;
+  total?: number;
+  total_amount?: number;
+  user_id?: string;
   user_name?: string;
-  shipping_address: {
+  customer_info?: {
+    name: string;
+    email: string;
+    type: string;
+  };
+  customer_email?: string;
+  guest_email?: string;
+  first_name?: string;
+  last_name?: string;
+  billing_email?: string;
+  order_items?: Array<{
+    id: string;
+    product_id: string;
+    quantity: number;
+    price: number;
+    unit_price?: number;
+    total_price?: number;
+    product_name: string;
+    size_name?: string;
+    frame_name?: string;
+    products?: {
+      id: string;
+      name: string;
+      image_url: string;
+    };
+  }>;
+  shipping_address?: {
     first_name: string;
     last_name: string;
   };
@@ -277,13 +304,13 @@ export default function OrdersPage() {
                         #{order.id.substring(0, 8)}
                       </td>
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">
-                        {order.user_name}
+                        {order.customer_info?.name || order.user_name || 'Unknown Customer'}
                       </td>
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">
                         {formatDate(order.created_at)}
                       </td>
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">
-                        ${order.total.toFixed(2)}
+                        ${(order.total_amount || order.total || 0).toFixed(2)}
                       </td>
                       <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap">
                         <span className={`tw-px-2 tw-inline-flex tw-text-xs tw-leading-5 tw-font-semibold tw-rounded-full ${getStatusBadgeClass(order.status)}`}>

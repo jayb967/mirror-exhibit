@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createClient } from '@supabase/supabase-js';
 import { orderTrackingService } from '@/services/orderTrackingService';
 import { notificationService } from '@/services/notificationService';
 import Stripe from 'stripe';
@@ -34,8 +34,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Webhook Error: ${errorMessage}` }, { status: 400 });
     }
 
-    // Create a Supabase client
-    const supabase = await createServerSupabaseClient();
+    // Create a Supabase client with service role key
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
 
     // Log webhook event for debugging
     await supabase
@@ -53,57 +62,73 @@ export async function POST(req: Request) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        // Retrieve the order ID from metadata
-        const orderId = session.client_reference_id;
+        // NEW FLOW: Update existing order with additional payment details
+        console.log('Webhook processing session:', session.id);
 
-        if (!orderId) {
-          console.error('No order ID found in session');
-          return NextResponse.json({ error: 'No order ID found' }, { status: 400 });
-        }
-
-        // Get order details for notifications
-        const { data: order } = await supabase
+        // Check if order already exists (should exist from immediate creation)
+        const { data: existingOrder, error: orderError } = await supabase
           .from('orders')
-          .select('*')
-          .eq('id', orderId)
+          .select('id, status')
+          .eq('stripe_session_id', session.id)
           .single();
 
-        // Update order status using tracking service
-        await orderTrackingService.updateOrderStatus({
-          orderId,
-          newStatus: 'paid',
-          changeReason: 'Payment completed via Stripe',
-          metadata: {
-            stripe_session_id: session.id,
-            payment_intent_id: session.payment_intent as string
-          }
-        });
-
-        // Create payment intent record
-        if (session.payment_intent) {
-          await supabase
-            .from('stripe_payment_intents')
-            .upsert({
-              order_id: orderId,
-              stripe_payment_intent_id: session.payment_intent as string,
-              stripe_customer_id: session.customer as string,
-              amount_cents: session.amount_total || 0,
-              currency: session.currency || 'usd',
-              status: 'succeeded',
-              payment_method_type: session.payment_method_types?.[0] || 'card',
-              metadata: session.metadata
-            });
+        if (orderError || !existingOrder) {
+          console.log('No existing order found, webhook will skip processing for session:', session.id);
+          // This is fine - order was created immediately after payment
+          return NextResponse.json({ message: 'Order already processed' });
         }
 
-        // Send admin notification for new order
-        if (order) {
+        try {
+          // Update order with additional payment information from webhook
+          const updateData = {
+            stripe_payment_intent_id: session.payment_intent,
+            payment_status: 'completed',
+            webhook_processed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+
+          const { error: updateError } = await supabase
+            .from('orders')
+            .update(updateData)
+            .eq('id', existingOrder.id);
+
+          if (updateError) {
+            console.error('Error updating order with webhook data:', updateError);
+            return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
+          }
+
+          console.log('Order updated successfully with webhook data:', existingOrder.id);
+
+          // Clean up the pending order if it still exists
+          await supabase
+            .from('pending_orders')
+            .delete()
+            .eq('stripe_session_id', session.id);
+
+          // Create payment intent record
+          if (session.payment_intent) {
+            await supabase
+              .from('stripe_payment_intents')
+              .upsert({
+                order_id: order.id,
+                stripe_payment_intent_id: session.payment_intent as string,
+                stripe_customer_id: session.customer as string,
+                amount_cents: session.amount_total || 0,
+                currency: session.currency || 'usd',
+                status: 'succeeded',
+                payment_method_type: session.payment_method_types?.[0] || 'card',
+                metadata: session.metadata
+              });
+          }
+
+          // Send admin notification for new order
           await notificationService.createNotification({
             type: 'admin_new_order',
             title: 'New Order Received',
-            message: `New order #${orderId.substring(0, 8)} for $${((session.amount_total || 0) / 100).toFixed(2)}`,
-            actionUrl: `/admin/orders/${orderId}`,
+            message: `New order #${order.id.substring(0, 8)} for $${((session.amount_total || 0) / 100).toFixed(2)}`,
+            actionUrl: `/admin/orders/${order.id}`,
             data: {
-              order_id: orderId,
+              order_id: order.id,
               amount: session.amount_total,
               customer_email: session.customer_details?.email
             }
@@ -112,18 +137,22 @@ export async function POST(req: Request) {
             sendEmail: true,
             emailTemplate: 'admin_new_order',
             emailData: {
-              order_number: orderId.substring(0, 8),
+              order_number: order.id.substring(0, 8),
               customer_name: order.shipping_address?.first_name || 'Customer',
               customer_email: session.customer_details?.email || order.guest_email,
               order_date: new Date().toLocaleDateString(),
               total_amount: ((session.amount_total || 0) / 100).toFixed(2),
               payment_status: 'paid',
-              admin_order_url: `${process.env.NEXT_PUBLIC_APP_URL}/admin/orders/${orderId}`
+              admin_order_url: `${process.env.NEXT_PUBLIC_APP_URL}/admin/orders/${order.id}`
             }
           });
-        }
 
-        console.log(`Payment for order ${orderId} succeeded!`);
+          console.log(`Payment for order ${order.id} succeeded!`);
+
+        } catch (parseError) {
+          console.error('Error parsing order data from metadata:', parseError);
+          return NextResponse.json({ error: 'Invalid order data in metadata' }, { status: 400 });
+        }
         break;
       }
 

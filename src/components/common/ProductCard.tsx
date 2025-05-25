@@ -16,8 +16,8 @@ interface ProductCardProps {
 const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }: ProductCardProps) => {
   const { openModal: openGlobalModal } = useGlobalModal();
   const [defaultOptions, setDefaultOptions] = useState<{
-    sizes: Array<{id: string, name: string}>,
-    frameTypes: Array<{id: string, name: string}>
+    sizes: Array<{id: string, name: string, price_adjustment?: number}>,
+    frameTypes: Array<{id: string, name: string, price_adjustment?: number}>
   }>({
     sizes: [],
     frameTypes: []
@@ -34,8 +34,16 @@ const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }:
 
         if (data.success) {
           setDefaultOptions({
-            sizes: data.sizes.map(size => ({ id: size.id, name: size.name })),
-            frameTypes: data.frameTypes.map(frame => ({ id: frame.id, name: frame.name }))
+            sizes: data.sizes.map(size => ({
+              id: size.id,
+              name: size.name,
+              price_adjustment: size.price_adjustment
+            })),
+            frameTypes: data.frameTypes.map(frame => ({
+              id: frame.id,
+              name: frame.name,
+              price_adjustment: frame.price_adjustment
+            }))
           });
         }
       } catch (error) {
@@ -54,7 +62,11 @@ const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }:
     if (product.variations && Array.isArray(product.variations) && product.variations.length > 0) {
       return [...new Set(product.variations.map(v =>
         v.frame_type?.id && v.frame_type?.name ?
-        JSON.stringify({id: v.frame_type.id, name: v.frame_type.name}) : null
+        JSON.stringify({
+          id: v.frame_type.id,
+          name: v.frame_type.name,
+          price_adjustment: v.frame_type.price_adjustment
+        }) : null
       ))]
       .filter(Boolean)
       .map(item => JSON.parse(item));
@@ -69,7 +81,11 @@ const ProductCard = ({ product, className = '', pauseCarousel, resumeCarousel }:
     if (product.variations && Array.isArray(product.variations) && product.variations.length > 0) {
       return [...new Set(product.variations.map(v =>
         v.size?.id && v.size?.name ?
-        JSON.stringify({id: v.size.id, name: v.size.name}) : null
+        JSON.stringify({
+          id: v.size.id,
+          name: v.size.name,
+          price_adjustment: v.size.price_adjustment
+        }) : null
       ))]
       .filter(Boolean)
       .map(item => JSON.parse(item));

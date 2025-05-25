@@ -70,6 +70,10 @@ This folder contains reusable UI components that are used across multiple pages 
 | 2025-01-27 | Updated ProductCard to use global modal instead of local modal | Prevent modal positioning conflicts with carousel |
 | 2025-01-27 | Added portal-based rendering for modal at document.body level | Guarantee proper centering regardless of page scroll |
 | 2025-01-27 | Enhanced carousel pause/resume with debugging logs | Ensure auto-scroll stops when modal is open |
+| 2025-01-27 | Fixed price adjustment calculation in product modals | Price wasn't updating when users selected different options |
+| 2025-01-27 | Updated data flow to preserve price_adjustment fields | Ensure modal components receive complete option data |
+| 2025-01-27 | Enhanced type definitions for Size and FrameType interfaces | Better type safety for price calculations |
+| 2025-01-27 | Fixed default size selection to prioritize Small over Large | Changed API ordering to ensure Small (price_adjustment: 0) comes first |
 
 ## 🎨 Styling
 - Components use CSS modules and global styles from `/src/styles/`

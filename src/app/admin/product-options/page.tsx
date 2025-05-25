@@ -35,6 +35,8 @@ export default function ProductOptionsPage() {
   const [frameTypes, setFrameTypes] = useState<FrameType[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('sizes');
+  const [editingSize, setEditingSize] = useState<Size | null>(null);
+  const [editingFrameType, setEditingFrameType] = useState<FrameType | null>(null);
 
   const supabase = useSupabaseClient();
 
@@ -45,11 +47,12 @@ export default function ProductOptionsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch sizes
+      // Fetch sizes - order by price_adjustment to ensure Small (0) comes first
       const { data: sizesData, error: sizesError } = await supabase
         .from('product_sizes')
         .select('*')
-        .order('name');
+        .order('price_adjustment', { ascending: true })
+        .order('name', { ascending: true });
 
       if (sizesError) throw sizesError;
       setSizes(sizesData || []);
@@ -71,6 +74,97 @@ export default function ProductOptionsPage() {
     }
   };
 
+  // Handler functions for sizes
+  const handleEditSize = (size: Size) => {
+    setEditingSize(size);
+    // You can implement a modal or inline editing here
+    const newName = prompt('Edit size name:', size.name);
+    if (newName && newName !== size.name) {
+      updateSize(size.id, { name: newName });
+    }
+  };
+
+  const handleDeleteSize = async (sizeId: string) => {
+    if (confirm('Are you sure you want to delete this size?')) {
+      try {
+        const { error } = await supabase
+          .from('product_sizes')
+          .delete()
+          .eq('id', sizeId);
+
+        if (error) throw error;
+
+        toast.success('Size deleted successfully');
+        fetchData();
+      } catch (error) {
+        console.error('Error deleting size:', error);
+        toast.error('Failed to delete size');
+      }
+    }
+  };
+
+  const updateSize = async (sizeId: string, updates: Partial<Size>) => {
+    try {
+      const { error } = await supabase
+        .from('product_sizes')
+        .update(updates)
+        .eq('id', sizeId);
+
+      if (error) throw error;
+
+      toast.success('Size updated successfully');
+      fetchData();
+    } catch (error) {
+      console.error('Error updating size:', error);
+      toast.error('Failed to update size');
+    }
+  };
+
+  // Handler functions for frame types
+  const handleEditFrameType = (frameType: FrameType) => {
+    setEditingFrameType(frameType);
+    const newName = prompt('Edit frame type name:', frameType.name);
+    if (newName && newName !== frameType.name) {
+      updateFrameType(frameType.id, { name: newName });
+    }
+  };
+
+  const handleDeleteFrameType = async (frameTypeId: string) => {
+    if (confirm('Are you sure you want to delete this frame type?')) {
+      try {
+        const { error } = await supabase
+          .from('frame_types')
+          .delete()
+          .eq('id', frameTypeId);
+
+        if (error) throw error;
+
+        toast.success('Frame type deleted successfully');
+        fetchData();
+      } catch (error) {
+        console.error('Error deleting frame type:', error);
+        toast.error('Failed to delete frame type');
+      }
+    }
+  };
+
+  const updateFrameType = async (frameTypeId: string, updates: Partial<FrameType>) => {
+    try {
+      const { error } = await supabase
+        .from('frame_types')
+        .update(updates)
+        .eq('id', frameTypeId);
+
+      if (error) throw error;
+
+      toast.success('Frame type updated successfully');
+      fetchData();
+    } catch (error) {
+      console.error('Error updating frame type:', error);
+      toast.error('Failed to update frame type');
+    }
+  };
+
   const renderSizesTab = () => (
     <div className="tw-space-y-6">
       <div className="tw-bg-white tw-shadow tw-rounded-lg tw-overflow-hidden">
@@ -81,12 +175,13 @@ export default function ProductOptionsPage() {
               <th scope="col" className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">Code</th>
               <th scope="col" className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">Dimensions</th>
               <th scope="col" className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">Price Adjustment</th>
+              <th scope="col" className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="tw-bg-white tw-divide-y tw-divide-gray-200">
             {sizes.length === 0 ? (
               <tr>
-                <td colSpan={4} className="tw-px-6 tw-py-4 tw-text-center tw-text-sm tw-text-gray-500">
+                <td colSpan={5} className="tw-px-6 tw-py-4 tw-text-center tw-text-sm tw-text-gray-500">
                   No sizes found. Use the &quot;Set Up Default Options&quot; button to create default sizes.
                 </td>
               </tr>
@@ -97,6 +192,24 @@ export default function ProductOptionsPage() {
                   <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">{size.code}</td>
                   <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">{size.dimensions}</td>
                   <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">${size.price_adjustment?.toFixed(2) || '0.00'}</td>
+                  <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">
+                    <div className="tw-flex tw-space-x-2">
+                      <button
+                        onClick={() => handleEditSize(size)}
+                        className="tw-bg-black tw-text-white tw-px-3 tw-py-1 tw-text-xs hover:tw-bg-gray-800 tw-transition-colors"
+                        title="Edit Size"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSize(size.id)}
+                        className="tw-bg-red-600 tw-text-white tw-px-3 tw-py-1 tw-text-xs hover:tw-bg-red-700 tw-transition-colors"
+                        title="Delete Size"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -116,12 +229,13 @@ export default function ProductOptionsPage() {
               <th scope="col" className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">Material</th>
               <th scope="col" className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">Color</th>
               <th scope="col" className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">Price Adjustment</th>
+              <th scope="col" className="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="tw-bg-white tw-divide-y tw-divide-gray-200">
             {frameTypes.length === 0 ? (
               <tr>
-                <td colSpan={4} className="tw-px-6 tw-py-4 tw-text-center tw-text-sm tw-text-gray-500">
+                <td colSpan={5} className="tw-px-6 tw-py-4 tw-text-center tw-text-sm tw-text-gray-500">
                   No frame types found. Use the &quot;Set Up Default Options&quot; button to create default frame types.
                 </td>
               </tr>
@@ -132,6 +246,24 @@ export default function ProductOptionsPage() {
                   <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">{frameType.material}</td>
                   <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">{frameType.color}</td>
                   <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">${frameType.price_adjustment?.toFixed(2) || '0.00'}</td>
+                  <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500">
+                    <div className="tw-flex tw-space-x-2">
+                      <button
+                        onClick={() => handleEditFrameType(frameType)}
+                        className="tw-bg-black tw-text-white tw-px-3 tw-py-1 tw-text-xs hover:tw-bg-gray-800 tw-transition-colors"
+                        title="Edit Frame Type"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFrameType(frameType.id)}
+                        className="tw-bg-red-600 tw-text-white tw-px-3 tw-py-1 tw-text-xs hover:tw-bg-red-700 tw-transition-colors"
+                        title="Delete Frame Type"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}

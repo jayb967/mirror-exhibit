@@ -3,7 +3,6 @@
 import React, { useState, ReactNode, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
 import {
   HomeIcon,
   ShoppingBagIcon,
@@ -24,6 +23,8 @@ const navigation = [
   { name: "Dashboard", href: "/admin", icon: HomeIcon },
   { name: "Products", href: "/admin/products", icon: ShoppingBagIcon },
   { name: "Product Options", href: "/admin/product-options", icon: TagIcon },
+  { name: "Brands", href: "/admin/brands", icon: TagIcon },
+  { name: "Tags", href: "/admin/tags", icon: TagIcon },
   { name: "Orders", href: "/admin/orders", icon: ChartBarIcon },
   { name: "Users", href: "/admin/users", icon: UsersIcon },
   { name: "Guest Users", href: "/admin/guests", icon: UserGroupIcon },
@@ -120,5 +121,5 @@ const SimpleAdminLayout = ({ children }: SimpleAdminLayoutProps) => {
   );
 };
 
-// Export with dynamic to avoid SSR
-export default dynamic(() => Promise.resolve(SimpleAdminLayout), { ssr: false });
+// Export as default
+export default SimpleAdminLayout;
