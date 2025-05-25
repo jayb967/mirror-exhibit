@@ -12,6 +12,7 @@ import OnPageMenu from './menu/OnPageMenu';
 import UseSticky from '@/hooks/UseSticky';
 import OnePageOffcanvas from '@/components/common/OnePageOffcanvas';
 import CartButtonComponent from '@/components/common/CartButtonComponent';
+import ProfileButtonComponent from '@/components/common/ProfileButtonComponent';
 
 const HeaderFour = ({ onePageHomeFive }: any) => {
 
@@ -65,6 +66,7 @@ const HeaderFour = ({ onePageHomeFive }: any) => {
             </div>
             <div className="col-xl-2 col-lg-8 col-6">
               <div className="tp-header-right d-flex align-items-center justify-content-end">
+                <ProfileButtonComponent iconColor={sticky ? "#000" : "#fff"} />
                 <CartButtonComponent
                   variant="navbar"
                   iconColor={sticky ? "#000" : "#fff"}
@@ -97,6 +99,7 @@ const HeaderFour = ({ onePageHomeFive }: any) => {
               </div>
               <div className="col-xl-2 col-lg-8 col-6">
                 <div className="tp-header-right d-flex align-items-center justify-content-end">
+                  <ProfileButtonComponent iconColor="#000" />
                   <CartButtonComponent
                     variant="navbar"
                     iconColor="#000"

@@ -10,6 +10,7 @@ import black_logo from "@/assets/img/logo/logo-black.png";
 import Offcanvus from '@/components/common/Offcanvus';
 import UseSticky from '@/hooks/UseSticky';
 import CartButtonComponent from '@/components/common/CartButtonComponent';
+import ProfileButtonComponent from '@/components/common/ProfileButtonComponent';
 
 const ProductHeader = () => {
   // sticky menu
@@ -56,6 +57,7 @@ const ProductHeader = () => {
             </div>
             <div className="col-xl-2 col-lg-8 col-6">
               <div className="tp-header-right d-flex align-items-center justify-content-end">
+                <ProfileButtonComponent iconColor="#fff" />
                 <CartButtonComponent
                   variant="navbar"
                   iconColor="#fff"
@@ -89,6 +91,7 @@ const ProductHeader = () => {
             </div>
             <div className="col-xl-2 col-lg-8 col-6">
               <div className="tp-header-right d-flex align-items-center justify-content-end">
+                <ProfileButtonComponent iconColor="#000" />
                 <CartButtonComponent
                   variant="navbar"
                   iconColor="#000"
