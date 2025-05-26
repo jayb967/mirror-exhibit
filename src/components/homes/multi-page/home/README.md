@@ -329,14 +329,21 @@ The component automatically selects the appropriate API endpoint based on props:
 ### TestimonialAreaHomeTwo Component Fixes
 | Date       | Change Description                                                 | Reason                         |
 |------------|--------------------------------------------------------------------|--------------------------------|
-| 2025-01-XX | Fixed testimonial images not displaying on desktop and mobile     | Images were hardcoded instead of using dynamic data |
+| 2025-01-XX | Fixed testimonial images not displaying on desktop and mobile     | Images were using regular img tags instead of Next.js Image |
 | 2025-01-XX | Updated TestimonialAreaHomeTwo to use Next.js Image component     | Consistency with other sections and better optimization |
-| 2025-01-XX | Added dynamic image switching based on current testimonial slide  | Better user experience with matching images |
-| 2025-01-XX | Fixed testimonial_data.ts image import paths                      | Images are in public directory, not src/assets |
+| 2025-01-XX | Set single image (IMG_7200.jpg) for all testimonials              | User requirement for consistent image display |
+| 2025-01-XX | Hide background image on desktop, show on mobile                  | User requirement for responsive image display |
+| 2025-01-XX | Fixed mobile layout - centered overlay image with background      | User reported stacked images instead of proper overlay |
+| 2025-01-XX | Added subtle scroll animation for mobile image                     | User requested slight movement animation on scroll |
 
 ### Key Changes Made:
-1. **Dynamic Image Display**: The testimonial section now displays different images based on the current testimonial slide
+1. **Fixed Image Display**: The testimonial section now properly displays IMG_7200.jpg on both desktop and mobile
 2. **Next.js Image Optimization**: Replaced regular `img` tags with Next.js `Image` components for better performance
-3. **Proper Image Paths**: Fixed image import paths in testimonial_data.ts to use public directory paths
-4. **WebGL Compatibility**: Maintained WebGL hover effects while ensuring images load properly
-5. **Fallback Handling**: Added proper fallback image handling for missing testimonial images
+3. **Mobile Layout Fix**:
+   - Background image (30% opacity) positioned absolutely behind main image
+   - Main image centered and overlaid on top with shadow and border radius
+   - Proper z-index layering to prevent stacking
+4. **Scroll Animation**: Added smooth translateY animation (±20px max) that responds to scroll position
+5. **WebGL Compatibility**: Maintained WebGL hover effects for desktop while ensuring images load properly
+6. **Single Image Source**: All testimonial images now use `/assets/img/testimonial/IMG_7200.jpg`
+7. **Performance Optimized**: Throttled scroll events using requestAnimationFrame for smooth performance

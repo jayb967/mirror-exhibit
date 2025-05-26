@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import testimonial_data from '@/data/testimonial_data';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -13,18 +13,55 @@ const testimonial_content = {
 const {subtitle, title} = testimonial_content
 
 
-const TestimonialAreaHomeTwo = () => {
-  // State to track current slide for dynamic image display
-  const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Get current testimonial image or fallback
-  const getCurrentImage = () => {
-    if (testimonials[currentSlide]?.img) {
-      return testimonials[currentSlide].img;
-    }
-    // Fallback to first testimonial image or default
-    return testimonials[0]?.img || '/assets/img/testimonial/IMG_7200.jpg';
-  };
+const TestimonialAreaHomeTwo = () => {
+  const imageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (imageRef.current) {
+        const scrollY = window.scrollY;
+        const elementTop = imageRef.current.offsetTop;
+        const elementHeight = imageRef.current.offsetHeight;
+        const windowHeight = window.innerHeight;
+
+        // Calculate if element is in viewport
+        const elementBottom = elementTop + elementHeight;
+        const isInViewport = elementTop < scrollY + windowHeight && elementBottom > scrollY;
+
+        if (isInViewport) {
+          // Calculate scroll progress relative to element
+          const scrollProgress = (scrollY + windowHeight - elementTop) / (windowHeight + elementHeight);
+          const clampedProgress = Math.max(0, Math.min(1, scrollProgress));
+
+          // Apply subtle movement (max 20px) while maintaining centering
+          const translateY = (clampedProgress - 0.5) * 20;
+          imageRef.current.style.transform = `translateX(-50%) translateY(${translateY}px)`;
+        }
+      }
+    };
+
+    // Throttle scroll events for performance
+    let ticking = false;
+    const throttledScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+
+    // Initial call
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+    };
+  }, []);
 
   return (
     <>
@@ -43,40 +80,77 @@ const TestimonialAreaHomeTwo = () => {
           </div>
           <div className="row align-items-center">
             <div className="col-xl-5 col-lg-5 col-md-5">
-              <div className="tp-testimonial-2-thumb">
-                {/* Fast-loading fallback image */}
-                <Image
-                  src={getCurrentImage()}
-                  alt="Customer testimonial"
-                  width={500}
-                  height={500}
+              <div className="tp-testimonial-2-thumb" style={{ position: 'relative', minHeight: '400px' }}>
+                {/* Background image - visible on mobile only */}
+                <div
+                  className="d-block d-xl-none testimonial-mobile-bg"
                   style={{
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
                     position: 'absolute',
                     top: 0,
                     left: 0,
+                    width: '100%',
+                    height: '400px',
                     zIndex: 1,
-                    objectFit: 'cover',
-                    objectPosition: 'center',
-                    aspectRatio: '1 / 1'
+                    opacity: 0.3
                   }}
-                  loading="eager"
-                />
+                >
+                  <Image
+                    src="/assets/img/testimonial/IMG_7200.jpg"
+                    alt="Background"
+                    width={500}
+                    height={500}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center'
+                    }}
+                    loading="eager"
+                  />
+                </div>
 
-                {/* WebGL wrapper - loads in background */}
-                <div className="tp-hover-distort-wrapper" style={{ position: 'relative', zIndex: 2 }}>
+                {/* Mobile overlay image - positioned at bottom center */}
+                <div
+                  ref={imageRef}
+                  className="d-block d-xl-none"
+                  style={{
+                    position: 'absolute',
+                    bottom: '5px',
+                    left: '50%',
+                    transform: 'translateX(-50%) translateY(0px)',
+                    transition: 'transform 0.1s ease-out',
+                    zIndex: 2,
+                    width: '60%',
+                    height: '50%'
+                  }}
+                >
+                  <Image
+                    src="/assets/img/testimonial/IMG_7200.jpg"
+                    alt="Customer testimonial"
+                    width={300}
+                    height={300}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+                    }}
+                    loading="eager"
+                  />
+                </div>
+
+                {/* Desktop WebGL wrapper */}
+                <div className="tp-hover-distort-wrapper d-none d-xl-block">
                   <div className="canvas"></div>
                   <div className="tp-hover-distort" data-displacementimage="/assets/img/webgl/10.jpg">
                     <Image
                       className="tp-hover-distort-img front"
-                      src={getCurrentImage()}
+                      src="/assets/img/testimonial/IMG_7200.jpg"
                       alt="Customer testimonial"
                       width={500}
                       height={500}
                       style={{
-                        opacity: 0,
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
@@ -86,7 +160,7 @@ const TestimonialAreaHomeTwo = () => {
                     />
                     <Image
                       className="tp-hover-distort-img back"
-                      src={getCurrentImage()}
+                      src="/assets/img/testimonial/IMG_7200.jpg"
                       alt="Customer testimonial"
                       width={500}
                       height={500}
@@ -115,9 +189,6 @@ const TestimonialAreaHomeTwo = () => {
                   navigation={{
                     nextEl: '.testimonial-next',
                     prevEl: '.testimonial-prev',
-                  }}
-                  onSlideChange={(swiper) => {
-                    setCurrentSlide(swiper.realIndex);
                   }}
                   breakpoints={{
                     '1600': {
