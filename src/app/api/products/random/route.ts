@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createAdminSupabaseClient } from '@/utils/clerk-supabase';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -19,8 +19,8 @@ export async function GET(
     const excludeId = searchParams.get('excludeId');
     const limit = parseInt(searchParams.get('limit') || '4', 10);
 
-    // Create a Supabase client for server-side use
-    const supabase = await createServerSupabaseClient();
+    // Create a Supabase client for server-side use (admin client for public data)
+    const supabase = createAdminSupabaseClient();
 
     // Build the query - fix relationship ambiguity
     let query = supabase

@@ -2,15 +2,15 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
 import { shippingService } from '@/services/shippingService';
 
 /**
  * Track a shipment
- * 
+ *
  * Path parameter:
  * - trackingNumber: Tracking number to look up
- * 
+ *
  * Response:
  * {
  *   status: string;
@@ -29,27 +29,27 @@ export async function GET(
 ) {
   try {
     const trackingNumber = params.trackingNumber;
-    
+
     if (!trackingNumber) {
       return NextResponse.json(
         { error: 'Tracking number is required' },
         { status: 400 }
       );
     }
-    
+
     // Create Supabase client
-    const supabase = await createServerSupabaseClient();
-    
+    const supabase = createServiceRoleSupabaseClient();
+
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     // Find order with this tracking number
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('id, user_id, status')
       .eq('tracking_number', trackingNumber)
       .single();
-    
+
     // If no order found or error, return 404
     if (orderError || !order) {
       return NextResponse.json(
@@ -57,12 +57,12 @@ export async function GET(
         { status: 404 }
       );
     }
-    
+
     // If user is not authenticated or not the owner of the order and not an admin, return 403
     if (session) {
       const isAdmin = session.user.user_metadata?.role === 'admin';
       const isOwner = order.user_id === session.user.id;
-      
+
       if (!isAdmin && !isOwner) {
         return NextResponse.json(
           { error: 'Unauthorized' },
@@ -77,10 +77,10 @@ export async function GET(
         { status: 401 }
       );
     }
-    
+
     // Track shipment
     const tracking = await shippingService.trackShipment(trackingNumber);
-    
+
     return NextResponse.json(tracking);
   } catch (error) {
     console.error('Error tracking shipment:', error);

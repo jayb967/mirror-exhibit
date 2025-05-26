@@ -139,6 +139,9 @@ export async function GET() {
 
 | Date       | Change Description                                                 | Reason                         |
 |------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-01-27 | **🔧 FIXED:** Clerk auth context errors in createServerSupabaseClient | Added error handling for static generation and missing request context |
+| 2025-01-27 | **🔧 FIXED:** Updated /api/products/random to use createAdminSupabaseClient | Fix Clerk auth errors for public product endpoints |
+| 2025-01-27 | **🔧 FIXED:** Added graceful fallbacks for Clerk auth failures | Prevent build failures when auth context is unavailable |
 | 2025-01-27 | **🛡️ NEW:** Created centralized admin authentication utilities (admin-auth.ts) | Standardize admin auth across all API routes with JWT + Clerk API fallback |
 | 2025-01-27 | Updated all admin API routes to use verifyAdminAccess() | Fix 403 Forbidden errors and ensure consistent admin role checking |
 | 2025-01-27 | **MAJOR:** Created separate client-only Supabase utilities | Fix server-only import errors in client components |

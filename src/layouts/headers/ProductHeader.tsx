@@ -57,7 +57,9 @@ const ProductHeader = () => {
             </div>
             <div className="col-xl-2 col-lg-8 col-6">
               <div className="tp-header-right d-flex align-items-center justify-content-end">
-                <ProfileButtonComponent iconColor="#fff" />
+                <div style={{ marginRight: '15px' }}>
+                  <ProfileButtonComponent iconColor="#fff" />
+                </div>
                 <CartButtonComponent
                   variant="navbar"
                   iconColor="#fff"
@@ -91,7 +93,9 @@ const ProductHeader = () => {
             </div>
             <div className="col-xl-2 col-lg-8 col-6">
               <div className="tp-header-right d-flex align-items-center justify-content-end">
-                <ProfileButtonComponent iconColor="#000" />
+                <div style={{ marginRight: '15px' }}>
+                  <ProfileButtonComponent iconColor="#000" />
+                </div>
                 <CartButtonComponent
                   variant="navbar"
                   iconColor="#000"

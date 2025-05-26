@@ -1,16 +1,16 @@
 
 
 import { StaticImageData } from 'next/image';
-// testimonial img 
-import testimonial_img_1 from '@/assets/img/testimonial/thumb-1-1.jpg'
-import testimonial_img_2 from '@/assets/img/testimonial/thumb-1-2.jpg'
+// testimonial img - using public path since images are in public directory
+const testimonial_img_1 = '/assets/img/testimonial/thumb-1-1.jpg';
+const testimonial_img_2 = '/assets/img/testimonial/thumb-1-2.jpg';
 
-import testimonial_img_5_1 from '@/assets/img/testimonial/avata-1-1.png'
-import testimonial_img_5_2 from '@/assets/img/testimonial/avata-1-2.png'
+const testimonial_img_5_1 = '/assets/img/testimonial/avata-1-1.png';
+const testimonial_img_5_2 = '/assets/img/testimonial/avata-1-2.png';
 
 interface DataType {
   path: string;
-  img?: StaticImageData | any;
+  img?: string;
   name: string;
   designation: string;
   description: string;

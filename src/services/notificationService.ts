@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
 import { emailService } from './emailService';
 
 export type NotificationType =
@@ -47,7 +47,7 @@ export interface NotificationPreferences {
 }
 
 class NotificationService {
-  private supabase = createServerSupabaseClient();
+  private supabase = createServiceRoleSupabaseClient();
 
   /**
    * Create a new notification
@@ -57,7 +57,7 @@ class NotificationService {
     options: CreateNotificationOptions = {}
   ): Promise<{ success: boolean; notificationId?: string; error?: string }> {
     try {
-      const supabase = await this.supabase;
+      const supabase = this.supabase;
 
       // Create in-app notification
       const notification = {
@@ -181,7 +181,7 @@ class NotificationService {
    */
   async getUserPreferences(userId: string): Promise<NotificationPreferences | null> {
     try {
-      const supabase = await this.supabase;
+      const supabase = this.supabase;
 
       const { data, error } = await supabase
         .from('notification_preferences')
@@ -205,7 +205,7 @@ class NotificationService {
    */
   async createDefaultPreferences(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const supabase = await this.supabase;
+      const supabase = this.supabase;
 
       const { error } = await supabase.rpc('create_user_notification_preferences', {
         user_uuid: userId
@@ -231,7 +231,7 @@ class NotificationService {
     preferences: Partial<Omit<NotificationPreferences, 'user_id'>>
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const supabase = await this.supabase;
+      const supabase = this.supabase;
 
       const { error } = await supabase
         .from('notification_preferences')
@@ -270,7 +270,7 @@ class NotificationService {
     unreadCount: number;
   }> {
     try {
-      const supabase = await this.supabase;
+      const supabase = this.supabase;
       const { limit = 20, offset = 0, unreadOnly = false, includeArchived = false } = options;
 
       let query = supabase
@@ -334,7 +334,7 @@ class NotificationService {
     unreadCount: number;
   }> {
     try {
-      const supabase = await this.supabase;
+      const supabase = this.supabase;
       const { limit = 20, offset = 0, unreadOnly = false } = options;
 
       let query = supabase
@@ -383,7 +383,7 @@ class NotificationService {
    */
   async markAsRead(notificationId: string, userId?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const supabase = await this.supabase;
+      const supabase = this.supabase;
 
       let query = supabase
         .from('notifications')
@@ -416,7 +416,7 @@ class NotificationService {
    */
   async archiveNotification(notificationId: string, userId?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const supabase = await this.supabase;
+      const supabase = this.supabase;
 
       let query = supabase
         .from('notifications')

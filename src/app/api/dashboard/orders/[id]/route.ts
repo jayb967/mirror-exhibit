@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
 
 /**
  * GET /api/dashboard/orders/[id]
@@ -20,9 +20,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = await createServerSupabaseClient();
+    const supabase = createServiceRoleSupabaseClient();
 
-    // Get order details
+    // Get order details with shipping address from separate table
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(`
@@ -82,12 +82,31 @@ export async function GET(
       );
     }
 
-    // Get tracking events
-    const { data: trackingEvents } = await supabase
-      .from('shipping_tracking_events')
-      .select('*')
-      .eq('order_id', params.id)
-      .order('event_timestamp', { ascending: false });
+    // Get shipping address from separate table if not stored as JSON
+    if (!order.shipping_address) {
+      const { data: shippingAddress } = await supabase
+        .from('shipping_addresses')
+        .select('*')
+        .eq('order_id', params.id)
+        .single();
+
+      if (shippingAddress) {
+        order.shipping_address = {
+          first_name: shippingAddress.first_name,
+          last_name: shippingAddress.last_name,
+          company: shippingAddress.company,
+          address_line_1: shippingAddress.address_line_1,
+          address_line_2: shippingAddress.address_line_2,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          postal_code: shippingAddress.postal_code,
+          country: shippingAddress.country,
+          phone: shippingAddress.phone
+        };
+      }
+    }
+
+    // Tracking events are not needed - tracking info is already in the order
 
     // Get status history
     const { data: statusHistory } = await supabase
@@ -113,7 +132,6 @@ export async function GET(
 
     return NextResponse.json({
       order,
-      trackingEvents: trackingEvents || [],
       statusHistory: statusHistory || [],
       orderNotes: orderNotes || [],
       paymentIntent

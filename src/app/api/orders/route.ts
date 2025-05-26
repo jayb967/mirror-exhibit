@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     }
 
     // Create Supabase client
-    const supabase = await createServerSupabaseClient();
+    const supabase = createServiceRoleSupabaseClient();
 
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession();
@@ -174,8 +174,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Create Supabase client with Clerk auth
-    const supabase = await createServerSupabaseClient();
+    // Create Supabase client with service role
+    const supabase = createServiceRoleSupabaseClient();
 
     // Get user's orders
     const { data: orders, error } = await supabase

@@ -66,7 +66,9 @@ const HeaderFour = ({ onePageHomeFive }: any) => {
             </div>
             <div className="col-xl-2 col-lg-8 col-6">
               <div className="tp-header-right d-flex align-items-center justify-content-end">
-                <ProfileButtonComponent iconColor={sticky ? "#000" : "#fff"} />
+                <div style={{ marginRight: '15px' }}>
+                  <ProfileButtonComponent iconColor={sticky ? "#000" : "#fff"} />
+                </div>
                 <CartButtonComponent
                   variant="navbar"
                   iconColor={sticky ? "#000" : "#fff"}
@@ -99,7 +101,9 @@ const HeaderFour = ({ onePageHomeFive }: any) => {
               </div>
               <div className="col-xl-2 col-lg-8 col-6">
                 <div className="tp-header-right d-flex align-items-center justify-content-end">
-                  <ProfileButtonComponent iconColor="#000" />
+                  <div style={{ marginRight: '15px' }}>
+                    <ProfileButtonComponent iconColor="#000" />
+                  </div>
                   <CartButtonComponent
                     variant="navbar"
                     iconColor="#000"

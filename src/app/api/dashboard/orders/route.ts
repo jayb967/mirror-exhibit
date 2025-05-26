@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
 
 /**
  * GET /api/dashboard/orders
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     const status = url.searchParams.get('status');
     const search = url.searchParams.get('search');
 
-    const supabase = await createServerSupabaseClient();
+    const supabase = createServiceRoleSupabaseClient();
 
     // Build the query
     let query = supabase

@@ -323,3 +323,20 @@ The component automatically selects the appropriate API endpoint based on props:
 - [ ] Infinite scroll support
 - [ ] Product comparison features
 - [ ] Wishlist integration
+
+## 🔄 Recent Changes
+
+### TestimonialAreaHomeTwo Component Fixes
+| Date       | Change Description                                                 | Reason                         |
+|------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-01-XX | Fixed testimonial images not displaying on desktop and mobile     | Images were hardcoded instead of using dynamic data |
+| 2025-01-XX | Updated TestimonialAreaHomeTwo to use Next.js Image component     | Consistency with other sections and better optimization |
+| 2025-01-XX | Added dynamic image switching based on current testimonial slide  | Better user experience with matching images |
+| 2025-01-XX | Fixed testimonial_data.ts image import paths                      | Images are in public directory, not src/assets |
+
+### Key Changes Made:
+1. **Dynamic Image Display**: The testimonial section now displays different images based on the current testimonial slide
+2. **Next.js Image Optimization**: Replaced regular `img` tags with Next.js `Image` components for better performance
+3. **Proper Image Paths**: Fixed image import paths in testimonial_data.ts to use public directory paths
+4. **WebGL Compatibility**: Maintained WebGL hover effects while ensuring images load properly
+5. **Fallback Handling**: Added proper fallback image handling for missing testimonial images

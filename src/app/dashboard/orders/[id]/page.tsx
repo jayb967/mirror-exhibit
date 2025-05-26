@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useClerkAuth';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { 
+import {
   ArrowLeftIcon,
   TruckIcon,
   CheckCircleIcon,
@@ -27,6 +27,8 @@ interface OrderDetails {
     tracking_url?: string;
     courier_name?: string;
     estimated_delivery_date?: string;
+    shipped_at?: string;
+    delivered_at?: string;
     order_items: Array<{
       id: string;
       product_name: string;
@@ -38,12 +40,6 @@ interface OrderDetails {
       sku?: string;
     }>;
   };
-  trackingEvents: Array<{
-    event_type: string;
-    event_description: string;
-    event_location?: string;
-    event_timestamp: string;
-  }>;
   statusHistory: Array<{
     previous_status: string;
     new_status: string;
@@ -63,17 +59,11 @@ const OrderDetailsPage: React.FC<{ params: { id: string } }> = ({ params }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchOrderDetails();
-    }
-  }, [user, params.id]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/dashboard/orders/${params.id}`);
-      
+
       if (response.ok) {
         const data = await response.json();
         setOrderDetails(data);
@@ -88,7 +78,13 @@ const OrderDetailsPage: React.FC<{ params: { id: string } }> = ({ params }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchOrderDetails();
+    }
+  }, [user?.id, fetchOrderDetails]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -281,35 +277,38 @@ const OrderDetailsPage: React.FC<{ params: { id: string } }> = ({ params }) => {
                     )}
                   </div>
 
-                  {/* Tracking Events */}
-                  {orderDetails.trackingEvents.length > 0 && (
-                    <div className="tw-mt-6">
-                      <h4 className="tw-text-sm tw-font-medium tw-text-gray-900 tw-mb-3">
-                        Tracking History
-                      </h4>
-                      <div className="tw-space-y-3">
-                        {orderDetails.trackingEvents.map((event, index) => (
-                          <div key={index} className="tw-flex tw-items-start tw-space-x-3">
-                            <div className="tw-flex-shrink-0 tw-w-2 tw-h-2 tw-rounded-full tw-mt-2" style={{ backgroundColor: '#A6A182' }}></div>
-                            <div className="tw-flex-1">
-                              <p className="tw-text-sm tw-font-medium tw-text-gray-900">
-                                {event.event_description}
-                              </p>
-                              <div className="tw-flex tw-items-center tw-space-x-2 tw-text-xs tw-text-gray-500">
-                                <span>{formatDate(event.event_timestamp)}</span>
-                                {event.event_location && (
-                                  <>
-                                    <span>•</span>
-                                    <span>{event.event_location}</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                  {/* Tracking Status */}
+                  <div className="tw-mt-6">
+                    <h4 className="tw-text-sm tw-font-medium tw-text-gray-900 tw-mb-3">
+                      Shipping Status
+                    </h4>
+                    <div className="tw-space-y-3">
+                      <div className="tw-flex tw-items-start tw-space-x-3">
+                        <div className="tw-flex-shrink-0 tw-w-2 tw-h-2 tw-rounded-full tw-mt-2" style={{ backgroundColor: '#A6A182' }}></div>
+                        <div className="tw-flex-1">
+                          <p className="tw-text-sm tw-font-medium tw-text-gray-900">
+                            Order {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          </p>
+                          <p className="tw-text-xs tw-text-gray-500">
+                            {order.shipped_at ? formatDate(order.shipped_at) : formatDate(order.created_at)}
+                          </p>
+                        </div>
                       </div>
+                      {order.delivered_at && (
+                        <div className="tw-flex tw-items-start tw-space-x-3">
+                          <div className="tw-flex-shrink-0 tw-w-2 tw-h-2 tw-rounded-full tw-mt-2" style={{ backgroundColor: '#A6A182' }}></div>
+                          <div className="tw-flex-1">
+                            <p className="tw-text-sm tw-font-medium tw-text-gray-900">
+                              Package Delivered
+                            </p>
+                            <p className="tw-text-xs tw-text-gray-500">
+                              {formatDate(order.delivered_at)}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             )}

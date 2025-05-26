@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/utils/clerk-supabase';
+import { createPublicSupabaseClient } from '@/utils/clerk-supabase';
 
 export async function GET(
   request: Request,
@@ -18,7 +18,7 @@ export async function GET(
       );
     }
 
-    const supabase = await createServerSupabaseClient();
+    const supabase = createPublicSupabaseClient();
 
     // Fetch the product with brand and category data - fix relationship ambiguity
     const { data, error } = await supabase

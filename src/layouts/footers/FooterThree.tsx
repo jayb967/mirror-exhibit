@@ -19,9 +19,10 @@ const footer_content = {
   page_title: 'Pages',
   pages: [
     { title: 'About Us', link: '/about-us' },
-    // { title: 'Our Team', link: '/team' },
-    // { title: 'Recent News', link: '/blog' },
-    { title: 'Gallery Lists', link: '#' },
+    { title: 'Shop', link: '/shop' },
+    { title: 'Cart', link: '/cart' },
+    { title: 'Dashboard', link: '/dashboard' },
+    { title: 'Contact', link: '/contact' },
   ],
   info_title: `Office Information`,
   address: <>Los Angeles, CA</>,

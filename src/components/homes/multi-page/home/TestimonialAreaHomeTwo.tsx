@@ -1,5 +1,6 @@
 'use client'
-import React from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
 import testimonial_data from '@/data/testimonial_data';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
@@ -13,8 +14,17 @@ const {subtitle, title} = testimonial_content
 
 
 const TestimonialAreaHomeTwo = () => {
+  // State to track current slide for dynamic image display
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-
+  // Get current testimonial image or fallback
+  const getCurrentImage = () => {
+    if (testimonials[currentSlide]?.img) {
+      return testimonials[currentSlide].img;
+    }
+    // Fallback to first testimonial image or default
+    return testimonials[0]?.img || '/assets/img/testimonial/IMG_7200.jpg';
+  };
 
   return (
     <>
@@ -34,29 +44,61 @@ const TestimonialAreaHomeTwo = () => {
           <div className="row align-items-center">
             <div className="col-xl-5 col-lg-5 col-md-5">
               <div className="tp-testimonial-2-thumb">
-                <div className="tp-hover-distort-wrapper">
+                {/* Fast-loading fallback image */}
+                <Image
+                  src={getCurrentImage()}
+                  alt="Customer testimonial"
+                  width={500}
+                  height={500}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    zIndex: 1,
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    aspectRatio: '1 / 1'
+                  }}
+                  loading="eager"
+                />
+
+                {/* WebGL wrapper - loads in background */}
+                <div className="tp-hover-distort-wrapper" style={{ position: 'relative', zIndex: 2 }}>
                   <div className="canvas"></div>
                   <div className="tp-hover-distort" data-displacementimage="/assets/img/webgl/10.jpg">
-                    <img className="tp-hover-distort-img front"
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center',
-                      aspectRatio: '1 / 1'
-                    }}
-                    src="/assets/img/testimonial/IMG_7200.jpg" alt="image-here" loading="eager" />
-                    <img className="tp-hover-distort-img back"
-                    style={{
-                      display: 'none',
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center',
-                      aspectRatio: '1 / 1'
-                    }}
-                    src="/assets/img/testimonial/IMG_7200.jpg" alt="image-here" loading="eager" />
+                    <Image
+                      className="tp-hover-distort-img front"
+                      src={getCurrentImage()}
+                      alt="Customer testimonial"
+                      width={500}
+                      height={500}
+                      style={{
+                        opacity: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center',
+                        aspectRatio: '1 / 1'
+                      }}
+                    />
+                    <Image
+                      className="tp-hover-distort-img back"
+                      src={getCurrentImage()}
+                      alt="Customer testimonial"
+                      width={500}
+                      height={500}
+                      style={{
+                        display: 'none',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center',
+                        aspectRatio: '1 / 1'
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -73,6 +115,9 @@ const TestimonialAreaHomeTwo = () => {
                   navigation={{
                     nextEl: '.testimonial-next',
                     prevEl: '.testimonial-prev',
+                  }}
+                  onSlideChange={(swiper) => {
+                    setCurrentSlide(swiper.realIndex);
                   }}
                   breakpoints={{
                     '1600': {

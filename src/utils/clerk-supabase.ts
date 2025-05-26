@@ -6,20 +6,37 @@ import { auth } from '@clerk/nextjs/server';
  * This should be used in Server Components, API routes, and Server Actions
  */
 export async function createServerSupabaseClient() {
-  const { getToken } = await auth();
+  try {
+    const { getToken } = await auth();
 
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: async () => {
-          const token = await getToken({ template: 'supabase' });
-          return token ? { Authorization: `Bearer ${token}` } : {};
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: async () => {
+            try {
+              const token = await getToken({ template: 'supabase' });
+              return token ? { Authorization: `Bearer ${token}` } : {};
+            } catch (error) {
+              // If token retrieval fails, return empty headers (unauthenticated)
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('Failed to get Clerk token:', error);
+              }
+              return {};
+            }
+          },
         },
-      },
+      }
+    );
+  } catch (error) {
+    // If auth context is not available, fall back to public client
+    // This can happen during static generation or when called outside request context
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Clerk auth context not available, falling back to public client:', error);
     }
-  );
+    return createPublicSupabaseClient();
+  }
 }
 
 
@@ -70,15 +87,29 @@ export function createServiceRoleSupabaseClient() {
  * Get the current Clerk user ID from server context
  */
 export async function getCurrentUserId(): Promise<string | null> {
-  const { userId } = await auth();
-  return userId;
+  try {
+    const { userId } = await auth();
+    return userId;
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Failed to get current user ID:', error);
+    }
+    return null;
+  }
 }
 
 /**
  * Check if the current user is an admin
  */
 export async function isCurrentUserAdmin(): Promise<boolean> {
-  const { sessionClaims } = await auth();
-  const userRole = sessionClaims?.metadata?.role || sessionClaims?.publicMetadata?.role;
-  return userRole === 'admin';
+  try {
+    const { sessionClaims } = await auth();
+    const userRole = sessionClaims?.metadata?.role || sessionClaims?.publicMetadata?.role;
+    return userRole === 'admin';
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Failed to check admin status:', error);
+    }
+    return false;
+  }
 }
