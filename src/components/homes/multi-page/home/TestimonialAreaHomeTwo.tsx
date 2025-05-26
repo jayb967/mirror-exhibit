@@ -4,6 +4,7 @@ import Image from 'next/image';
 import testimonial_data from '@/data/testimonial_data';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
+import { FaStar } from 'react-icons/fa';
 const testimonials = testimonial_data.filter(item => item.path === 'home_1')
 
 const testimonial_content = {
@@ -218,11 +219,11 @@ const TestimonialAreaHomeTwo = () => {
                     <SwiperSlide key={i} className="swiper-slide">
                       <div className="tp-testimonial-2-content">
                         <div className="tp-testimonial-2-rate pb-15">
-                          <i className="fa-solid fa-star"></i>
-                          <i className="fa-solid fa-star"></i>
-                          <i className="fa-solid fa-star"></i>
-                          <i className="fa-solid fa-star"></i>
-                          <i className="fa-solid fa-star"></i>
+                          <FaStar style={{ padding: '0 3px', fontSize: '14px', color: 'var(--tp-theme-1)' }} />
+                          <FaStar style={{ padding: '0 3px', fontSize: '14px', color: 'var(--tp-theme-1)' }} />
+                          <FaStar style={{ padding: '0 3px', fontSize: '14px', color: 'var(--tp-theme-1)' }} />
+                          <FaStar style={{ padding: '0 3px', fontSize: '14px', color: 'var(--tp-theme-1)' }} />
+                          <FaStar style={{ padding: '0 3px', fontSize: '14px', color: 'var(--tp-theme-1)' }} />
                         </div>
                         <div className="tp-testimonial-2-author-info">
                           <h5>{item.name}</h5>

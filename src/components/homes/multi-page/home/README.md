@@ -335,6 +335,7 @@ The component automatically selects the appropriate API endpoint based on props:
 | 2025-01-XX | Hide background image on desktop, show on mobile                  | User requirement for responsive image display |
 | 2025-01-XX | Fixed mobile layout - centered overlay image with background      | User reported stacked images instead of proper overlay |
 | 2025-01-XX | Added subtle scroll animation for mobile image                     | User requested slight movement animation on scroll |
+| 2025-01-XX | Fixed Font Awesome production error - replaced with React Icons   | Production error: "Super constructor null of Fa is not a constructor" |
 
 ### Key Changes Made:
 1. **Fixed Image Display**: The testimonial section now properly displays IMG_7200.jpg on both desktop and mobile
@@ -347,3 +348,4 @@ The component automatically selects the appropriate API endpoint based on props:
 5. **WebGL Compatibility**: Maintained WebGL hover effects for desktop while ensuring images load properly
 6. **Single Image Source**: All testimonial images now use `/assets/img/testimonial/IMG_7200.jpg`
 7. **Performance Optimized**: Throttled scroll events using requestAnimationFrame for smooth performance
+8. **Font Awesome Fix**: Replaced Font Awesome CSS classes with React Icons (FaStar) to prevent production errors
