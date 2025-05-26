@@ -94,6 +94,9 @@ This folder contains components for the shop/product listing functionality of th
 | 2025-01-27 | Updated add-to-cart buttons to open modal instead of direct add   | Consistent user experience     |
 | 2025-01-27 | Implemented default selections: "Classic Wood" frame and "Small" size | User requirement for defaults |
 | 2025-01-27 | Added dynamic price calculations with size and frame adjustments  | Show accurate pricing          |
+| 2025-01-27 | **NEW**: Implemented sticky filter sidebar for desktop with JavaScript-based solution | Improve user experience by keeping filters visible while scrolling |
+| 2025-01-27 | **NEW**: Added useStickyFilter hook for managing sticky behavior | Provide reliable sticky positioning that works across different browsers |
+| 2025-01-27 | **NEW**: Added internal scrolling to filter sidebar with custom scrollbar styling | Allow users to scroll within filters when content exceeds viewport height |
 
 ## 🎯 Integration Points
 - **ProductOptionsModal:** Used for product customization before adding to cart
@@ -109,3 +112,4 @@ This folder contains components for the shop/product listing functionality of th
 - React Paginate for pagination
 - Next.js Image component for optimized images
 - React Toastify for notifications
+- **useStickyFilter hook** for sticky sidebar behavior on desktop

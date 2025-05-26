@@ -26,6 +26,16 @@ const Shop = () => {
   useEffect(() => {
     console.log('Shop component mounted');
 
+    // Add shop-page class to body for CSS targeting
+    document.body.classList.add('shop-page');
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('shop-page');
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
         console.log('Shop: Fetching products...');
