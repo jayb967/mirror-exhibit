@@ -1,8 +1,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import about_shape_1 from "@/assets/img/about/shape-2-1.png";
-import about_shape_2 from "@/assets/img/about/shape-2-2.png";
+// Images are in public folder, so we'll use direct paths
 
 
 interface DataType {
@@ -56,7 +55,7 @@ const AboutAreaHomeTwo = () => {
                       <div key={i} className={`tp-about-2-item ${i === 0 ? 'pb-40' : ''}`}>
                         <div className="tp-about-2-icon d-flex align-items-center pb-20">
                           <span dangerouslySetInnerHTML={{ __html: item.icon }}>
-                           
+
                           </span>
                           <h4 className="tp-about-2-title">{item.title}</h4>
                         </div>
@@ -64,7 +63,7 @@ const AboutAreaHomeTwo = () => {
                           <p dangerouslySetInnerHTML={{ __html: item.description }}></p>
                         </div>
                       </div>
-                    ))} 
+                    ))}
                   </div>
                 </div>
               </div>
@@ -72,10 +71,10 @@ const AboutAreaHomeTwo = () => {
           </div>
           <div className="tp-about-2-thumb" style={{ backgroundImage: `url(/assets/img/about/thumb-3.jpg)` }}>
             <div className="tp-about-2-shape-1 d-none d-lg-block">
-              <Image src={about_shape_1} alt="imge-here" />
+              <Image src="/assets/img/about/shape-2-1.png" alt="About shape decoration" width={100} height={100} />
             </div>
             <div className="tp-about-2-shape-2 d-none d-lg-block">
-              <Image src={about_shape_2} alt="imge-here" />
+              <Image src="/assets/img/about/shape-2-2.png" alt="About shape decoration" width={100} height={100} />
             </div>
           </div>
         </div>

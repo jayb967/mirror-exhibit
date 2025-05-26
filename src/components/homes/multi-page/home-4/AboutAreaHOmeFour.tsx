@@ -1,11 +1,8 @@
 
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-
-import about_img_1 from "@/assets/img/about/thumb-4-1.jpg";
-import about_img_2 from "@/assets/img/about/thumb-4-2.jpg";
+import Image from 'next/image';
 
 
 interface DataType {
@@ -56,8 +53,24 @@ const AboutAreaHOmeFour = () => {
                   <div className="tp-hover-distort-wrapper">
                     <div className="canvas"></div>
                     <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
-                      <Image className="tp-hover-distort-img front" src={about_img_1} alt="image-here" />
-                      <Image className="tp-hover-distort-img back" src={about_img_1} alt="image-here" />
+                      <Image
+                        className="tp-hover-distort-img front"
+                        src="/assets/img/about/thumb-4-1.jpg"
+                        alt="About us - Interior design"
+                        width={400}
+                        height={300}
+                        unoptimized
+                        style={{ width: '100%', height: 'auto' }}
+                      />
+                      <Image
+                        className="tp-hover-distort-img back"
+                        src="/assets/img/about/thumb-4-1.jpg"
+                        alt="About us - Interior design"
+                        width={400}
+                        height={300}
+                        unoptimized
+                        style={{ width: '100%', height: 'auto' }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -65,8 +78,24 @@ const AboutAreaHOmeFour = () => {
                   <div className="tp-hover-distort-wrapper">
                     <div className="canvas"></div>
                     <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
-                      <Image className="tp-hover-distort-img front" src={about_img_2} alt="image-here" />
-                      <Image className="tp-hover-distort-img back" src={about_img_2} alt="image-here" />
+                      <Image
+                        className="tp-hover-distort-img front"
+                        src="/assets/img/about/thumb-4-2.jpg"
+                        alt="About us - Living space"
+                        width={400}
+                        height={300}
+                        unoptimized
+                        style={{ width: '100%', height: 'auto' }}
+                      />
+                      <Image
+                        className="tp-hover-distort-img back"
+                        src="/assets/img/about/thumb-4-2.jpg"
+                        alt="About us - Living space"
+                        width={400}
+                        height={300}
+                        unoptimized
+                        style={{ width: '100%', height: 'auto' }}
+                      />
                     </div>
                   </div>
                 </div>

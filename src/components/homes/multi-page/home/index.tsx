@@ -36,6 +36,7 @@ const HomeThree = () => {
               description="Our most popular mirrors chosen by design experts for their exceptional quality and timeless appeal."
               sectionId="premium-products"
               limit={15}
+              staggerDelay={0}
               showViewAll={true}
               viewAllLink="/shop"
             />
@@ -58,6 +59,7 @@ const HomeThree = () => {
               sectionId="new-arrivals"
               limit={12}
               autoplayDelay={4000}
+              staggerDelay={700}
               showViewAll={true}
               viewAllLink="/shop?sort=newest"
             />
@@ -82,6 +84,7 @@ const HomeThree = () => {
               sectionId="popular-products"
               limit={15}
               autoplayDelay={6000}
+              staggerDelay={1400}
               showViewAll={true}
               viewAllLink="/shop?sort=popular"
             />

@@ -5,10 +5,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyAdminAccess } from '@/utils/admin-auth';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
 
 interface FAQ {
   id: string;
@@ -20,6 +26,7 @@ interface FAQ {
 // GET - Fetch FAQs (both product and general)
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient();
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type'); // 'product' or 'general'
 
@@ -58,6 +65,8 @@ export async function GET(request: NextRequest) {
 // POST - Add new FAQ
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient();
+
     // Verify admin access
     const authResult = await verifyAdminAccess({
       operation: 'manage FAQs'
@@ -149,6 +158,8 @@ export async function POST(request: NextRequest) {
 // PUT - Update FAQ
 export async function PUT(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient();
+
     // Verify admin access
     const authResult = await verifyAdminAccess({
       operation: 'manage FAQs'
@@ -240,6 +251,8 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete FAQ
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient();
+
     // Verify admin access
     const authResult = await verifyAdminAccess({
       operation: 'manage FAQs'

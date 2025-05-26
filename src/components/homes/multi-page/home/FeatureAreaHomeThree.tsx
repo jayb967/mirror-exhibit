@@ -87,7 +87,7 @@ const FeatureAreaHomeThree = () => {
 
   return (
     <>
-      <div className="tp-feature-area tp-feature-style-2 p-relative z-index fix black-bg pt-140 pb-135">
+      <div className="tp-feature-area tp-feature-style-2 p-relative z-index fix black-bg pt-75 pb-75">
         <div className="tp-feature-shape-1">
           <Image style={{height:"auto"}} src={shape_img} alt="image-here" />
         </div>

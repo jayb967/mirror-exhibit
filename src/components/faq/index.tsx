@@ -1,11 +1,11 @@
 
 
-import HeaderFive from '@/layouts/headers/HeaderFive';
+import HeaderFive from '@/layouts/headers/HeaderFour';
 import React from 'react';
 import Breadcrumb from '../common/Breadcrumb';
 import FaqArea from './FaqArea';
 import ContactAreaHomeOne from '../homes/multi-page/home-3/ContactAreaHomeOne';
-import FooterOne from '@/layouts/footers/FooterOne';
+import FooterThree from '@/layouts/footers/FooterThree';
 
 const Faq = () => {
   return (
@@ -18,7 +18,7 @@ const Faq = () => {
             <FaqArea />
             <ContactAreaHomeOne />
           </main>
-          <FooterOne />
+          <FooterThree />
         </div>
       </div>
     </>

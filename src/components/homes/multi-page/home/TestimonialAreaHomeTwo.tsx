@@ -66,7 +66,7 @@ const TestimonialAreaHomeTwo = () => {
 
   return (
     <>
-      <div id="testimonial-one-page" className="tp-testimonial-2-area p-relative fix pt-140 pb-140 grey-bg">
+      <div id="testimonial-one-page" className="tp-testimonial-2-area p-relative fix pt-75 pb-75 grey-bg">
         <div className="tp-testimonial-2-big-text d-none d-xl-block">
           <h6>Review</h6>
         </div>
@@ -144,7 +144,7 @@ const TestimonialAreaHomeTwo = () => {
                 {/* Desktop WebGL wrapper */}
                 <div className="tp-hover-distort-wrapper d-none d-xl-block">
                   <div className="canvas"></div>
-                  <div className="tp-hover-distort" data-displacementimage="/assets/img/webgl/10.jpg">
+                  <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
                     <Image
                       className="tp-hover-distort-img front"
                       src="/assets/img/testimonial/IMG_7200.jpg"

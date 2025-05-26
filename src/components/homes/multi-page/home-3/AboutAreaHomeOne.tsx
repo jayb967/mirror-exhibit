@@ -4,9 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 
-import about_img_1 from "@/assets/img/about/thumb-1.jpg";
-import about_img_2 from "@/assets/img/about/thumb-2.jpg";
-
 interface StyleType {
   style_2: boolean
 }
@@ -45,11 +42,40 @@ const AboutAreaHomeOne = ({ style_2 }: StyleType) => {
           <div className="row align-items-end">
             <div className="col-xl-6 col-lg-6 order-1 order-lg-0">
               <div className="tp-about-thumb-box z-index">
-                <div className="tp-hover-distort-wrapper">
+                {/* Test with simple img tag first */}
+                <img
+                  src="/assets/img/about/IMG_7339.jpg"
+                  alt="About us - Crafting luxury mirrors"
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                  onError={(e) => {
+                    console.error('Image failed to load:', e.currentTarget.src);
+                    e.currentTarget.src = '/assets/img/logo/ME_Logo.png'; // fallback
+                  }}
+                  onLoad={() => console.log('Image loaded successfully:', '/assets/img/about/IMG_7339.jpg')}
+                />
+
+                <div className="tp-hover-distort-wrapper" style={{ display: 'none' }}>
                   <div className="canvas"></div>
                   <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
-                    <Image className="tp-hover-distort-img front" src={about_img_1} alt="image-here" />
-                    <Image className="tp-hover-distort-img back" src={about_img_1} alt="image-here" />
+                    <Image
+                      className="tp-hover-distort-img front"
+                      src="/assets/img/about/IMG_7339.jpg"
+                      alt="About us - Crafting luxury mirrors"
+                      width={600}
+                      height={400}
+                      priority
+                      unoptimized
+                      style={{ width: '100%', height: 'auto' }}
+                    />
+                    <Image
+                      className="tp-hover-distort-img back"
+                      src="/assets/img/about/IMG_7339.jpg"
+                      alt="About us - Crafting luxury mirrors"
+                      width={600}
+                      height={400}
+                      unoptimized
+                      style={{ width: '100%', height: 'auto' }}
+                    />
                   </div>
                 </div>
               </div>
@@ -79,11 +105,39 @@ const AboutAreaHomeOne = ({ style_2 }: StyleType) => {
           <div className="row">
             <div className="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 wow tpfadeUp" data-wow-duration=".9s" data-wow-delay=".3s">
               <div className="tp-about-thumb-boxs z-index text-center mt-80">
-                <div className="tp-hover-distort-wrapper">
+                {/* Test with simple img tag first */}
+                <img
+                  src="/assets/img/about/IMG_7182.jpg"
+                  alt="About us - Mirror craftsmanship"
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                  onError={(e) => {
+                    console.error('Image failed to load:', e.currentTarget.src);
+                    e.currentTarget.src = '/assets/img/logo/ME_Logo.png'; // fallback
+                  }}
+                  onLoad={() => console.log('Image loaded successfully:', '/assets/img/about/IMG_7182.jpg')}
+                />
+
+                <div className="tp-hover-distort-wrapper" style={{ display: 'none' }}>
                   <div className="canvas"></div>
                   <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
-                    <Image className="tp-hover-distort-img front" src={about_img_2} alt="image-here" />
-                    <Image className="tp-hover-distort-img back" src={about_img_2} alt="image-here" />
+                    <Image
+                      className="tp-hover-distort-img front"
+                      src="/assets/img/about/IMG_7182.jpg"
+                      alt="About us - Mirror craftsmanship"
+                      width={600}
+                      height={400}
+                      unoptimized
+                      style={{ width: '100%', height: 'auto' }}
+                    />
+                    <Image
+                      className="tp-hover-distort-img back"
+                      src="/assets/img/about/IMG_7182.jpg"
+                      alt="About us - Mirror craftsmanship"
+                      width={600}
+                      height={400}
+                      unoptimized
+                      style={{ width: '100%', height: 'auto' }}
+                    />
                   </div>
                 </div>
               </div>

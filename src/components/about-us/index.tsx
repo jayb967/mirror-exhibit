@@ -12,7 +12,6 @@ const AboutUs = () => {
       <Breadcrumb title="About Us" subtitle="About Us" />
       <AboutAreaHomeOne style_2={true} />
       <FunFactAreaHomeOne style_2={true} />
-      <TestimonialAreaHomeOne />
       <ContactAreaHomeOne />
     </>
   );

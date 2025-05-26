@@ -27,8 +27,9 @@ A comprehensive performance optimization suite for the Mirror Exhibit home page,
 - **Conditional API calls** only when components are visible
 
 ### Product Carousel Performance
-- **Scroll-based autoplay pausing** during user interaction (desktop only)
-- **Mobile autoplay enabled** for discoverability - continues during scroll
+- **Staggered autoplay start** - Each carousel starts with a 0.7s delay from the previous one
+- **Scroll-based autoplay pausing** during user interaction (both mobile and desktop)
+- **Immediate autoplay start** - Carousels start playing right away, not waiting for intersection
 - **Throttled scroll detection** (50ms) to reduce event frequency
 - **Intersection Observer** for API calls optimization
 - **Image lazy loading** with priority flags for first 4 products
@@ -149,7 +150,7 @@ interface ProductAreaHomeFourProps {
 />
 ```
 
-### New Arrivals with Custom Styling
+### New Arrivals with Custom Styling and Staggered Start
 ```jsx
 <ProductAreaHomeFour
   productType="new-arrivals"
@@ -159,6 +160,7 @@ interface ProductAreaHomeFourProps {
   sectionId="new-arrivals"
   limit={12}
   autoplayDelay={3000}
+  staggerDelay={700} // Start autoplay 700ms after component mount
   className="custom-carousel"
   containerClassName="custom-container"
 />
@@ -349,3 +351,51 @@ The component automatically selects the appropriate API endpoint based on props:
 6. **Single Image Source**: All testimonial images now use `/assets/img/testimonial/IMG_7200.jpg`
 7. **Performance Optimized**: Throttled scroll events using requestAnimationFrame for smooth performance
 8. **Font Awesome Fix**: Replaced Font Awesome CSS classes with React Icons (FaStar) to prevent production errors
+
+### ProductAreaHomeFour Staggered Autoplay Enhancement
+| Date       | Change Description                                                 | Reason                         |
+|------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-01-XX | Implemented staggered autoplay start timing for home page carousels | Prevent all carousels from scrolling simultaneously |
+| 2025-01-XX | Added staggerDelay prop to control autoplay start timing          | Allow customizable delay for each carousel |
+| 2025-01-XX | Updated scroll-based pause/resume to work on both mobile and desktop | User requested consistent behavior across devices |
+| 2025-01-XX | Removed intersection dependency for autoplay start                | Carousels now start immediately on page load |
+
+### Staggered Autoplay Implementation:
+1. **Premium Collection**: Starts immediately (staggerDelay: 0ms)
+2. **New Arrivals**: Starts after 700ms delay
+3. **Popular Products**: Starts after 1400ms delay
+4. **Scroll Behavior**: All carousels pause during scroll and resume 150ms after scroll stops
+5. **Cross-Device**: Works consistently on both mobile and desktop
+
+### Section Spacing Standardization
+| Date       | Change Description                                                 | Reason                         |
+|------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-01-XX | Standardized all section spacing to pt-75 pb-75                   | Ensure consistent spacing between all sections without double spacing |
+| 2025-01-XX | Fixed double spacing issue by using 75px padding instead of 150px | User reported excessive spacing above About Us section |
+| 2025-01-XX | Updated all home page sections with consistent padding approach    | Creates uniform 150px gaps between sections (75px + 75px) |
+| 2025-01-XX | Fixed About Us page image display issues                          | Images weren't showing due to incorrect import paths |
+| 2025-01-XX | Updated AboutAreaHomeOne, AboutAreaHomeTwo, AboutAreaHOmeFour      | Changed from @/assets imports to public folder paths |
+| 2025-01-XX | Fixed WebGL hover effects not loading                             | Used Next.js Image components with unoptimized prop for WebGL compatibility |
+| 2025-01-XX | Updated WebGL data-displacementimage paths                        | Removed leading slashes for proper WebGL initialization |
+| 2025-01-XX | Final image fix using Next.js Image with unoptimized prop         | Maintains fast loading while ensuring WebGL compatibility |
+
+### Consistent Section Spacing Implementation:
+1. **All sections now use**: `pt-75 pb-75` for consistent top and bottom padding
+2. **Standardized spacing**: 75px top and bottom padding creates 150px total gap between sections (75px + 75px)
+3. **No double spacing**: Prevents the 300px gaps that occurred with pt-150 pb-150 approach
+4. **Modular design**: Sections can be reordered without affecting spacing consistency
+5. **Visual consistency**: Creates uniform spacing throughout the page
+6. **Responsive**: Padding scales appropriately across all device sizes
+
+### About Us Page Image Fixes:
+1. **Problem**: Components were importing images from `@/assets` path but images were in `public/assets`
+2. **Solution**: Updated to use direct public folder paths (`/assets/img/about/...`)
+3. **Enhancement**: Added fallback images for immediate display while WebGL loads
+4. **Components Fixed**:
+   - `AboutAreaHomeOne` - Main about section with "Crafting Luxury Mirrors" heading
+   - `AboutAreaHomeTwo` - Alternative about layout
+   - `AboutAreaHOmeFour` - Fourth variant about section
+5. **WebGL Compatibility**: Used Next.js `Image` components with `unoptimized` prop for WebGL hover effects
+6. **Technical Solution**: The `unoptimized` prop allows WebGL script to work with Next.js Image components
+7. **Path Fixes**: Corrected `data-displacementimage` paths to not include leading slashes
+8. **Performance**: Maintains Next.js Image benefits (lazy loading, responsive) while ensuring WebGL functionality

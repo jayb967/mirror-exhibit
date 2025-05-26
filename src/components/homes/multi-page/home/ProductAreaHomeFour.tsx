@@ -87,6 +87,7 @@ interface ProductAreaHomeFourProps {
   limit?: number; // Default 15
   autoplay?: boolean; // Default true
   autoplayDelay?: number; // Default 5000ms
+  staggerDelay?: number; // Delay before starting autoplay (for staggered start)
   showViewAll?: boolean; // Show "View All" link
   viewAllLink?: string; // Custom link for "View All"
 
@@ -209,6 +210,7 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
   limit = 15,
   autoplay = true,
   autoplayDelay = 5000,
+  staggerDelay = 0,
   showViewAll = false,
   viewAllLink,
 
@@ -229,7 +231,9 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
   const [isScrolling, setIsScrolling] = useState(false);
   const [shouldPauseAutoplay, setShouldPauseAutoplay] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [autoplayStarted, setAutoplayStarted] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const staggerTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Simplified API queries - use a single query based on productType
   const shouldUseDefault = productType === 'all' && !category;
@@ -339,25 +343,42 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Staggered autoplay initialization
+  useEffect(() => {
+    if (autoplay && staggerDelay > 0) {
+      // Start with autoplay disabled, then enable after stagger delay
+      setAutoplayStarted(false);
+
+      staggerTimeoutRef.current = setTimeout(() => {
+        setAutoplayStarted(true);
+      }, staggerDelay);
+
+      return () => {
+        if (staggerTimeoutRef.current) {
+          clearTimeout(staggerTimeoutRef.current);
+        }
+      };
+    } else {
+      // No stagger delay, start immediately
+      setAutoplayStarted(autoplay);
+    }
+  }, [autoplay, staggerDelay]);
+
   // Scroll detection for performance optimization
   const handleScroll = useThrottle(() => {
     setIsScrolling(true);
-    // Only pause autoplay on desktop during scroll, keep it running on mobile
-    if (!isMobile) {
-      setShouldPauseAutoplay(true);
-    }
+    // Pause autoplay during scroll on both mobile and desktop
+    setShouldPauseAutoplay(true);
 
     // Clear existing timeout
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
 
-    // Resume autoplay after scroll stops (only affects desktop)
+    // Resume autoplay after scroll stops on both mobile and desktop
     scrollTimeoutRef.current = setTimeout(() => {
       setIsScrolling(false);
-      if (!isMobile) {
-        setShouldPauseAutoplay(false);
-      }
+      setShouldPauseAutoplay(false);
     }, 150);
   }, 50);
 
@@ -532,7 +553,7 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
       <div
         ref={targetRef}
         id={sectionId}
-        className={`tp-product-2-area tp-product-2-style-3 fix pt-20 pb-150 ${className}`}
+        className={`tp-product-2-area tp-product-2-style-3 fix pt-150 pb-75 ${className}`}
       >
         <div className={`container ${containerClassName}`}>
           <div className="tp-product-2-wrap mb-60">
@@ -579,7 +600,7 @@ const ProductAreaHomeFour: React.FC<ProductAreaHomeFourProps> = ({
                     slidesPerView={isMobile ? 1.2 : 4} // Show partial next slide on mobile for discoverability
                     spaceBetween={isMobile ? 20 : 40}
                     centeredSlides={isMobile} // Center slides on mobile
-                    autoplay={autoplay && (!shouldPauseAutoplay || isMobile) && isIntersecting ? {
+                    autoplay={autoplayStarted && !shouldPauseAutoplay ? {
                       delay: isMobile ? autoplayDelay * 0.8 : autoplayDelay, // Slightly faster on mobile
                       disableOnInteraction: false,
                       pauseOnMouseEnter: !isMobile, // Don't pause on hover for mobile

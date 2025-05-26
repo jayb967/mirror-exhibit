@@ -4,7 +4,7 @@ import React from "react";
 const AboutAreaHomeThree = () => {
   return (
     <>
-      <div id="about-one-page" className="tp-about-3-area pb-150">
+      <div id="about-one-page" className="tp-about-3-area pt-75 pb-75">
         <div className="container">
           <div className="row">
             <div className="col-xl-12">
@@ -41,7 +41,7 @@ const AboutAreaHomeThree = () => {
                     <div className="canvas"></div>
                     <div
                       className="tp-hover-distort"
-                      data-displacementimage="/assets/img/webgl/10.jpg"
+                      data-displacementimage="assets/img/webgl/10.jpg"
                     >
                       <img
                         className="tp-hover-distort-img front"
@@ -100,7 +100,7 @@ const AboutAreaHomeThree = () => {
                         <div className="canvas"></div>
                         <div
                           className="tp-hover-distort"
-                          data-displacementimage="/assets/img/webgl/10.jpg"
+                          data-displacementimage="assets/img/webgl/10.jpg"
                         >
                           <img
                             className="tp-hover-distort-img front"

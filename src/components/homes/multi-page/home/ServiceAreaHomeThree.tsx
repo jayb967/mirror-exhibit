@@ -10,7 +10,7 @@ const services = service_data.filter(item => item.home === 3)
 const ServiceAreaHomeThree = () => {
   return (
     <>
-      <div id="service-one-page" className="tp-service-area pt-150 pb-120">
+      <div id="service-one-page" className="tp-service-area pt-75 pb-75">
         <div className="container">
           <div className="row">
             <div className="col-xl-12">

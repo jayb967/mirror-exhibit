@@ -26,7 +26,7 @@ const { title, counter_data } = funfact_content
 const FunFactAreaHomeThree = () => {
   return (
     <>
-      <div className="tp-funfact-area tp-funfact-style-2 tp-funfact-height theme-bg fix p-relative">
+      <div className="tp-funfact-area tp-funfact-style-2 tp-funfact-height theme-bg fix p-relative pt-75 pb-75">
         <div className="container">
           <div className="row align-items-center">
             <div className="col-xl-5 col-lg-5 col-md-5">
@@ -43,7 +43,7 @@ const FunFactAreaHomeThree = () => {
                     </i></h6>
                     <span>{item.title}</span>
                   </div>
-                ))} 
+                ))}
               </div>
             </div>
           </div>

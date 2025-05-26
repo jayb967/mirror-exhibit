@@ -14,7 +14,7 @@ const ExpartFeatureAreaHomeThree = () => {
 
   return (
     <>
-      <div className="tp-exp-fea-area fix pb-200">
+      <div className="tp-exp-fea-area fix pt-75 pb-75">
         <div className="container">
           <div className="row">
             <div className="col-xl-12">
@@ -50,7 +50,7 @@ const ExpartFeatureAreaHomeThree = () => {
                   {/* WebGL wrapper - loads in background */}
                   <div className="tp-hover-distort-wrapper" style={{ position: 'relative', zIndex: 2 }}>
                     <div className="canvas"></div>
-                    <div className="tp-hover-distort" data-displacementimage="/assets/img/webgl/10.jpg">
+                    <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
                       <img className="tp-hover-distort-img front" src="/assets/img/service/blonde_mirror3.png" alt="image-here" loading="eager" style={{ opacity: 0, width: '100%', height: 'auto' }} />
                       <img className="tp-hover-distort-img back" src="/assets/img/service/blonde_mirror3.png" alt="image-here" loading="eager" style={{ display: 'none' }} />
                     </div>
@@ -139,7 +139,7 @@ const ExpartFeatureAreaHomeThree = () => {
                   {/* WebGL wrapper - loads in background */}
                   <div className="tp-hover-distort-wrapper" style={{ position: 'relative', zIndex: 2 }}>
                     <div className="canvas"></div>
-                    <div className="tp-hover-distort" data-displacementimage="/assets/img/webgl/10.jpg">
+                    <div className="tp-hover-distort" data-displacementimage="assets/img/webgl/10.jpg">
                       <img className="tp-hover-distort-img front" src="/assets/img/service/service-1-2.webp" alt="image-here" loading="eager" style={{ opacity: 0, width: '100%', height: 'auto' }} />
                       <img className="tp-hover-distort-img back" src="/assets/img/service/service-1-2.webp" alt="image-here" loading="eager" style={{ display: 'none' }} />
                     </div>

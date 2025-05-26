@@ -4,7 +4,7 @@ import React from 'react';
 const NewsletterAreaHomeThree = () => {
   return (
     <>
-      <div className="tp-newsletter-area tp-newsletter-bg grey-bg">
+      <div className="tp-newsletter-area tp-newsletter-bg grey-bg pt-75 pb-75">
         <div className="container">
           <div className="tp-newsletter-height z-index theme-bg">
             <div className="row align-items-center">
