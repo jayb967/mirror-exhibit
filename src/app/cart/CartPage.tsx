@@ -298,7 +298,7 @@ const CartPage = () => {
                               onClick={() => handleQuantityChange(item.product_id || item.id, item.quantity - 1, item)}
                               aria-label="Decrease quantity"
                             >
-                              <i className="fas fa-minus"></i>
+                              −
                             </button>
                             <input
                               className="qty-input"
@@ -311,7 +311,7 @@ const CartPage = () => {
                               onClick={() => handleQuantityChange(item.product_id || item.id, item.quantity + 1, item)}
                               aria-label="Increase quantity"
                             >
-                              <i className="fas fa-plus"></i>
+                              +
                             </button>
                           </div>
 

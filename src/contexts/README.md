@@ -114,17 +114,24 @@ if (isModalOpen && modalData) {
 **Root Cause:** The application was using Font Awesome Light (`fal`) icons which require Font Awesome Pro, but only had the free version installed. This caused constructor errors when the icons tried to render.
 
 **Solution Implemented:**
-- **Replaced all `fal` icons** with `fas` (Font Awesome Solid) icons from the free version
-- **Added Font Awesome configuration** in `layout.tsx` to prevent CSS conflicts
-- **Added CSS fallbacks** in `custom-fixes.css` to ensure proper icon rendering
-- **Installed missing packages** (`@fortawesome/free-regular-svg-icons`)
+- **Completely removed Font Awesome dependency** to eliminate all potential conflicts
+- **Replaced all Font Awesome icons** with Unicode symbols and emojis
+- **Added custom CSS styling** for the Unicode symbols to maintain visual consistency
+- **Removed all Font Awesome packages** from package.json
 
 **Files Modified:**
-- `src/app/layout.tsx` - Added Font Awesome configuration
-- `src/styles/custom-fixes.css` - Added icon CSS fixes
-- `src/components/common/GlobalProductModal.tsx` - Replaced `fal` with `fas`
-- `src/app/cart/CartPage.tsx` - Replaced `fal` with `fas`
-- `src/components/shop-details/ShopDetailsArea.tsx` - Replaced `fal` with `fas`
-- `src/components/common/ProductOptionsModal.tsx` - Replaced `fal` with `fas`
-- `src/components/common/OnePageOffcanvas.tsx` - Replaced `fal` with `fas`
-- `src/components/common/Offcanvus.tsx` - Replaced `fal` with `fas`
+- `package.json` - Removed all Font Awesome packages
+- `src/styles/custom-fixes.css` - Added Unicode symbol styling
+- `src/components/common/GlobalProductModal.tsx` - Replaced icons with Unicode symbols
+- `src/app/cart/CartPage.tsx` - Replaced icons with Unicode symbols
+- `src/components/shop-details/ShopDetailsArea.tsx` - Replaced icons with Unicode symbols
+- `src/components/common/ProductOptionsModal.tsx` - Replaced icons with Unicode symbols
+- `src/components/common/OnePageOffcanvas.tsx` - Replaced icons with Unicode symbols/emojis
+- `src/components/common/Offcanvus.tsx` - Replaced icons with Unicode symbols/emojis
+
+**Icon Replacements:**
+- `fas fa-times` → `×` (multiplication sign)
+- `fas fa-minus` → `−` (minus sign)
+- `fas fa-plus` → `+` (plus sign)
+- `fas fa-envelope` → `✉️` (envelope emoji)
+- `fas fa-phone-alt` → `📞` (telephone emoji)

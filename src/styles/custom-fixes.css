@@ -1,26 +1,32 @@
 /* Custom fixes for specific issues */
 
-/* Font Awesome icon fixes */
-.fas, .far, .fal, .fab {
-  font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro" !important;
-  font-weight: 900;
-  font-style: normal;
-  font-variant: normal;
-  text-rendering: auto;
+/* Style for Unicode symbol replacements */
+.close-btn {
+  font-size: 24px;
+  font-weight: bold;
   line-height: 1;
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.far {
-  font-weight: 400;
+.close-btn:hover {
+  color: #000;
 }
 
-.fal {
-  font-weight: 300;
-}
-
-/* Ensure Font Awesome icons are properly loaded */
-i[class*="fa-"]:before {
-  font-family: inherit;
+.tp-cart-minus, .tp-cart-plus {
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Fix for product card layout - ensure add to cart button doesn't overlap price */
