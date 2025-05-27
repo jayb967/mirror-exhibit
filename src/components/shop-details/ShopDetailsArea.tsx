@@ -506,11 +506,11 @@ const ShopDetailsArea = () => {
                   <div className="tp-shop-details__quantity-box">
                     <div className="tp-shop-details__quantity">
                       <div className="tp-cart-minus" onClick={decreaseQuantity}>
-                        <i className="fal fa-minus"></i>
+                        <i className="fas fa-minus"></i>
                       </div>
                       <input type="text" value={quantity} readOnly />
                       <div className="tp-cart-plus" onClick={increaseQuantity}>
-                        <i className="fal fa-plus"></i>
+                        <i className="fas fa-plus"></i>
                       </div>
                     </div>
                   </div>

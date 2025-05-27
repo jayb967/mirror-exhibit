@@ -1,5 +1,28 @@
 /* Custom fixes for specific issues */
 
+/* Font Awesome icon fixes */
+.fas, .far, .fal, .fab {
+  font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro" !important;
+  font-weight: 900;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+.far {
+  font-weight: 400;
+}
+
+.fal {
+  font-weight: 300;
+}
+
+/* Ensure Font Awesome icons are properly loaded */
+i[class*="fa-"]:before {
+  font-family: inherit;
+}
+
 /* Fix for product card layout - ensure add to cart button doesn't overlap price */
 .tp-product-2-content {
   padding-bottom: 60px !important; /* Add extra padding at the bottom to make room for the button */

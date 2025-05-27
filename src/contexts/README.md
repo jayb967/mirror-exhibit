@@ -69,6 +69,7 @@ This folder contains React Context providers that manage global application stat
 
 | Date       | Change Description                                                 | Reason                         |
 |------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-01-27 | Fixed Font Awesome "Super constructor null" error | Prevent crashes on checkout and other pages |
 | 2025-01-27 | Created GlobalModalContext to replace local modal state | Fix modal positioning issues in carousel components |
 | 2025-01-27 | Added automatic carousel pause/resume functionality | Ensure carousel stops when modal is open |
 | 2025-01-27 | Implemented type-safe modal data interface | Improve developer experience and prevent bugs |
@@ -105,3 +106,25 @@ if (isModalOpen && modalData) {
 - Handles cleanup automatically when component unmounts
 - Compatible with SSR (Server-Side Rendering)
 - Integrates seamlessly with existing Redux cart functionality
+
+## 🛠️ Font Awesome Icon Fix
+
+**Problem Solved:** "Super constructor null of Fa is not a constructor" error occurring on checkout and other pages, particularly after user login.
+
+**Root Cause:** The application was using Font Awesome Light (`fal`) icons which require Font Awesome Pro, but only had the free version installed. This caused constructor errors when the icons tried to render.
+
+**Solution Implemented:**
+- **Replaced all `fal` icons** with `fas` (Font Awesome Solid) icons from the free version
+- **Added Font Awesome configuration** in `layout.tsx` to prevent CSS conflicts
+- **Added CSS fallbacks** in `custom-fixes.css` to ensure proper icon rendering
+- **Installed missing packages** (`@fortawesome/free-regular-svg-icons`)
+
+**Files Modified:**
+- `src/app/layout.tsx` - Added Font Awesome configuration
+- `src/styles/custom-fixes.css` - Added icon CSS fixes
+- `src/components/common/GlobalProductModal.tsx` - Replaced `fal` with `fas`
+- `src/app/cart/CartPage.tsx` - Replaced `fal` with `fas`
+- `src/components/shop-details/ShopDetailsArea.tsx` - Replaced `fal` with `fas`
+- `src/components/common/ProductOptionsModal.tsx` - Replaced `fal` with `fas`
+- `src/components/common/OnePageOffcanvas.tsx` - Replaced `fal` with `fas`
+- `src/components/common/Offcanvus.tsx` - Replaced `fal` with `fas`

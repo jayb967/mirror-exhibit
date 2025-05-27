@@ -16,7 +16,7 @@ const OnePageOffcanvas = ({ showOffCanvas, setShowOffCanvas, onePageHomeOne, one
       <div className="tpoffcanvas-area">
         <div className={`tpoffcanvas ${showOffCanvas ? 'opened' : ''}`}>
           <div className="tpoffcanvas__close-btn" onClick={() => setShowOffCanvas(false)}>
-            <button className="close-btn"><i className="fal fa-times"></i></button>
+            <button className="close-btn"><i className="fas fa-times"></i></button>
           </div>
           <div className="tpoffcanvas__logo">
             <Link href="/">
@@ -53,7 +53,7 @@ const OnePageOffcanvas = ({ showOffCanvas, setShowOffCanvas, onePageHomeOne, one
                 <a href="mailto:info@mirrorexhibit.com">info@mirrorexhibit.com</a>
               </li>
               <li>
-                <i className="fal fa-phone-alt"></i>
+                <i className="fas fa-phone-alt"></i>
                 <a href="tel:+48555223224">+48 555 223 224</a>
               </li>
             </ul>

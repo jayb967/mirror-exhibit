@@ -14,7 +14,7 @@ const Offcanvus = ({ showOffCanvas, setShowOffCanvas }: any) => {
       <div className="tpoffcanvas-area">
         <div className={`tpoffcanvas ${showOffCanvas ? 'opened' : ''}`}>
           <div className="tpoffcanvas__close-btn" onClick={() => setShowOffCanvas(false)}>
-            <button className="close-btn"><i className="fal fa-times"></i></button>
+            <button className="close-btn"><i className="fas fa-times"></i></button>
           </div>
           <div className="tpoffcanvas__logo">
             <Link href="/">
@@ -53,7 +53,7 @@ const Offcanvus = ({ showOffCanvas, setShowOffCanvas }: any) => {
               </li>
               {/* Phone number will be added later
               <li>
-                <i className="fal fa-phone-alt"></i>
+                <i className="fas fa-phone-alt"></i>
                 <a href="tel:+13105557890">(310) 555-7890</a>
               </li>
               */}
