@@ -45,7 +45,7 @@ const OnePageOffcanvas = ({ showOffCanvas, setShowOffCanvas, onePageHomeOne, one
             </div>
             <ul>
               <li>
-                <i className="fa-light fa-location-dot"></i>
+                📍
                 <a href="https://www.google.com/maps/@34.0200374,-118.7420549,10z" target="_blank">Los Angeles, CA</a>
               </li>
               <li>

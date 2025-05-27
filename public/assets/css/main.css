@@ -26,7 +26,7 @@
 		2.3 Buttons
 		2.4 Animations
 		2.5 Preloader
-		2.6 Background 
+		2.6 Background
 		2.7 Carousel
 		2.8 Nice Select
 		2.9 Pagination
@@ -69,7 +69,7 @@
 	---------------------------------
 	07. PAGES CSS
 	---------------------------------
-		7.1 about css start 
+		7.1 about css start
 		7.2 appointment css start
 		7.3 cart css start
 		7.4 checkout css start
@@ -77,9 +77,9 @@
 		7.6 error css start
 		7.7 feature css start
 		7.8 funfact css start
-		7.9 gallery css start 
+		7.9 gallery css start
 		7.10 hero css start
-		7.11 newsletter css 
+		7.11 newsletter css
 		7.12 price css start
 		7.13 product css start
 		7.14 progress css start
@@ -136,7 +136,7 @@ li,
   --tp-ff-heading: 'Montserrat', sans-serif;
   --tp-ff-satisfy: 'Satisfy', cursive;
   --tp-ff-poppins: 'Poppins', sans-serif;
-  --tp-ff-fontawesome: "Font Awesome 6 Pro";
+  /* --tp-ff-fontawesome: "Font Awesome 6 Pro"; */
   /**
   @color declaration
   */
@@ -175,7 +175,7 @@ li,
 }
 
 /*---------------------------------
-	typography css start 
+	typography css start
 ---------------------------------*/
 body {
   font-family: var(--tp-ff-body);
@@ -593,7 +593,7 @@ div.demo img {
 }
 
 /*----------------------------------------
-    Body Overlay 
+    Body Overlay
 -----------------------------------------*/
 .body-overlay {
   background-color: var(--tp-common-black);

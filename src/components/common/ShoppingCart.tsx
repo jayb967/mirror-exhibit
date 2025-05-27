@@ -98,7 +98,7 @@ const ShoppingCart = () => {
               </div>
             </div>
             <div className="cart-del-icon">
-              <span><i className="fa-light fa-trash-can" onClick={() => handleRemoveFromCart(item)}></i></span>
+              <span onClick={() => handleRemoveFromCart(item)} style={{ cursor: 'pointer' }}>🗑️</span>
             </div>
           </div>
         ))}

@@ -54,7 +54,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
     return (
       <div className={`tp-header-icon profile ${variant === 'mobile' ? '' : 'd-none d-xl-block'}`}>
         <button className="profile-icon" style={{ color: iconColor, background: 'none', border: 'none' }}>
-          <i className="fa-solid fa-spinner fa-spin" style={{ color: iconColor }}></i>
+          ⟳
         </button>
       </div>
     );
@@ -74,7 +74,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
           cursor: 'pointer'
         }}
       >
-        <i className="fa-solid fa-user" style={{ color: iconColor, fontSize: '18px' }}></i>
+        👤
       </button>
 
       {dropdownOpen && (
@@ -120,7 +120,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <i className="fa-solid fa-tachometer-alt" style={{ marginRight: '8px', width: '16px' }}></i>
+                  📊
                   My Dashboard
                 </Link>
 
@@ -138,7 +138,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <i className="fa-solid fa-box" style={{ marginRight: '8px', width: '16px' }}></i>
+                  📦
                   My Orders
                 </Link>
 
@@ -157,7 +157,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <i className="fa-solid fa-cog" style={{ marginRight: '8px', width: '16px' }}></i>
+                    ⚙️
                     Admin Dashboard
                   </Link>
                 )}
@@ -180,7 +180,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <i className="fa-solid fa-sign-out-alt" style={{ marginRight: '8px', width: '16px' }}></i>
+                    🚪
                     Sign Out
                   </button>
                 </div>
@@ -206,7 +206,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                <i className="fa-solid fa-sign-in-alt" style={{ marginRight: '8px', width: '16px' }}></i>
+                🔑
                 Sign In
               </button>
 
@@ -227,7 +227,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                <i className="fa-solid fa-user-plus" style={{ marginRight: '8px', width: '16px' }}></i>
+                👥
                 Sign Up
               </button>
             </div>

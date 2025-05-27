@@ -27,13 +27,13 @@ const CartButtonComponent: React.FC<CartButtonComponentProps> = ({
     if (variant === 'navbar') {
       return {
         button: 'cart-icon p-relative',
-        icon: 'fa-sharp fa-solid fa-cart-shopping shopping-cart',
+        icon: 'shopping-cart',
         countBadge: 'cart-count'
       };
     } else {
       return {
         button: 'floating-cart-button',
-        icon: 'fa-sharp fa-solid fa-cart-shopping',
+        icon: 'shopping-cart',
         countBadge: 'floating-cart-count'
       };
     }
@@ -52,7 +52,7 @@ const CartButtonComponent: React.FC<CartButtonComponentProps> = ({
           color: iconColor
         }}
       >
-        <i className={styles.icon} style={{ color: iconColor }}></i>
+        🛒
         {itemCount > 0 && (
           <span className={styles.countBadge}>{itemCount}</span>
         )}
