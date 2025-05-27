@@ -39,8 +39,7 @@ export async function GET(request: NextRequest) {
       limit
     });
 
-    // Build the query with filters - using regular products table with basic fields
-    // We'll fetch brand and category data separately to avoid relationship conflicts
+    // Build the query with filters - include variations for product options
     let query = supabase
       .from('products')
       .select(`
@@ -53,7 +52,14 @@ export async function GET(request: NextRequest) {
         meta_keywords,
         created_at,
         brand_id,
-        category_id
+        category_id,
+        variations:product_variations(
+          id,
+          price,
+          sku,
+          size:product_sizes(id, name, price_adjustment),
+          frame_type:frame_types(id, name, price_adjustment)
+        )
       `, { count: 'exact' });
 
     // Apply search filter
@@ -137,13 +143,15 @@ export async function GET(request: NextRequest) {
         title: product.name,
         description: product.description,
         price: product.base_price,
+        base_price: product.base_price,
         image: product.image_url || getPlaceholderImage(),
+        image_url: product.image_url || getPlaceholderImage(),
         brand: 'Mirror Exhibit', // Default brand for now
         brandData: null, // Will be loaded separately
         category: 'Uncategorized', // Default category for now
         categoryData: null, // Will be loaded separately
         tags: [], // Will be loaded separately for now
-        variations: [],
+        variations: product.variations || [], // Include variations data
         is_featured: product.is_featured || false,
         handle: product.meta_keywords || '',
         created_at: product.created_at,

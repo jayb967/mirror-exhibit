@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`API: /api/products/filtered - Type: ${productType}, Category: ${category}, Limit: ${actualLimit}`);
 
-    // Build base query
+    // Build base query with variations for product options
     let query = supabase
       .from('products')
       .select(`
@@ -42,6 +42,13 @@ export async function GET(request: NextRequest) {
         category:product_categories(
           id,
           name
+        ),
+        variations:product_variations(
+          id,
+          price,
+          sku,
+          size:product_sizes(id, name, price_adjustment),
+          frame_type:frame_types(id, name, price_adjustment)
         )
       `);
 
@@ -135,11 +142,13 @@ export async function GET(request: NextRequest) {
       title: product.name,
       description: product.description || '',
       price: product.base_price || 0,
+      base_price: product.base_price || 0,
       image: product.image_url || getPlaceholderImage(),
+      image_url: product.image_url || getPlaceholderImage(),
       brand: 'Mirror Exhibit', // Default brand
       category: product.category?.name || 'Uncategorized',
       category_slug: product.category?.name?.toLowerCase().replace(/\s+/g, '-') || 'uncategorized',
-      variations: [], // Will be populated separately if needed
+      variations: product.variations || [], // Include variations data
       is_featured: product.is_featured || false,
       view_count: product.view_count || 0,
       handle: product.meta_keywords || '',

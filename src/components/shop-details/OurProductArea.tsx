@@ -32,20 +32,34 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
   const relatedProducts = randomData?.products ||
     (allData?.products?.filter(product => product.id !== currentProductId) || []);
 
-  // Fetch product options (sizes and frame types)
+  // Fetch product options (sizes and frame types) with caching
   useEffect(() => {
     const fetchProductOptions = async () => {
       try {
+        // Check if options are already cached in sessionStorage
+        const cachedOptions = sessionStorage.getItem('productOptions');
+        if (cachedOptions) {
+          const parsed = JSON.parse(cachedOptions);
+          setDefaultOptions({
+            sizes: parsed.sizes || [],
+            frameTypes: parsed.frameTypes || []
+          });
+          return;
+        }
+
         console.log('Fetching product options for OurProductArea...');
         const response = await fetch('/api/product-options');
         const data = await response.json();
 
         if (data.success) {
           console.log('Product options loaded for OurProductArea:', data);
-          setDefaultOptions({
+          const options = {
             sizes: data.sizes || [],
             frameTypes: data.frameTypes || []
-          });
+          };
+          setDefaultOptions(options);
+          // Cache the options for other components
+          sessionStorage.setItem('productOptions', JSON.stringify(options));
         }
       } catch (err) {
         console.error('Error fetching product options:', err);
@@ -235,7 +249,7 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
                               flexShrink: 0
                             }}
                           >
-                            <h4
+                            {/* <h4
                               className="tp-product-2-title mb-0"
                               style={{
                                 overflow: 'hidden',
@@ -252,10 +266,10 @@ const OurProductArea = ({ currentProductId }: { currentProductId?: string }) => 
                               <Link href={`/product/${product.id}?id=${product.id}`}>
                                 <span>{product.title}</span>
                               </Link>
-                            </h4>
-                            <div className="tp-product-2-rate-2" style={{ flexShrink: 0 }}>
+                            </h4> */}
+                            {/* <div className="tp-product-2-rate-2" style={{ flexShrink: 0 }}>
                               <span>${product.price}</span>
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       </SwiperSlide>

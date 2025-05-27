@@ -28,30 +28,64 @@ const ProductCard = React.memo(({ product, className = '', pauseCarousel, resume
   // Get the image URL with fallback
   const imageUrl = product?.image || product?.image_url || '/assets/img/logo/ME_Logo.png';
 
-  // Fetch default options if needed
+  // Fetch default options with retry mechanism and caching
   useEffect(() => {
     const fetchDefaultOptions = async () => {
       try {
         setIsLoadingOptions(true);
-        const response = await fetch('/api/product-options');
-        const data = await response.json();
 
-        if (data.success) {
+        // Check if options are already cached in sessionStorage
+        const cachedOptions = sessionStorage.getItem('productOptions');
+        if (cachedOptions) {
+          const parsed = JSON.parse(cachedOptions);
           setDefaultOptions({
-            sizes: data.sizes.map(size => ({
-              id: size.id,
-              name: size.name,
-              price_adjustment: size.price_adjustment
-            })),
-            frameTypes: data.frameTypes.map(frame => ({
-              id: frame.id,
-              name: frame.name,
-              price_adjustment: frame.price_adjustment
-            }))
+            sizes: parsed.sizes || [],
+            frameTypes: parsed.frameTypes || []
           });
+          setIsLoadingOptions(false);
+          return;
+        }
+
+        // Fetch from API with retry
+        let retries = 3;
+        let response;
+
+        while (retries > 0) {
+          try {
+            response = await fetch('/api/product-options');
+            if (response.ok) break;
+          } catch (err) {
+            console.warn(`ProductCard: API call failed, ${retries - 1} retries left`);
+          }
+          retries--;
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+          }
+        }
+
+        if (response && response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            const options = {
+              sizes: data.sizes.map(size => ({
+                id: size.id,
+                name: size.name,
+                price_adjustment: size.price_adjustment
+              })),
+              frameTypes: data.frameTypes.map(frame => ({
+                id: frame.id,
+                name: frame.name,
+                price_adjustment: frame.price_adjustment
+              }))
+            };
+
+            setDefaultOptions(options);
+            // Cache the options for other components
+            sessionStorage.setItem('productOptions', JSON.stringify(options));
+          }
         }
       } catch (error) {
-        console.error('Error fetching default options:', error);
+        console.error('ProductCard: Error fetching default options:', error);
       } finally {
         setIsLoadingOptions(false);
       }
@@ -160,12 +194,9 @@ const ProductCard = React.memo(({ product, className = '', pauseCarousel, resume
           <h4 className="tp-product-2-title mb-2">
             {product.title || product.name}
           </h4>
-          <div className="tp-product-2-rate-2">
+          {/* <div className="tp-product-2-rate-2">
             <span>${product.base_price || product.price}</span>
-            {product.variations && product.variations.length > 0 && (
-              <small className="ml-2">({product.variations.length} variations)</small>
-            )}
-          </div>
+          </div> */}
         </div>
         <button
           className="product-add-to-cart-btn"
