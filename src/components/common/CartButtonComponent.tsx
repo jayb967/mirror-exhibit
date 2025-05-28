@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import ShoppingCart from './ShoppingCart';
+import { HiShoppingCart } from 'react-icons/hi';
 
 interface CartButtonComponentProps {
   variant: 'navbar' | 'floating';
@@ -52,7 +53,7 @@ const CartButtonComponent: React.FC<CartButtonComponentProps> = ({
           color: iconColor
         }}
       >
-        🛒
+        <HiShoppingCart style={{ color: iconColor, fontSize: '20px' }} />
         {itemCount > 0 && (
           <span className={styles.countBadge}>{itemCount}</span>
         )}

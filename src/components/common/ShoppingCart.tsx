@@ -7,6 +7,7 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { remove_cart_product } from '@/redux/features/cartSlice';
 import empty_bag from "@/assets/img/bag/empty-cart.webp";
+import { HiTrash } from 'react-icons/hi';
 
 const ShoppingCart = () => {
   const dispatch = useDispatch();
@@ -98,7 +99,20 @@ const ShoppingCart = () => {
               </div>
             </div>
             <div className="cart-del-icon">
-              <span onClick={() => handleRemoveFromCart(item)} style={{ cursor: 'pointer' }}>🗑️</span>
+              <button
+                onClick={() => handleRemoveFromCart(item)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <HiTrash style={{ fontSize: '16px', color: '#666' }} />
+              </button>
             </div>
           </div>
         ))}

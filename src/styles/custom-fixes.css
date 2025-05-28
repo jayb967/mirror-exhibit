@@ -1,5 +1,14 @@
 /* Custom fixes for specific issues */
 
+/* Style for React Icons in authentication components */
+.profile-icon {
+  transition: all 0.3s ease;
+}
+
+.profile-icon:hover {
+  transform: scale(1.1);
+}
+
 /* Style for Unicode symbol replacements */
 .close-btn {
   font-size: 24px;
@@ -15,10 +24,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .close-btn:hover {
   color: #000;
+  transform: scale(1.1);
 }
 
 .tp-cart-minus, .tp-cart-plus {
@@ -27,6 +38,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Ensure React Icons render properly */
+svg {
+  vertical-align: middle;
+}
+
+/* Animation for spinning icons */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
 /* Fix for product card layout - ensure add to cart button doesn't overlap price */

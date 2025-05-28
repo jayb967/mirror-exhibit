@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
+import { createAdminSupabaseClient } from '@/utils/clerk-supabase';
 
 // Get all addresses for the current user
 export async function GET(req: Request) {
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     }
 
     // Create Supabase client with service role
-    const supabase = createServiceRoleSupabaseClient();
+    const supabase = createAdminSupabaseClient();
 
     // Get all addresses for the user
     const { data, error } = await supabase
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     }
 
     // Create Supabase client
-    const supabase = createServiceRoleSupabaseClient();
+    const supabase = createAdminSupabaseClient();
 
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession();
@@ -152,7 +152,7 @@ export async function PUT(req: Request) {
     }
 
     // Create Supabase client
-    const supabase = createServiceRoleSupabaseClient();
+    const supabase = createAdminSupabaseClient();
 
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession();

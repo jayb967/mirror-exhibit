@@ -115,23 +115,34 @@ if (isModalOpen && modalData) {
 
 **Solution Implemented:**
 - **Completely removed Font Awesome dependency** to eliminate all potential conflicts
-- **Replaced all Font Awesome icons** with Unicode symbols and emojis
-- **Added custom CSS styling** for the Unicode symbols to maintain visual consistency
-- **Removed all Font Awesome packages** from package.json
+- **Replaced all authentication-related Font Awesome icons** with React Icons (react-icons/hi)
+- **Moved Font Awesome CSS and font files** to backup folders to prevent loading
+- **Added React Icons with modern, theme-matching design**
+- **Added custom CSS styling** with hover effects and animations
 
 **Files Modified:**
-- `package.json` - Removed all Font Awesome packages
-- `src/styles/custom-fixes.css` - Added Unicode symbol styling
-- `src/components/common/GlobalProductModal.tsx` - Replaced icons with Unicode symbols
-- `src/app/cart/CartPage.tsx` - Replaced icons with Unicode symbols
-- `src/components/shop-details/ShopDetailsArea.tsx` - Replaced icons with Unicode symbols
-- `src/components/common/ProductOptionsModal.tsx` - Replaced icons with Unicode symbols
-- `src/components/common/OnePageOffcanvas.tsx` - Replaced icons with Unicode symbols/emojis
-- `src/components/common/Offcanvus.tsx` - Replaced icons with Unicode symbols/emojis
+- `package.json` - Added react-icons package
+- `src/styles/custom-fixes.css` - Added React Icons styling and animations
+- `src/components/common/ProfileButtonComponent.tsx` - Replaced with React Icons
+- `src/components/common/CartButtonComponent.tsx` - Replaced with React Icons
+- `src/components/common/ShoppingCart.tsx` - Replaced with React Icons
+- `public/assets/css/font-awesome-pro.css` - Moved to backup
+- `public/assets/fonts/fa-*` - Moved Font Awesome fonts to backup folder
+- `src/styles/index.scss` - Commented out Font Awesome Pro CSS import
+- `src/app/api/dashboard/orders/route.ts` - Fixed Clerk auth context issue
+- `src/app/api/dashboard/orders/[id]/route.ts` - Fixed Clerk auth context issue
+- `src/services/notificationService.ts` - Fixed Clerk auth context issue
+- `src/app/api/addresses/route.ts` - Fixed Clerk auth context issue
+- `src/utils/clerk-supabase.ts` - Deprecated problematic function
 
-**Icon Replacements:**
-- `fas fa-times` → `×` (multiplication sign)
-- `fas fa-minus` → `−` (minus sign)
-- `fas fa-plus` → `+` (plus sign)
-- `fas fa-envelope` → `✉️` (envelope emoji)
-- `fas fa-phone-alt` → `📞` (telephone emoji)
+**React Icon Replacements:**
+- `fa-solid fa-user` → `<HiUser />` (user profile)
+- `fa-solid fa-spinner` → `<HiRefresh className="animate-spin" />` (loading)
+- `fa-solid fa-tachometer-alt` → `<HiChartBar />` (dashboard)
+- `fa-solid fa-box` → `<HiShoppingBag />` (orders)
+- `fa-solid fa-cog` → `<HiCog />` (settings)
+- `fa-solid fa-sign-out-alt` → `<HiLogout />` (sign out)
+- `fa-solid fa-sign-in-alt` → `<HiLogin />` (sign in)
+- `fa-solid fa-user-plus` → `<HiUserAdd />` (sign up)
+- `fa-light fa-trash-can` → `<HiTrash />` (delete)
+- `fa-sharp fa-solid fa-cart-shopping` → `<HiShoppingCart />` (cart)

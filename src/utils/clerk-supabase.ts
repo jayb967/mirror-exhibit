@@ -78,8 +78,10 @@ export function createPublicSupabaseClient() {
 /**
  * Create a Supabase client with service role privileges
  * This is an alias for createAdminSupabaseClient for backward compatibility
+ * @deprecated Use createAdminSupabaseClient() instead
  */
 export function createServiceRoleSupabaseClient() {
+  console.warn('createServiceRoleSupabaseClient is deprecated. Use createAdminSupabaseClient instead.');
   return createAdminSupabaseClient();
 }
 

@@ -1,4 +1,4 @@
-import { createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
+import { createAdminSupabaseClient } from '@/utils/clerk-supabase';
 import { emailService } from './emailService';
 
 export type NotificationType =
@@ -47,7 +47,7 @@ export interface NotificationPreferences {
 }
 
 class NotificationService {
-  private supabase = createServiceRoleSupabaseClient();
+  private supabase = createAdminSupabaseClient();
 
   /**
    * Create a new notification

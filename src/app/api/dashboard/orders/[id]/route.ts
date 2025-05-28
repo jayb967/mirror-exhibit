@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createServiceRoleSupabaseClient } from '@/utils/clerk-supabase';
+import { createAdminSupabaseClient } from '@/utils/clerk-supabase';
 
 /**
  * GET /api/dashboard/orders/[id]
@@ -20,7 +20,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createServiceRoleSupabaseClient();
+    const supabase = createAdminSupabaseClient();
 
     // Get order details with shipping address from separate table
     const { data: order, error: orderError } = await supabase

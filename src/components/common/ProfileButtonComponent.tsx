@@ -3,6 +3,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useClerkAuth';
+import {
+  HiUser,
+  HiChartBar,
+  HiShoppingBag,
+  HiCog,
+  HiLogout,
+  HiLogin,
+  HiUserAdd,
+  HiRefresh
+} from 'react-icons/hi';
 
 interface ProfileButtonComponentProps {
   iconColor?: string;
@@ -54,7 +64,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
     return (
       <div className={`tp-header-icon profile ${variant === 'mobile' ? '' : 'd-none d-xl-block'}`}>
         <button className="profile-icon" style={{ color: iconColor, background: 'none', border: 'none' }}>
-          ⟳
+          <HiRefresh className="animate-spin" style={{ color: iconColor, fontSize: '18px' }} />
         </button>
       </div>
     );
@@ -74,7 +84,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
           cursor: 'pointer'
         }}
       >
-        👤
+        <HiUser style={{ color: iconColor, fontSize: '18px' }} />
       </button>
 
       {dropdownOpen && (
@@ -120,7 +130,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  📊
+                  <HiChartBar style={{ marginRight: '8px', fontSize: '16px' }} />
                   My Dashboard
                 </Link>
 
@@ -138,7 +148,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  📦
+                  <HiShoppingBag style={{ marginRight: '8px', fontSize: '16px' }} />
                   My Orders
                 </Link>
 
@@ -157,7 +167,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    ⚙️
+                    <HiCog style={{ marginRight: '8px', fontSize: '16px' }} />
                     Admin Dashboard
                   </Link>
                 )}
@@ -180,7 +190,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    🚪
+                    <HiLogout style={{ marginRight: '8px', fontSize: '16px' }} />
                     Sign Out
                   </button>
                 </div>
@@ -206,7 +216,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                🔑
+                <HiLogin style={{ marginRight: '8px', fontSize: '16px' }} />
                 Sign In
               </button>
 
@@ -227,7 +237,7 @@ const ProfileButtonComponent: React.FC<ProfileButtonComponentProps> = ({
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                👥
+                <HiUserAdd style={{ marginRight: '8px', fontSize: '16px' }} />
                 Sign Up
               </button>
             </div>
