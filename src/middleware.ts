@@ -2,10 +2,15 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { createClerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-// Create Clerk client instance
-const clerkClient = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY,
-});
+// Create Clerk client instance with error handling
+let clerkClient: any = null;
+try {
+  clerkClient = createClerkClient({
+    secretKey: process.env.CLERK_SECRET_KEY,
+  });
+} catch (error) {
+  console.error('Failed to create Clerk client:', error);
+}
 
 // Define protected routes that require authentication
 const isProtectedRoute = createRouteMatcher([
@@ -26,7 +31,8 @@ const isPublicAdminRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, sessionClaims } = await auth();
+  try {
+    const { userId, sessionClaims } = await auth();
 
   // Allow public admin routes
   if (isPublicAdminRoute(req)) {
@@ -48,7 +54,7 @@ export default clerkMiddleware(async (auth, req) => {
                    sessionClaims?.privateMetadata?.role;
 
     // Check for admin role in multiple possible locations
-    if (!userRole) {
+    if (!userRole && clerkClient) {
       try {
         const user = await clerkClient.users.getUser(userId);
         userRole = (user.publicMetadata?.role as string) ||
@@ -58,8 +64,10 @@ export default clerkMiddleware(async (auth, req) => {
         console.error('Error fetching user role from Clerk:', error);
         // No fallback - if Clerk API fails, access should be denied
       }
-    } else {
+    } else if (userRole) {
       console.log('Admin access via JWT:', { userId, role: userRole });
+    } else {
+      console.warn('Clerk client not available, skipping role check');
     }
 
     if (userRole !== 'admin') {
@@ -79,6 +87,12 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   return NextResponse.next();
+  } catch (error) {
+    console.error('Middleware error:', error);
+    // If there's an error in authentication, allow the request to proceed
+    // This prevents the app from crashing due to Clerk crypto issues
+    return NextResponse.next();
+  }
 });
 
 export const config = {

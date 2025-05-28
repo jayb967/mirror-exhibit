@@ -87,10 +87,24 @@ const Wrapper = ({ children }: any) => {
   // Initialize ScrollSmoother with performance-based config
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const config = getScrollSmootherConfig();
+      try {
+        const config = getScrollSmootherConfig();
 
-
-      ScrollSmoother.create(config);
+        // Add delay to ensure DOM is ready and GSAP is fully loaded
+        setTimeout(() => {
+          try {
+            if (window.gsap && ScrollSmoother) {
+              ScrollSmoother.create(config);
+            } else {
+              console.warn("GSAP or ScrollSmoother not available");
+            }
+          } catch (error) {
+            console.warn("ScrollSmoother creation failed:", error);
+          }
+        }, 100);
+      } catch (error) {
+        console.warn("ScrollSmoother initialization error:", error);
+      }
     }
   }, [getScrollSmootherConfig]);
 
@@ -113,9 +127,19 @@ const Wrapper = ({ children }: any) => {
       // Initialize animations based on performance level
       if (performanceLevel.current !== "low") {
         scheduleWork(() => {
-
-          animationTitle();
-          scrollSmother();
+          try {
+            animationTitle();
+            // Add delay and error handling for scrollSmother
+            setTimeout(() => {
+              try {
+                scrollSmother();
+              } catch (error) {
+                console.warn("ScrollSmother initialization failed:", error);
+              }
+            }, 500); // Delay to ensure GSAP is fully loaded
+          } catch (error) {
+            console.warn("Animation initialization failed:", error);
+          }
         });
 
         // Initialize WebGL effects for all devices

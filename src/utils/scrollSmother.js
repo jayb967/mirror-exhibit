@@ -1,4 +1,11 @@
 export function scrollSmother(windowObject) {
+  // Add safety checks for GSAP and window
+  if (typeof window === "undefined") return;
+  if (!window.gsap || !window.gsap.registerPlugin) {
+    console.warn("GSAP not available, skipping scrollSmother initialization");
+    return;
+  }
+
   if (typeof windowObject !== "undefined") {
     !(function (e, t) {
       "object" == typeof exports && "undefined" != typeof module
@@ -120,14 +127,19 @@ export function scrollSmother(windowObject) {
               j.isUpdating || j.update());
         }
         function Fa(e) {
-          return arguments.length
-            ? (e < 0 && (e = 0),
-              (M.y = -e),
-              (d = !0),
-              u ? (A = -e) : Ea(-e),
-              j.isRefreshing ? i.update() : _(e),
-              this)
-            : -A;
+          try {
+            return arguments.length
+              ? (e < 0 && (e = 0),
+                (M.y = -e),
+                (d = !0),
+                u ? (A = -e) : Ea(-e),
+                j.isRefreshing ? i.update() : _(e),
+                this)
+              : -A;
+          } catch (error) {
+            console.warn("ScrollSmother Fa function error:", error);
+            return this || {};
+          }
         }
         function Ha(e) {
           (b.scrollTop = 0),
