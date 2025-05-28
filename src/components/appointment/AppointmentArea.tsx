@@ -1,5 +1,5 @@
- 
- 
+
+
 import React from 'react';
 import Image from 'next/image';
 import AppointmentForm from '../forms/AppointmentForm';
@@ -7,7 +7,7 @@ import thumb_img from "@/assets/img/contact/thumb-1-1.jpg";
 
 
 const AppointmentArea = () => {
- 
+
   return (
     <>
       <div className="tp-appointment-area pt-150 pb-150">
@@ -15,7 +15,7 @@ const AppointmentArea = () => {
           <div className="row">
             <div className="col-xl-8 col-lg-8">
               <div className="tp-form-box pb-50">
-                <h4 className="tp-section-title tp-split-text tp-split-in-right pb-60">Enter You Personal Details</h4>           
+                <h4 className="tp-section-title tp-split-text tp-split-in-right pb-60">Enter You Personal Details</h4>
                 <AppointmentForm />
               </div>
             </div>
@@ -54,9 +54,9 @@ const AppointmentArea = () => {
                   <p className="pb-20">It is a long established fact that reader will be distracted by the readable content of page when looking at its layout. The point of using Lorem is it has a more-or-less normal distribution of letters, using Content here not.</p>
                   <div className="tp-appointment-list">
                     <ul>
-                      <li><i className="fa-solid fa-check"></i>One of our specialist surveyors will visit your home to measure your room and identify utilities and services</li>
-                      <li><i className="fa-solid fa-check"></i>The home measure will typically take between 30-60 minutes.</li>
-                      <li><i className="fa-solid fa-check"></i>Your measurements will then be sent back to your Wren Designer and we will be in touch to arrange a Design</li>
+                      <li>✓ One of our specialist surveyors will visit your home to measure your room and identify utilities and services</li>
+                      <li>✓ The home measure will typically take between 30-60 minutes.</li>
+                      <li>✓ Your measurements will then be sent back to your Wren Designer and we will be in touch to arrange a Design</li>
                     </ul>
                   </div>
                 </div>

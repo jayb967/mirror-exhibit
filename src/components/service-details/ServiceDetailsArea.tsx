@@ -73,7 +73,7 @@ const ServiceDetailsArea = () => {
                           <div key={i} className="col-lg-6 col-md-6 mb-40">
                             <div className="tp-sv-details-left">
                               <h6>
-                                <i className="fa-sharp fa-solid fa-circle-check"></i>
+                                ✓
                                 {item.title}
                               </h6>
                               <p>{item.description}</p>

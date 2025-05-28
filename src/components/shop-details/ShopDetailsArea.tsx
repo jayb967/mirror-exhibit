@@ -373,7 +373,7 @@ const ShopDetailsArea = () => {
                                 fontSize: '12px'
                               }}
                             >
-                              <i className="fas fa-external-link-alt"></i>
+                              ↗
                             </a>
                           )}
                         </div>
@@ -519,16 +519,16 @@ const ShopDetailsArea = () => {
                 <div className="tp-shop-details__social mt-30">
                   <span>Share:</span>
                   <a href="#">
-                    <i className="fa-brands fa-facebook-f"></i>
+                    📘
                   </a>
                   <a href="#">
-                    <i className="fa-brands fa-twitter"></i>
+                    🐦
                   </a>
                   <a href="#">
-                    <i className="fa-brands fa-linkedin-in"></i>
+                    💼
                   </a>
                   <a href="#">
-                    <i className="fa-brands fa-pinterest"></i>
+                    📌
                   </a>
                 </div>
               </div>

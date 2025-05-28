@@ -1041,7 +1041,7 @@ div.demo img {
   position: absolute;
   content: "\f00c";
   font-weight: 600;
-  font-family: var(--tp-ff-fontawesome);
+  /* font-family: var(--tp-ff-fontawesome); */
   color: var(--tp-common-white);
   font-size: 16px;
   left: 50%;
@@ -2297,7 +2297,7 @@ div.demo img {
   top: 50%;
   right: 33px;
   font-size: 18px;
-  font-family: var(--tp-ff-fontawesome);
+  /* font-family: var(--tp-ff-fontawesome); */
   color: #54595F;
   font-weight: 500;
   pointer-events: none;
@@ -6847,7 +6847,7 @@ body .ui-tooltip {
   box-sizing: border-box;
   content: "\f00c";
   position: absolute;
-  font-family: var(--tp-ff-fontawesome);
+  /* font-family: var(--tp-ff-fontawesome); */
   font-size: 10px;
   color: var(--tp-common-white);
   top: 47%;
