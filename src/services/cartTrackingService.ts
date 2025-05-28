@@ -80,7 +80,7 @@ class CartTrackingService {
       const trackingData: CartTrackingData = {
         user_id: userId || null,
         guest_token: !userId ? guestToken : null,
-        email: email || user?.email || null,
+        email: email || null,
         cart_items: cartItems,
         subtotal,
         last_activity: new Date().toISOString(),

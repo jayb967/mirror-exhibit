@@ -85,28 +85,37 @@ function CartInitializer() {
     const isNowAuthenticated = isAuthenticated
 
     const handleAuthChange = async () => {
-      if (!wasAuthenticated && isNowAuthenticated && user) {
-        // User just logged in - convert guest cart and sync
-        console.log('User logged in, converting guest cart and syncing...')
-        try {
-          // Convert guest cart to user cart in cart_tracking
-          await cartTrackingService.convertGuestToUser(user.id)
+      try {
+        if (!wasAuthenticated && isNowAuthenticated && user) {
+          // User just logged in - convert guest cart and sync
+          console.log('User logged in, converting guest cart and syncing...')
+          try {
+            // Convert guest cart to user cart in cart_tracking
+            await cartTrackingService.convertGuestToUser(user.id)
 
-          // Load cart from database and merge with local cart
-          dispatch(loadCartFromDatabase())
-          // Sync any local cart items to database
-          dispatch(syncCartWithDatabase())
-        } catch (error) {
-          console.error('Error syncing cart after login:', error)
+            // Load cart from database and merge with local cart
+            dispatch(loadCartFromDatabase())
+            // Sync any local cart items to database
+            dispatch(syncCartWithDatabase())
+          } catch (error) {
+            console.error('Error syncing cart after login:', error)
+            // Fallback to local cart if sync fails
+            dispatch(get_cart_products())
+          }
+        } else if (wasAuthenticated && !isNowAuthenticated) {
+          // User logged out - continue with local storage only
+          console.log('User logged out, using local cart...')
+          dispatch(get_cart_products())
         }
-      } else if (wasAuthenticated && !isNowAuthenticated) {
-        // User logged out - continue with local storage only
-        console.log('User logged out, using local cart...')
-        dispatch(get_cart_products())
-      }
 
-      // Update previous auth state
-      prevAuthState.current = isAuthenticated
+        // Update previous auth state
+        prevAuthState.current = isAuthenticated
+      } catch (error) {
+        console.error('Error in auth change handler:', error)
+        // Fallback to local cart if anything fails
+        dispatch(get_cart_products())
+        prevAuthState.current = isAuthenticated
+      }
     }
 
     handleAuthChange()
