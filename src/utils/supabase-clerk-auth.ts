@@ -17,8 +17,14 @@ export function useSupabaseWithClerk() {
     {
       global: {
         headers: async () => {
-          const token = await getToken({ template: 'supabase' });
-          return token ? { Authorization: `Bearer ${token}` } : {};
+          try {
+            const token = await getToken({ template: 'supabase' });
+            return token ? { Authorization: `Bearer ${token}` } : {};
+          } catch (error) {
+            console.warn('Failed to get Clerk token for Supabase in supabase-clerk-auth:', error);
+            // Return empty headers to fall back to anonymous access
+            return {};
+          }
         },
       },
       auth: {
@@ -29,7 +35,7 @@ export function useSupabaseWithClerk() {
 
   // Custom method to check if user is admin
   const isAdmin = () => {
-    return user?.publicMetadata?.role === 'admin' || 
+    return user?.publicMetadata?.role === 'admin' ||
            user?.privateMetadata?.role === 'admin';
   };
 

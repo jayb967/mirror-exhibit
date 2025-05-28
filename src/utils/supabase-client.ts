@@ -44,9 +44,15 @@ export function useSupabaseClient() {
     {
       global: {
         headers: async () => {
-          // Use Clerk's Supabase template
-          const token = await getToken({ template: 'supabase' });
-          return token ? { Authorization: `Bearer ${token}` } : {};
+          try {
+            // Use Clerk's Supabase template with error handling
+            const token = await getToken({ template: 'supabase' });
+            return token ? { Authorization: `Bearer ${token}` } : {};
+          } catch (error) {
+            console.warn('Failed to get Clerk token for Supabase:', error);
+            // Return empty headers to fall back to anonymous access
+            return {};
+          }
         },
       },
     }

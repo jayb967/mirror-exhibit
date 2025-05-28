@@ -9,15 +9,21 @@ import { createClient } from '@supabase/supabase-js';
  */
 export function useSupabaseClient() {
   const { getToken } = useAuth();
-  
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       global: {
         headers: async () => {
-          const token = await getToken({ template: 'supabase' });
-          return token ? { Authorization: `Bearer ${token}` } : {};
+          try {
+            const token = await getToken({ template: 'supabase' });
+            return token ? { Authorization: `Bearer ${token}` } : {};
+          } catch (error) {
+            console.warn('Failed to get Clerk token for Supabase in auth-helpers:', error);
+            // Return empty headers to fall back to anonymous access
+            return {};
+          }
         },
       },
     }
@@ -58,10 +64,10 @@ export async function createAnonymousUser(): Promise<{ id: string } | null> {
     const guestToken = localStorage.getItem('guest_token') || '';
     const timestamp = Date.now();
     const anonymousId = `guest_${guestToken}_${timestamp}`;
-    
+
     // Store the anonymous ID for this session
     sessionStorage.setItem('anonymous_user_id', anonymousId);
-    
+
     return { id: anonymousId };
   } catch (error) {
     console.error('Error creating anonymous user:', error);

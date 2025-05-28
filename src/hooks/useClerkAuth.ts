@@ -99,7 +99,8 @@ export function useSupabaseToken() {
     try {
       return await getToken({ template: 'supabase' });
     } catch (error) {
-      console.error('Error getting Supabase token:', error);
+      console.warn('Error getting Supabase token in useClerkAuth:', error);
+      // Return null to indicate token retrieval failed
       return null;
     }
   };
