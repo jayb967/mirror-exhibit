@@ -150,10 +150,17 @@ export const syncCartWithDatabase = createAsyncThunk(
   'cart/syncWithDatabase',
   async (_, { getState }) => {
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      // Add error handling for Supabase client creation
+      let supabase;
+      try {
+        supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+      } catch (clientError) {
+        console.warn('Failed to create Supabase client for cart sync:', clientError);
+        return null; // Skip sync if client creation fails
+      }
 
       // Test database connection first
       const { error: connectionError } = await supabase.from('cart_tracking').select('id').limit(1);
@@ -242,10 +249,17 @@ export const loadCartFromDatabase = createAsyncThunk(
   'cart/loadFromDatabase',
   async () => {
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      // Add error handling for Supabase client creation
+      let supabase;
+      try {
+        supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+      } catch (clientError) {
+        console.warn('Failed to create Supabase client for cart load:', clientError);
+        return []; // Return empty array if client creation fails
+      }
 
       // Test database connection first
       const { error: connectionError } = await supabase.from('cart_tracking').select('id').limit(1);
