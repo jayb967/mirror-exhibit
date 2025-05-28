@@ -66,7 +66,7 @@ const ProductHeader = () => {
                 />
                 <div className="tp-header-bar" >
                   <button className="tp-menu-bar" style={{ marginTop: '5px' }} onClick={() => setShowOffCanvas(!showOffCanvas)}>
-                    <i className="fa-solid fa-bars"></i>
+                    ☰
                   </button>
                 </div>
               </div>
@@ -102,7 +102,7 @@ const ProductHeader = () => {
                 />
                 <div className="tp-header-bar">
                   <button className="tp-menu-bar" onClick={() => setShowOffCanvas(!showOffCanvas)}>
-                    <i className="fa-solid fa-bars"></i>
+                    ☰
                   </button>
                 </div>
               </div>

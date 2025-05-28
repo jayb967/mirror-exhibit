@@ -67,17 +67,17 @@ const Offcanvus = ({ showOffCanvas, setShowOffCanvas }: any) => {
               <div className="p-relative">
                 <input type="email" placeholder="Enter your email" />
                 <button>
-                  <i className="fas fa-paper-plane"></i>
+                  ✈️
                 </button>
               </div>
             </form>
           </div>
           <div className="tpoffcanvas__social">
             <div className="social-icon">
-              <a target='_blank' href="https://twitter.com"><i className="fab fa-twitter"></i></a>
-              <a target='_blank' href="https://instagram.com"><i className="fab fa-instagram"></i></a>
-              <a target='_blank' href="https://facebook.com"><i className="fab fa-facebook-f"></i></a>
-              <a target='_blank' href="https://pinterest.com"><i className="fab fa-pinterest-p"></i></a>
+              <a target='_blank' href="https://twitter.com">🐦</a>
+              <a target='_blank' href="https://instagram.com">📷</a>
+              <a target='_blank' href="https://facebook.com">📘</a>
+              <a target='_blank' href="https://pinterest.com">📌</a>
             </div>
           </div>
         </div>

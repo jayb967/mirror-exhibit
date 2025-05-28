@@ -108,7 +108,7 @@ const HeaderOne = ({ onePageHomeOne, onePageHomeThree }: any) => {
                   <Link className="tp-btn-border black-border" href="/contact"><span>Get a Quote</span></Link>
                 </div>
                 <div className="tp-header-bar d-xl-none">
-                  <button className="tp-menu-bar" onClick={() => setShowOffCanvas(!showOffCanvas)}> <i className="fa-solid fa-bars"></i></button>
+                  <button className="tp-menu-bar" onClick={() => setShowOffCanvas(!showOffCanvas)}> ☰</button>
                 </div>
               </div>
             </div>
@@ -147,7 +147,7 @@ const HeaderOne = ({ onePageHomeOne, onePageHomeThree }: any) => {
                     <Link className="tp-btn-border black-border" href="/contact"><span>Get a Quote</span></Link>
                   </div>
                   <div className="tp-header-bar d-xl-none">
-                    <button className="tp-menu-bar" onClick={() => setShowOffCanvas(!showOffCanvas)}><i className="fa-solid fa-bars"></i></button>
+                    <button className="tp-menu-bar" onClick={() => setShowOffCanvas(!showOffCanvas)}>☰</button>
                   </div>
                 </div>
               </div>

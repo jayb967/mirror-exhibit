@@ -140,9 +140,9 @@
   color: #000 !important;
 }
 
-.tp-header-sticky-cloned .fa-cart-shopping,
+/* .tp-header-sticky-cloned .fa-cart-shopping,
 .tp-header-pinned .fa-cart-shopping,
-.tp-header-style-5.tp-header-sticky-cloned .fa-cart-shopping,
+.tp-header-style-5.tp-header-sticky-cloned .fa-cart-shopping, */
 .tp-header-sticky-cloned i.shopping-cart,
 .tp-header-pinned i.shopping-cart,
 .tp-header-style-5.tp-header-sticky-cloned i.shopping-cart {

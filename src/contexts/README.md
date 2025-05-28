@@ -134,6 +134,15 @@ if (isModalOpen && modalData) {
 - `src/services/notificationService.ts` - Fixed Clerk auth context issue
 - `src/app/api/addresses/route.ts` - Fixed Clerk auth context issue
 - `src/utils/clerk-supabase.ts` - Deprecated problematic function
+- `src/app/cart/CartPage.tsx` - Replaced remaining Font Awesome icons
+- `src/styles/cart.css` - Commented out Font Awesome CSS references
+- `src/layouts/headers/*.tsx` - Replaced all hamburger menu icons
+- `src/layouts/headers/menu/*.tsx` - Replaced mobile menu arrow icons
+- `src/components/common/ProductBreadcrumb.tsx` - Replaced breadcrumb arrows
+- `src/components/common/Breadcrumb.tsx` - Replaced breadcrumb arrows
+- `src/components/common/OnePageOffcanvas.tsx` - Replaced social media icons
+- `src/components/common/Offcanvus.tsx` - Replaced social media icons
+- `src/components/common/PostboxSidebar.tsx` - Replaced search and UI icons
 
 **React Icon Replacements:**
 - `fa-solid fa-user` → `<HiUser />` (user profile)

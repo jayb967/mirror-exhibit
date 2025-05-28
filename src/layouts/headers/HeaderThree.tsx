@@ -68,7 +68,7 @@ const HeaderThree = ({ onePageHomeFour }: any) => {
                   iconColor={sticky ? "#000" : "#fff"}
                 />
                 <div className="tp-header-bar">
-                  <button className="tp-menu-bar" style={{ marginTop: '5px' }} onClick={() => setShowOffCanvas(!showOffCanvas)}><i className="fa-solid fa-bars"></i></button>
+                  <button className="tp-menu-bar" style={{ marginTop: '5px' }} onClick={() => setShowOffCanvas(!showOffCanvas)}>☰</button>
                 </div>
               </div>
             </div>
@@ -106,7 +106,7 @@ const HeaderThree = ({ onePageHomeFour }: any) => {
 
                   </div>
                   <div className="tp-header-bar">
-                    <button className="tp-menu-bar" onClick={() => setShowOffCanvas(!showOffCanvas)}><i className="fa-solid fa-bars"></i></button>
+                    <button className="tp-menu-bar" onClick={() => setShowOffCanvas(!showOffCanvas)}>☰</button>
                   </div>
                 </div>
               </div>

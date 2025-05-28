@@ -32,7 +32,7 @@ const ProductBreadcrumb = () => {
                   </div>
                   <div className="breadcrumb__list">
                     <span><Link href="/">Home</Link></span>
-                    <span className="dvdr"><i className="fa-solid fa-angle-right"></i></span>
+                    <span className="dvdr">▶</span>
                     <span>{productTitle}</span>
                   </div>
                 </div>

@@ -85,7 +85,7 @@ const PostboxSidebar = () => {
                   <div className="sidebar__search-input-2">
                     <input type="text" placeholder="Search here" />
                     <button type="submit">
-                      <i className="far fa-search"></i>
+                      🔍
                     </button>
                   </div>
                 </form>
@@ -109,7 +109,7 @@ const PostboxSidebar = () => {
                     <div className="rc__post-content">
                       <div className="rc__meta">
                         <span>
-                          <i className="fa-light fa-clock"></i>
+                          🕒
                           {item.date} , {new Date().getFullYear()}
                         </span>
                       </div>
@@ -134,7 +134,7 @@ const PostboxSidebar = () => {
                     <Link href="/blog-details">
                       {item}
                       <span>
-                        <i className="fa-sharp fa-solid fa-arrow-right"></i>
+                        →
                       </span>
                     </Link>
                   </li>
@@ -150,7 +150,7 @@ const PostboxSidebar = () => {
                   <Link key={i} href="/blog-details">
                     {item}
                   </Link>
-                ))} 
+                ))}
               </div>
             </div>
           </div>

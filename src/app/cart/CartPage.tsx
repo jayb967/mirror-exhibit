@@ -282,7 +282,7 @@ const CartPage = () => {
                             onClick={() => handleRemoveItem(item.product_id || item.id, item)}
                             aria-label="Remove item"
                           >
-                            <i className="fa fa-times"></i>
+                            ×
                           </button>
                         </div>
 

@@ -65,7 +65,7 @@ const OnePageMobileMenu = ({ onePageHomeOne, onePageHomeTwo, onePageHomeThree, o
                   <button className={`dropdown-toggle-btn ${navTitle === menu.title ? "dropdown-opened" : ""}`}
                     onClick={() => openMobileMenu(menu.title)}
                     style={{ fontSize: "18px", cursor: "pointer" }}>
-                    <i className="fa-regular fa-angle-right"></i>
+                    ▶
                   </button>
                 </Link>
                 <div className="tp-submenu has-homemenu" style={{ display: navTitle === menu.title ? "block" : "none" }}>

@@ -79,7 +79,7 @@ const HeaderFive = () => {
                       onClick={() => setShowOffCanvas(!showOffCanvas)}
                       style={{ color: '#B59410' }}
                     >
-                      <i className="fa-solid fa-bars"></i>
+                      ☰
                     </button>
                   </div>
                 </div>
@@ -129,7 +129,7 @@ const HeaderFive = () => {
                       onClick={() => setShowOffCanvas(!showOffCanvas)}
                       style={{ color: '#B59410' }}
                     >
-                      <i className="fa-solid fa-bars"></i>
+                      ☰
                     </button>
                   </div>
                 </div>
