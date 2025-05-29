@@ -66,7 +66,7 @@ function bypassMiddleware(req: NextRequest) {
 
 // TOGGLE BETWEEN MINIMAL CLERK AND COMPLETE BYPASS
 // Set to true to use minimal Clerk middleware, false to completely bypass Clerk
-const USE_CLERK_MIDDLEWARE = true;
+const USE_CLERK_MIDDLEWARE = false;
 
 export default function middleware(req: NextRequest) {
   console.log('🔍 STEP6 MIDDLEWARE DEBUG: Middleware entry point');
