@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create shipping address
+    // Create shipping address for order
     const shippingAddressData = {
       order_id: orderId,
       first_name: shipping.firstName || customer.firstName,
@@ -112,6 +112,56 @@ export async function POST(req: Request) {
     if (shippingError) {
       console.error('Error creating shipping address:', shippingError);
       // Continue with order creation even if shipping address fails
+    }
+
+    // If user is authenticated, also save address to their profile for future use
+    if (userId) {
+      try {
+        // Check if this address already exists for the user
+        const { data: existingAddresses } = await supabase
+          .from('shipping_addresses')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('first_name', shipping.firstName || customer.firstName)
+          .eq('last_name', shipping.lastName || customer.lastName)
+          .eq('address', shipping.address)
+          .eq('city', shipping.city)
+          .eq('state', shipping.state)
+          .eq('postal_code', shipping.postalCode);
+
+        // Only save if this address doesn't already exist
+        if (!existingAddresses || existingAddresses.length === 0) {
+          const userAddressData = {
+            user_id: userId,
+            first_name: shipping.firstName || customer.firstName,
+            last_name: shipping.lastName || customer.lastName,
+            address: shipping.address,
+            apartment: shipping.apartment || '',
+            city: shipping.city,
+            state: shipping.state,
+            postal_code: shipping.postalCode,
+            country: shipping.country || 'United States',
+            phone: shipping.phone || customer.phone,
+            is_default: false, // Don't automatically set as default
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+
+          const { error: userAddressError } = await supabase
+            .from('shipping_addresses')
+            .insert(userAddressData);
+
+          if (userAddressError) {
+            console.error('Error saving address to user profile:', userAddressError);
+            // Don't fail the order creation for this
+          } else {
+            console.log('Address saved to user profile for future use');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking/saving user address:', error);
+        // Don't fail the order creation for this
+      }
     }
 
     // Create order items

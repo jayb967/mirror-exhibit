@@ -1,6 +1,6 @@
 'use client';
 
-import { useSupabaseClient } from '@/utils/supabase-client';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * ProductCompatibilityService
@@ -10,7 +10,19 @@ import { useSupabaseClient } from '@/utils/supabase-client';
  * display, ordering, and editing functionality.
  */
 class ProductCompatibilityService {
-  private supabase = useSupabaseClient();
+  // Create a Supabase client with service role for admin operations
+  private getSupabaseClient() {
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      }
+    );
+  }
 
   /**
    * Normalize product data to ensure compatibility with existing product display
@@ -56,8 +68,9 @@ class ProductCompatibilityService {
    */
   async getProductById(productId: string): Promise<any> {
     try {
+      const supabase = this.getSupabaseClient();
       // Get product
-      const { data: product, error } = await this.supabase
+      const { data: product, error } = await supabase
         .from('products')
         .select(`
           *,
@@ -114,8 +127,9 @@ class ProductCompatibilityService {
       // Calculate offset
       const offset = (page - 1) * limit;
 
+      const supabase = this.getSupabaseClient();
       // Build query
-      let query = this.supabase
+      let query = supabase
         .from('products')
         .select(`
           *,
@@ -195,8 +209,7 @@ class ProductCompatibilityService {
         meta_keywords,
         handle,
         variations,
-        images,
-        ...rest
+        images
       } = productData;
 
       // Prepare product update data
@@ -226,13 +239,12 @@ class ProductCompatibilityService {
         productUpdate.meta_keywords = meta_keywords;
       }
 
+      const supabase = this.getSupabaseClient();
       // Update product
-      const { data: updatedProduct, error } = await this.supabase
+      const { error } = await supabase
         .from('products')
         .update(productUpdate)
-        .eq('id', productId)
-        .select()
-        .single();
+        .eq('id', productId);
 
       if (error) {
         console.error('Error updating product:', error);
@@ -263,8 +275,9 @@ class ProductCompatibilityService {
    */
   private async updateProductVariations(productId: string, variations: any[]): Promise<void> {
     try {
+      const supabase = this.getSupabaseClient();
       // Get existing variations
-      const { data: existingVariations, error: fetchError } = await this.supabase
+      const { data: existingVariations, error: fetchError } = await supabase
         .from('product_variations')
         .select('*')
         .eq('product_id', productId);
@@ -312,7 +325,7 @@ class ProductCompatibilityService {
             updateData.weight_unit = variation.weight_unit || existingVariation.weight_unit;
           }
 
-          const { error: updateError } = await this.supabase
+          const { error: updateError } = await supabase
             .from('product_variations')
             .update(updateData)
             .eq('id', existingVariation.id);
@@ -344,7 +357,7 @@ class ProductCompatibilityService {
             insertData.weight_unit = 'lb'; // Default value
           }
 
-          const { error: insertError } = await this.supabase
+          const { error: insertError } = await supabase
             .from('product_variations')
             .insert(insertData);
 
@@ -366,8 +379,9 @@ class ProductCompatibilityService {
    */
   private async updateProductImages(productId: string, images: any[]): Promise<void> {
     try {
+      const supabase = this.getSupabaseClient();
       // Get existing images
-      const { data: existingImages, error: fetchError } = await this.supabase
+      const { data: existingImages, error: fetchError } = await supabase
         .from('product_images')
         .select('*')
         .eq('product_id', productId);
@@ -395,7 +409,7 @@ class ProductCompatibilityService {
 
         if (existingImage) {
           // Update existing image
-          const { error: updateError } = await this.supabase
+          const { error: updateError } = await supabase
             .from('product_images')
             .update({
               is_primary: image.is_primary !== undefined ? image.is_primary : existingImage.is_primary,
@@ -410,7 +424,7 @@ class ProductCompatibilityService {
           }
         } else {
           // Create new image
-          const { error: insertError } = await this.supabase
+          const { error: insertError } = await supabase
             .from('product_images')
             .insert({
               product_id: productId,
@@ -429,7 +443,7 @@ class ProductCompatibilityService {
       // Update main product image if there's a primary image
       const primaryImage = images.find(img => img.is_primary);
       if (primaryImage && primaryImage.image_url) {
-        const { error: updateError } = await this.supabase
+        const { error: updateError } = await supabase
           .from('products')
           .update({ image_url: primaryImage.image_url })
           .eq('id', productId);

@@ -5,6 +5,7 @@ This folder contains the components used in the admin dashboard of the Mirror Ex
 
 ## 📂 Files Overview
 - `ProductEditModal.tsx` - Modal component for editing product details with multi-image management
+- `UserModal.tsx` - **NEW** Modal component for editing user details and viewing user orders
 - `SimpleAdminLayout.tsx` - Simplified layout component for admin pages
 - `NotificationCenter.tsx` - **NEW** Real-time admin notification system
 - `OrderManagement.tsx` - **NEW** Enhanced order management with bulk operations
@@ -25,6 +26,20 @@ This folder contains the components used in the admin dashboard of the Mirror Ex
   - **Default Values:** is_active defaults to true for new products
 - **Usage:** Replaces both ProductEditModal and /admin/products/new page
 - **Props:** isOpen, product (null for create), categories, sizes, frameTypes, onClose, onSave
+
+### UserModal Component (NEW)
+- **Purpose:** Comprehensive modal interface for editing user information and viewing user orders
+- **Features:**
+  - **Tabbed Interface:** General info and Orders tabs for organized data display
+  - **User Management:** Role changes (customer/admin), status display, user actions
+  - **Order History:** Display user's complete order history with details
+  - **User Actions:** Ban/unban, lock/unlock functionality with confirmation
+  - **Real-time Loading:** Loading states for all async operations
+  - **Error Handling:** Toast notifications and graceful error states
+  - **Responsive Design:** Mobile-friendly modal layout
+- **Usage:** Replaces navigation-based user editing with modal approach
+- **Props:** isOpen, user, onClose, onSave
+- **Dependencies:** `/api/admin/users`, `/api/admin/orders?userId=`
 
 ### ProductEditModal Component (DEPRECATED)
 - **Status:** Replaced by unified ProductModal component
@@ -76,6 +91,7 @@ This folder contains the components used in the admin dashboard of the Mirror Ex
 ## 🔄 Recent Changes
 | Date       | Change Description                                                 | Reason                         |
 |------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-01-27 | **NEW:** Created UserModal component with tabbed interface        | Fix broken user edit functionality and provide comprehensive user management |
 | 2025-01-27 | **PERFORMANCE:** Optimized modal rendering to eliminate hesitation/lag | Deferred data fetching, optimized useEffect dependencies, added loading states |
 | 2025-01-27 | **CRITICAL:** Fixed duplicate SKU generation with unique checking system | Prevent inventory confusion and ensure each variation has unique identifier |
 | 2025-01-27 | Removed stock column from product variations table | Made-to-order business model doesn't require inventory tracking |

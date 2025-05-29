@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Search from "@/components/admin/svg/Search";
 import SimpleAdminLayout from "@/components/admin/SimpleAdminLayout";
+import UserModal from "@/components/admin/UserModal";
 
 interface User {
   id: string;
@@ -32,6 +33,10 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showInactive, setShowInactive] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -146,6 +151,22 @@ export default function UsersPage() {
       console.error('Error updating user role:', error);
       toast.error('Failed to update user role');
     }
+  };
+
+  // Modal functions
+  const openEditModal = (user: User) => {
+    setEditingUser(user);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingUser(null);
+  };
+
+  const handleModalSave = () => {
+    fetchUsers(); // Refresh the users list
+    closeModal();
   };
 
   return (
@@ -263,12 +284,12 @@ export default function UsersPage() {
                     </td>
                     <td className="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-right tw-text-sm tw-font-medium">
                       <div className="tw-flex tw-justify-end tw-space-x-2">
-                        <Link
-                          href={`/admin/users/edit/${user.id}`}
+                        <button
+                          onClick={() => openEditModal(user)}
                           className="tw-text-blue-600 hover:tw-text-blue-900 tw-px-2 tw-py-1 tw-border tw-border-blue-600 tw-rounded"
                         >
                           Edit
-                        </Link>
+                        </button>
                         <button
                           onClick={() => toggleUserStatus(user.id)}
                           className={`tw-px-2 tw-py-1 tw-border tw-rounded ${
@@ -296,6 +317,14 @@ export default function UsersPage() {
       )}
     </div>
       </div>
+
+      {/* User Edit Modal */}
+      <UserModal
+        isOpen={isModalOpen}
+        user={editingUser}
+        onClose={closeModal}
+        onSave={handleModalSave}
+      />
     </SimpleAdminLayout>
   );
 }

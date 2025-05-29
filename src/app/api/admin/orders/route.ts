@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const statusFilter = url.searchParams.get('status') || '';
+    const userIdFilter = url.searchParams.get('userId') || '';
 
     // Use admin client to bypass RLS
     const adminClient = getAdminClient();
@@ -65,6 +66,11 @@ export async function GET(request: NextRequest) {
     // Apply status filter if selected
     if (statusFilter) {
       query = query.eq('status', statusFilter);
+    }
+
+    // Apply user filter if selected
+    if (userIdFilter) {
+      query = query.eq('user_id', userIdFilter);
     }
 
     // Apply pagination
