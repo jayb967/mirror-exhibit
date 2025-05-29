@@ -19,6 +19,11 @@ interface User {
   status: "active" | "inactive";
   lastLogin: string;
   avatar: string;
+  createdAt: string;
+  emailVerified: boolean;
+  banned: boolean;
+  locked: boolean;
+  twoFactorEnabled: boolean;
 }
 
 export default function UsersPage() {
@@ -26,76 +31,49 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showInactive, setShowInactive] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch users (mock data)
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockUsers: User[] = [
-        {
-          id: "1",
-          name: "John Doe",
-          email: "john.doe@mirrorexhibit.com",
-          role: "Administrator",
-          status: "active",
-          lastLogin: "2023-08-15T10:30:00Z",
-          avatar: "https://randomuser.me/api/portraits/men/41.jpg"
-        },
-        {
-          id: "2",
-          name: "Jane Smith",
-          email: "jane.smith@mirrorexhibit.com",
-          role: "Editor",
-          status: "active",
-          lastLogin: "2023-08-14T14:45:00Z",
-          avatar: "https://randomuser.me/api/portraits/women/25.jpg"
-        },
-        {
-          id: "3",
-          name: "Robert Johnson",
-          email: "robert.johnson@mirrorexhibit.com",
-          role: "Viewer",
-          status: "inactive",
-          lastLogin: "2023-07-10T09:15:00Z",
-          avatar: "https://randomuser.me/api/portraits/men/32.jpg"
-        },
-        {
-          id: "4",
-          name: "Sarah Williams",
-          email: "sarah.williams@mirrorexhibit.com",
-          role: "Editor",
-          status: "active",
-          lastLogin: "2023-08-13T16:20:00Z",
-          avatar: "https://randomuser.me/api/portraits/women/12.jpg"
-        },
-        {
-          id: "5",
-          name: "Michael Brown",
-          email: "michael.brown@mirrorexhibit.com",
-          role: "Viewer",
-          status: "active",
-          lastLogin: "2023-08-10T11:10:00Z",
-          avatar: "https://randomuser.me/api/portraits/men/67.jpg"
-        }
-      ];
+  // Fetch users from API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
 
-      setUsers(mockUsers);
+      const params = new URLSearchParams({
+        search: searchTerm,
+        showInactive: showInactive.toString(),
+        limit: '50',
+        offset: '0'
+      });
+
+      const response = await fetch(`/api/admin/users?${params}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const data = await response.json();
+      setUsers(data.users || []);
+      setTotalCount(data.totalCount || 0);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+      setUsers([]);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
-
-  // Filter users based on search term and status
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.role.toLowerCase().includes(searchTerm.toLowerCase());
-
-    if (showInactive) {
-      return matchesSearch;
-    } else {
-      return matchesSearch && user.status === "active";
     }
-  });
+  };
+
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchUsers();
+    }, searchTerm ? 500 : 0); // 500ms delay for search, immediate for other changes
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, showInactive]);
+
+  // Since we're filtering on the server side now, we don't need client-side filtering
+  const filteredUsers = users;
 
   // Format date for better display
   const formatDate = (dateString: string) => {
@@ -110,15 +88,64 @@ export default function UsersPage() {
   };
 
   // Toggle user status
-  const toggleUserStatus = (userId: string) => {
-    setUsers(prevUsers => prevUsers.map(user => {
-      if (user.id === userId) {
-        const newStatus = user.status === "active" ? "inactive" : "active";
-        toast.success(`User status changed to ${newStatus}`);
-        return { ...user, status: newStatus };
+  const toggleUserStatus = async (userId: string) => {
+    try {
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+
+      const action = user.banned ? 'unban' : 'ban';
+
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          action
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user status');
       }
-      return user;
-    }));
+
+      toast.success(`User ${action === 'ban' ? 'banned' : 'unbanned'} successfully!`);
+
+      // Refresh the users list
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast.error('Failed to update user status');
+    }
+  };
+
+  const updateUserRole = async (userId: string, newRole: string) => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          action: 'updateRole',
+          role: newRole
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user role');
+      }
+
+      toast.success('User role updated successfully!');
+
+      // Refresh the users list
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      toast.error('Failed to update user role');
+    }
   };
 
   return (
@@ -245,12 +272,12 @@ export default function UsersPage() {
                         <button
                           onClick={() => toggleUserStatus(user.id)}
                           className={`tw-px-2 tw-py-1 tw-border tw-rounded ${
-                            user.status === 'active'
-                              ? 'tw-text-red-600 hover:tw-text-red-900 tw-border-red-600'
-                              : 'tw-text-green-600 hover:tw-text-green-900 tw-border-green-600'
+                            user.banned
+                              ? 'tw-text-green-600 hover:tw-text-green-900 tw-border-green-600'
+                              : 'tw-text-red-600 hover:tw-text-red-900 tw-border-red-600'
                           }`}
                         >
-                          {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                          {user.banned ? 'Unban' : 'Ban'}
                         </button>
                       </div>
                     </td>

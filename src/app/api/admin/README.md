@@ -13,6 +13,7 @@ This directory contains API endpoints for admin-only operations in the Mirror Ex
 - `orders/route.ts` - API endpoint to manage orders (view and update status)
 - `csv-import/route.ts` - API endpoint for CSV import functionality
 - `faqs/route.ts` - API endpoint for FAQ management (admin only)
+- `users/route.ts` - API endpoint for user management (fetch users from Clerk)
 
 ## 🧩 Endpoints and Functions
 
