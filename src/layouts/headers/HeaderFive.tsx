@@ -60,7 +60,7 @@ const HeaderFive = () => {
               </div>
               <div className="col-xl-2 col-lg-8 col-6">
                 <div className="tp-header-right d-flex align-items-center justify-content-end">
-                  <ProfileButtonComponent iconColor="#000" />
+                  <ProfileButtonComponent iconColor="#000" variant="mobile" />
                   <div className="tp-header-icon cart d-none d-xl-block">
                     <Link className="cart-icon" href="/cart">
                       <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -108,7 +108,7 @@ const HeaderFive = () => {
               </div>
               <div className="col-xl-2 col-lg-8 col-6">
                 <div className="tp-header-right d-flex align-items-center justify-content-end">
-                  <ProfileButtonComponent iconColor="#000" />
+                  <ProfileButtonComponent iconColor="#000" variant="mobile" />
                   <div className="tp-header-icon cart d-none d-xl-block">
                     <Link className="cart-icon" href="/cart">
                       <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">

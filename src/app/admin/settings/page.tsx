@@ -8,6 +8,8 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import SimpleAdminLayout from '@/components/admin/SimpleAdminLayout';
 import { toast } from 'react-toastify';
+import { useClerk } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 interface FAQ {
   id: string;
@@ -63,6 +65,8 @@ interface SiteSettings {
 }
 
 export default function AdminSettingsRoute() {
+  const { signOut } = useClerk();
+  const router = useRouter();
   const [settings, setSettings] = useState<SiteSettings>({
     // Store information (matches database schema)
     store_name: 'Mirror Exhibit',
@@ -284,6 +288,17 @@ export default function AdminSettingsRoute() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     saveSettings();
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push('/admin/login');
+      toast.success('Signed out successfully');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to sign out');
+    }
   };
 
   // FAQ Management Functions
@@ -906,6 +921,35 @@ export default function AdminSettingsRoute() {
     </div>
   );
 
+  const renderAccountSettings = () => (
+    <div className="tw-space-y-6">
+      <div className="tw-bg-gray-50 tw-p-6 tw-rounded-lg">
+        <h3 className="tw-text-lg tw-font-medium tw-text-gray-900 tw-mb-4">Account Management</h3>
+        <p className="tw-text-sm tw-text-gray-600 tw-mb-6">
+          Manage your admin account settings and sign out of the system.
+        </p>
+
+        <div className="tw-space-y-4">
+          <div className="tw-flex tw-items-center tw-justify-between tw-p-4 tw-bg-white tw-rounded-md tw-border">
+            <div>
+              <h4 className="tw-text-sm tw-font-medium tw-text-gray-900">Sign Out</h4>
+              <p className="tw-text-sm tw-text-gray-500">
+                Sign out of your admin account and return to the login page.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="tw-inline-flex tw-items-center tw-px-4 tw-py-2 tw-border tw-border-transparent tw-text-sm tw-font-medium tw-rounded-md tw-text-white tw-bg-red-600 hover:tw-bg-red-700 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-red-500"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <SimpleAdminLayout>
       <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
@@ -979,6 +1023,16 @@ export default function AdminSettingsRoute() {
                 >
                   FAQs
                 </button>
+                <button
+                  onClick={() => setActiveTab('account')}
+                  className={`tw-px-6 tw-py-4 tw-text-sm tw-font-medium ${
+                    activeTab === 'account'
+                      ? 'tw-border-b-2 tw-border-blue-500 tw-text-blue-600'
+                      : 'tw-text-gray-500 hover:tw-text-gray-700 hover:tw-border-gray-300'
+                  }`}
+                >
+                  Account
+                </button>
               </nav>
             </div>
 
@@ -989,24 +1043,27 @@ export default function AdminSettingsRoute() {
               {activeTab === 'shipping' && renderShippingSettings()}
               {activeTab === 'seo' && renderSEOSettings()}
               {activeTab === 'faqs' && renderFaqSettings()}
+              {activeTab === 'account' && renderAccountSettings()}
 
-              <div className="tw-mt-8 tw-flex tw-justify-end">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="tw-inline-flex tw-items-center tw-px-4 tw-py-2 tw-border tw-border-transparent tw-text-sm tw-font-medium tw-rounded-md tw-shadow-sm tw-text-white tw-bg-blue-600 hover:tw-bg-blue-700 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-blue-500 disabled:tw-opacity-50"
-                >
-                  {saving ? (
-                    <>
-                      <svg className="tw-animate-spin tw--ml-1 tw-mr-3 tw-h-5 tw-w-5 tw-text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Saving...
-                    </>
-                  ) : 'Save Settings'}
-                </button>
-              </div>
+              {activeTab !== 'account' && (
+                <div className="tw-mt-8 tw-flex tw-justify-end">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="tw-inline-flex tw-items-center tw-px-4 tw-py-2 tw-border tw-border-transparent tw-text-sm tw-font-medium tw-rounded-md tw-shadow-sm tw-text-white tw-bg-blue-600 hover:tw-bg-blue-700 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-blue-500 disabled:tw-opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <svg className="tw-animate-spin tw--ml-1 tw-mr-3 tw-h-5 tw-w-5 tw-text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : 'Save Settings'}
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         )}

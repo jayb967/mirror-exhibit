@@ -17,6 +17,7 @@ This directory contains the main admin settings page for the Mirror Exhibit appl
   - **Shipping & Tax Tab:** 🆕 **Origin address configuration** + free shipping threshold + tax settings
   - **SEO Tab:** Meta title, description, keywords
   - **FAQs Tab:** 🆕 **FAQ management** for product and general pages
+  - **Account Tab:** 🆕 **Admin account management** with sign out functionality
 
 ### Key Settings Available
 1. **Origin Address Configuration (Shipping & Tax Tab):**
@@ -45,9 +46,15 @@ This directory contains the main admin settings page for the Mirror Exhibit appl
    - Real-time updates to frontend without page refresh
    - Automatic sorting and numbering
 
+6. **Account Management (Account Tab):** 🆕
+   - **Sign Out:** Secure sign out functionality using Clerk authentication
+   - Redirects to admin login page after successful sign out
+   - No save button needed (account actions are immediate)
+
 ## 🔄 Recent Changes
 | Date       | Change Description                                                 | Reason                         |
 |------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-01-27 | Added Account tab with sign out functionality and fixed mobile profile icon | Allow admin to sign out from settings and fix mobile navbar |
 | 2025-01-27 | Fixed guidelines violation - removed duplicate admin-settings route | Follow guidelines: avoid duplicating components |
 | 2025-01-27 | Restored original /admin/settings route with working functionality | Preserve existing code and routes as per guidelines |
 | 2025-01-27 | Fixed database schema compatibility issues                         | Resolved "address column not found" error by using correct field names |
