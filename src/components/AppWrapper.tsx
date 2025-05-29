@@ -1,76 +1,26 @@
 'use client'
 
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode } from 'react'
 import { StoreProvider } from './StoreProvider'
-import { GlobalModalProvider } from '@/contexts/GlobalModalContext'
-import GlobalProductModal from './common/GlobalProductModal'
-import { ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
-import '@/styles/index.scss'
-import '@/styles/carousel-arrows.css'
-import '@/styles/shop-details.css'
-import '@/styles/product-details-enhancements.css'
-import '@/styles/cart.css'
-import '@/styles/product-modal.css'
 
+// STEP 2: Add back StoreProvider only (minimal Redux setup)
 export function AppWrapper({ children }: { children: ReactNode }) {
-  console.log('🔍 SSR DEBUG: AppWrapper starting')
-
-  // Prevent SSR issues by only rendering on client
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    console.log('🔍 SSR DEBUG: AppWrapper useEffect - setting isClient to true')
-    setIsClient(true)
-  }, [])
-
-  // Show loading state during SSR
-  if (!isClient) {
-    console.log('🔍 SSR DEBUG: AppWrapper rendering SSR fallback')
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontSize: '18px'
-      }}>
-        Loading...
-      </div>
-    )
-  }
+  console.log('🔍 STEP2 DEBUG: AppWrapper starting - STEP 2: StoreProvider only')
 
   try {
-    console.log('🔍 SSR DEBUG: About to render StoreProvider (client-side)')
+    console.log('🔍 STEP2 DEBUG: About to render StoreProvider')
 
     return (
       <StoreProvider>
-        <GlobalModalProvider>
-          {children}
-          <GlobalProductModal />
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-        </GlobalModalProvider>
+        {children}
       </StoreProvider>
     )
   } catch (error) {
-    console.error('🔍 SSR DEBUG: Error in AppWrapper:', error)
-    console.error('🔍 SSR DEBUG: AppWrapper error name:', (error as any)?.name)
-    console.error('🔍 SSR DEBUG: AppWrapper error message:', (error as any)?.message)
+    console.error('🔍 STEP2 DEBUG: Error in Step 2 AppWrapper:', error)
+    console.error('🔍 STEP2 DEBUG: Error message:', (error as any)?.message)
 
-    // Check if this is the constructor error we're looking for
     if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
-      console.error('🔍 SSR DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN APPWRAPPER! ***')
+      console.error('🔍 STEP2 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN STEP 2! ***')
     }
 
     throw error
