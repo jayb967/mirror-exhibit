@@ -18,8 +18,11 @@ export function useSupabaseWithClerk() {
       global: {
         headers: async () => {
           try {
-            const token = await getToken({ template: 'supabase' });
-            return token ? { Authorization: `Bearer ${token}` } : {};
+            // TEMPORARILY DISABLED: Supabase token template to isolate constructor error
+            // const token = await getToken({ template: 'supabase' });
+            // return token ? { Authorization: `Bearer ${token}` } : {};
+            console.warn('Supabase token template temporarily disabled in supabase-clerk-auth for debugging');
+            return {}; // Fall back to anonymous access
           } catch (error) {
             console.warn('Failed to get Clerk token for Supabase in supabase-clerk-auth:', error);
             // Return empty headers to fall back to anonymous access

@@ -97,7 +97,10 @@ export function useSupabaseToken() {
 
   const getSupabaseToken = async () => {
     try {
-      return await getToken({ template: 'supabase' });
+      // TEMPORARILY DISABLED: Supabase token template to isolate constructor error
+      // return await getToken({ template: 'supabase' });
+      console.warn('Supabase token template temporarily disabled for debugging');
+      return null;
     } catch (error) {
       console.warn('Error getting Supabase token in useClerkAuth:', error);
       // Return null to indicate token retrieval failed

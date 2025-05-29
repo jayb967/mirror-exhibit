@@ -81,59 +81,59 @@ export const addToCartWithAuth = createAsyncThunk(
       dispatch(addToCart({ ...product, silent: false })); // Show toast from Redux
 
       // 2. BACKGROUND: Handle database operations asynchronously
-      // Import cart service dynamically to avoid circular imports
-      const { cartService } = await import('@/services/cartService');
+      // TEMPORARILY DISABLED: Import cart service dynamically to avoid circular imports
+      // const { cartService } = await import('@/services/cartService');
 
-      // Ensure anonymous user is signed in (background)
-      ensureAnonymousUser().then(async () => {
-        try {
-          // Always use product_id for cart service operations (not variation_id)
-          const productId = product.product_id || product.id;
+      // TEMPORARILY DISABLED: Background database operations
+      // ensureAnonymousUser().then(async () => {
+      //   try {
+      //     // Always use product_id for cart service operations (not variation_id)
+      //     const productId = product.product_id || product.id;
 
-          // Add to database in background (silent mode to prevent duplicate toasts)
-          await cartService.addToCart(
-            productId,
-            product.quantity || 1,
-            {
-              variation_id: product.variation_id,
-              frame_type: product.frame_type,
-              frame_name: product.frame_name,
-              size: product.size,
-              size_name: product.size_name,
-              price: product.price
-            },
-            true // silent mode - no toasts from cart service
-          );
+      //     // Add to database in background (silent mode to prevent duplicate toasts)
+      //     await cartService.addToCart(
+      //       productId,
+      //       product.quantity || 1,
+      //       {
+      //         variation_id: product.variation_id,
+      //         frame_type: product.frame_type,
+      //         frame_name: product.frame_name,
+      //         size: product.size,
+      //         size_name: product.size_name,
+      //         price: product.price
+      //       },
+      //       true // silent mode - no toasts from cart service
+      //     );
 
-          // Also track cart activity for guest users
-          const { cartTrackingService } = await import('@/services/cartTrackingService');
-          const currentCart = await cartService.getCart();
+      //     // Also track cart activity for guest users
+      //     const { cartTrackingService } = await import('@/services/cartTrackingService');
+      //     const currentCart = await cartService.getCart();
 
-          // Track cart activity (this will work for both guest and authenticated users)
-          await cartTrackingService.trackCartActivity(
-            currentCart.map(item => ({
-              product_id: item.product_id,
-              quantity: item.quantity,
-              price: item.product?.price || item.product?.base_price || product.price || 0,
-              title: item.product?.name || product.title || 'Product',
-              image: item.product?.image_url || item.product?.image || product.image,
-              size_name: (item as any).size_name,
-              frame_name: (item as any).frame_name,
-              variation_id: (item as any).variation_id
-            })),
-            undefined, // email
-            false, // checkout_started
-            false, // checkout_completed
-            undefined // userId (will use guest token)
-          );
-        } catch (dbError) {
-          console.log('Background database sync failed, item already in local cart:', dbError);
-          // Don't show error to user since item is already in cart locally
-        }
-      }).catch(authError => {
-        console.log('Background auth failed, item already in local cart:', authError);
-        // Don't show error to user since item is already in cart locally
-      });
+      //     // Track cart activity (this will work for both guest and authenticated users)
+      //     await cartTrackingService.trackCartActivity(
+      //       currentCart.map(item => ({
+      //         product_id: item.product_id,
+      //         quantity: item.quantity,
+      //         price: item.product?.price || item.product?.base_price || product.price || 0,
+      //         title: item.product?.name || product.title || 'Product',
+      //         image: item.product?.image_url || item.product?.image || product.image,
+      //         size_name: (item as any).size_name,
+      //         frame_name: (item as any).frame_name,
+      //         variation_id: (item as any).variation_id
+      //       })),
+      //       undefined, // email
+      //       false, // checkout_started
+      //       false, // checkout_completed
+      //       undefined // userId (will use guest token)
+      //     );
+      //   } catch (dbError) {
+      //     console.log('Background database sync failed, item already in local cart:', dbError);
+      //     // Don't show error to user since item is already in cart locally
+      //   }
+      // }).catch(authError => {
+      //   console.log('Background auth failed, item already in local cart:', authError);
+      //   // Don't show error to user since item is already in cart locally
+      // });
 
       return product;
     } catch (error) {

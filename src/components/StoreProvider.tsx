@@ -105,41 +105,43 @@ function CartInitializer() {
     const handleAuthChange = async () => {
       try {
         if (!wasAuthenticated && isNowAuthenticated && user) {
-          // User just logged in - convert guest cart and sync
-          console.log('User logged in, converting guest cart and syncing...')
-          try {
-            // Convert guest cart to user cart in cart_tracking with error handling
-            try {
-              await cartTrackingService.convertGuestToUser(user.id)
-              console.log('Guest cart conversion completed')
-            } catch (conversionError) {
-              console.warn('Guest cart conversion failed (non-critical):', conversionError)
-              // Continue with cart sync even if conversion fails
-            }
+          // User just logged in - TEMPORARILY DISABLED cart operations to isolate constructor error
+          console.log('User logged in, cart operations temporarily disabled for debugging...')
 
-            // Load cart from database and merge with local cart with error handling
-            try {
-              await dispatch(loadCartFromDatabase()).unwrap()
-              console.log('Cart loaded from database')
-            } catch (loadError) {
-              console.warn('Failed to load cart from database:', loadError)
-              // Fallback to local cart
-              dispatch(get_cart_products())
-            }
+          // TEMPORARILY DISABLED: All cart operations during login
+          // try {
+          //   // Convert guest cart to user cart in cart_tracking with error handling
+          //   try {
+          //     await cartTrackingService.convertGuestToUser(user.id)
+          //     console.log('Guest cart conversion completed')
+          //   } catch (conversionError) {
+          //     console.warn('Guest cart conversion failed (non-critical):', conversionError)
+          //     // Continue with cart sync even if conversion fails
+          //   }
 
-            // Sync any local cart items to database with error handling
-            try {
-              await dispatch(syncCartWithDatabase()).unwrap()
-              console.log('Cart synced to database')
-            } catch (syncError) {
-              console.warn('Failed to sync cart to database:', syncError)
-              // Continue with local cart - sync will be retried later
-            }
-          } catch (error) {
-            console.error('Error in login cart handling:', error)
-            // Fallback to local cart if anything fails
-            dispatch(get_cart_products())
-          }
+          //   // Load cart from database and merge with local cart with error handling
+          //   try {
+          //     await dispatch(loadCartFromDatabase()).unwrap()
+          //     console.log('Cart loaded from database')
+          //   } catch (loadError) {
+          //     console.warn('Failed to load cart from database:', loadError)
+          //     // Fallback to local cart
+          //     dispatch(get_cart_products())
+          //   }
+
+          //   // Sync any local cart items to database with error handling
+          //   try {
+          //     await dispatch(syncCartWithDatabase()).unwrap()
+          //     console.log('Cart synced to database')
+          //   } catch (syncError) {
+          //     console.warn('Failed to sync cart to database:', syncError)
+          //     // Continue with local cart - sync will be retried later
+          //   }
+          // } catch (error) {
+          //   console.error('Error in login cart handling:', error)
+          //   // Fallback to local cart if anything fails
+          //   dispatch(get_cart_products())
+          // }
         } else if (wasAuthenticated && !isNowAuthenticated) {
           // User logged out - continue with local storage only
           console.log('User logged out, using local cart...')

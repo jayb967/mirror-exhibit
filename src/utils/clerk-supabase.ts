@@ -16,8 +16,11 @@ export async function createServerSupabaseClient() {
         global: {
           headers: async () => {
             try {
-              const token = await getToken({ template: 'supabase' });
-              return token ? { Authorization: `Bearer ${token}` } : {};
+              // TEMPORARILY DISABLED: Supabase token template to isolate constructor error
+              // const token = await getToken({ template: 'supabase' });
+              // return token ? { Authorization: `Bearer ${token}` } : {};
+              console.warn('Supabase token template temporarily disabled in clerk-supabase for debugging');
+              return {}; // Fall back to anonymous access
             } catch (error) {
               // If token retrieval fails, return empty headers (unauthenticated)
               if (process.env.NODE_ENV === 'development') {
