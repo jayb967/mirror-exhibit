@@ -1,26 +1,28 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { StoreProvider } from './StoreProvider'
 
-// STEP 2: Add back StoreProvider only (minimal Redux setup)
+// STEP 3: Absolutely minimal - no imports except React
 export function AppWrapper({ children }: { children: ReactNode }) {
-  console.log('🔍 STEP2 DEBUG: AppWrapper starting - STEP 2: StoreProvider only')
+  console.log('🔍 STEP3 DEBUG: AppWrapper starting - ABSOLUTELY MINIMAL')
 
   try {
-    console.log('🔍 STEP2 DEBUG: About to render StoreProvider')
+    console.log('🔍 STEP3 DEBUG: About to render children with no providers')
 
     return (
-      <StoreProvider>
+      <div style={{ padding: '20px' }}>
+        <div style={{ marginBottom: '20px', color: 'red', fontWeight: 'bold' }}>
+          DEBUG MODE: Minimal AppWrapper - No Redux, No Complex Imports
+        </div>
         {children}
-      </StoreProvider>
+      </div>
     )
   } catch (error) {
-    console.error('🔍 STEP2 DEBUG: Error in Step 2 AppWrapper:', error)
-    console.error('🔍 STEP2 DEBUG: Error message:', (error as any)?.message)
+    console.error('🔍 STEP3 DEBUG: Error in minimal AppWrapper:', error)
+    console.error('🔍 STEP3 DEBUG: Error message:', (error as any)?.message)
 
     if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
-      console.error('🔍 STEP2 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN STEP 2! ***')
+      console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN MINIMAL APPWRAPPER! ***')
     }
 
     throw error

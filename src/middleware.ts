@@ -1,58 +1,24 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// MINIMAL DEBUGGING MIDDLEWARE - To isolate the constructor error
-export default clerkMiddleware(async (auth, req) => {
-  console.log('🔍 MIDDLEWARE DEBUG: Starting middleware for:', req.url);
+// STEP 3: Completely disable Clerk middleware to isolate the issue
+export default function middleware(request: NextRequest) {
+  console.log('🔍 STEP3 MIDDLEWARE DEBUG: Minimal middleware (no Clerk) for:', request.url);
 
   try {
-    // Step 1: Test if the basic middleware wrapper works
-    console.log('🔍 MIDDLEWARE DEBUG: Step 1 - Basic middleware wrapper OK');
-
-    // Step 2: Test if we can call auth() without errors
-    console.log('🔍 MIDDLEWARE DEBUG: Step 2 - About to call auth()');
-
-    let authResult;
-    try {
-      authResult = await auth();
-      console.log('🔍 MIDDLEWARE DEBUG: Step 2 - auth() call successful');
-      console.log('🔍 MIDDLEWARE DEBUG: Auth result keys:', Object.keys(authResult || {}));
-    } catch (authError) {
-      console.error('🔍 MIDDLEWARE DEBUG: Step 2 - auth() call FAILED:', authError);
-      console.error('🔍 MIDDLEWARE DEBUG: Auth error name:', (authError as any)?.name);
-      console.error('🔍 MIDDLEWARE DEBUG: Auth error message:', (authError as any)?.message);
-      // Return early if auth() fails
-      return NextResponse.next();
-    }
-
-    // Step 3: Test if we can access basic auth properties
-    console.log('🔍 MIDDLEWARE DEBUG: Step 3 - Accessing auth properties');
-    const userId = authResult?.userId;
-    console.log('🔍 MIDDLEWARE DEBUG: Step 3 - userId:', userId ? 'present' : 'null');
-
-    // Step 4: Test if we can access session claims
-    console.log('🔍 MIDDLEWARE DEBUG: Step 4 - Accessing session claims');
-    const sessionClaims = authResult?.sessionClaims;
-    console.log('🔍 MIDDLEWARE DEBUG: Step 4 - sessionClaims:', sessionClaims ? 'present' : 'null');
-
-    console.log('🔍 MIDDLEWARE DEBUG: All steps completed successfully');
+    console.log('🔍 STEP3 MIDDLEWARE DEBUG: About to return NextResponse.next()');
     return NextResponse.next();
-
   } catch (error) {
-    console.error('🔍 MIDDLEWARE DEBUG: FATAL ERROR in middleware:', error);
-    console.error('🔍 MIDDLEWARE DEBUG: Error name:', (error as any)?.name);
-    console.error('🔍 MIDDLEWARE DEBUG: Error message:', (error as any)?.message);
-    console.error('🔍 MIDDLEWARE DEBUG: Error stack:', (error as any)?.stack);
+    console.error('🔍 STEP3 MIDDLEWARE DEBUG: Error in minimal middleware:', error);
+    console.error('🔍 STEP3 MIDDLEWARE DEBUG: Error message:', (error as any)?.message);
 
-    // Check if this is the constructor error we're looking for
-    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('$a')) {
-      console.error('🔍 MIDDLEWARE DEBUG: *** FOUND THE CONSTRUCTOR ERROR! ***');
-      console.error('🔍 MIDDLEWARE DEBUG: This is the $a constructor error we are hunting');
+    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+      console.error('🔍 STEP3 MIDDLEWARE DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN MINIMAL MIDDLEWARE! ***');
     }
 
     return NextResponse.next();
   }
-});
+}
 
 export const config = {
   matcher: [
