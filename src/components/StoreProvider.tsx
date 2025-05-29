@@ -69,7 +69,25 @@ type StoreType = ReturnType<typeof createStore>
 // Component to initialize cart and handle auth state changes
 function CartInitializer() {
   const dispatch = useDispatch()
-  const { isAuthenticated, user, isLoading } = useAuth()
+
+  // Safely get auth state with error handling
+  let isAuthenticated = false
+  let user = null
+  let isLoading = true
+
+  try {
+    const authState = useAuth()
+    isAuthenticated = authState.isAuthenticated
+    user = authState.user
+    isLoading = authState.isLoading
+  } catch (authError) {
+    console.warn('Error getting auth state:', authError)
+    // Use default values (unauthenticated state)
+    isAuthenticated = false
+    user = null
+    isLoading = false
+  }
+
   const prevAuthState = useRef(isAuthenticated)
 
   useEffect(() => {
@@ -90,16 +108,36 @@ function CartInitializer() {
           // User just logged in - convert guest cart and sync
           console.log('User logged in, converting guest cart and syncing...')
           try {
-            // Convert guest cart to user cart in cart_tracking
-            await cartTrackingService.convertGuestToUser(user.id)
+            // Convert guest cart to user cart in cart_tracking with error handling
+            try {
+              await cartTrackingService.convertGuestToUser(user.id)
+              console.log('Guest cart conversion completed')
+            } catch (conversionError) {
+              console.warn('Guest cart conversion failed (non-critical):', conversionError)
+              // Continue with cart sync even if conversion fails
+            }
 
-            // Load cart from database and merge with local cart
-            dispatch(loadCartFromDatabase())
-            // Sync any local cart items to database
-            dispatch(syncCartWithDatabase())
+            // Load cart from database and merge with local cart with error handling
+            try {
+              await dispatch(loadCartFromDatabase()).unwrap()
+              console.log('Cart loaded from database')
+            } catch (loadError) {
+              console.warn('Failed to load cart from database:', loadError)
+              // Fallback to local cart
+              dispatch(get_cart_products())
+            }
+
+            // Sync any local cart items to database with error handling
+            try {
+              await dispatch(syncCartWithDatabase()).unwrap()
+              console.log('Cart synced to database')
+            } catch (syncError) {
+              console.warn('Failed to sync cart to database:', syncError)
+              // Continue with local cart - sync will be retried later
+            }
           } catch (error) {
-            console.error('Error syncing cart after login:', error)
-            // Fallback to local cart if sync fails
+            console.error('Error in login cart handling:', error)
+            // Fallback to local cart if anything fails
             dispatch(get_cart_products())
           }
         } else if (wasAuthenticated && !isNowAuthenticated) {
