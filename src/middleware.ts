@@ -31,9 +31,9 @@ export default clerkMiddleware(async (auth, req) => {
       console.error('🔍 STEP4 MIDDLEWARE DEBUG: Auth error constructor:', (authError as any)?.constructor?.name);
 
       // Check if this is the constructor error we're looking for
-      if ((authError as any)?.message?.includes('constructor') || (authError as any)?.message?.includes('Ba')) {
-        console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN AUTH()! ***');
-        console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** THIS IS THE SOURCE OF THE Ba ERROR! ***');
+      if ((authError as any)?.message?.includes('constructor') || (authError as any)?.message?.includes('Ba') || (authError as any)?.message?.includes('ja')) {
+        console.error('🔍 STEP5 MIDDLEWARE DEBUG: *** FOUND THE CONSTRUCTOR ERROR IN AUTH()! ***');
+        console.error('🔍 STEP5 MIDDLEWARE DEBUG: *** THIS IS THE SOURCE OF THE CONSTRUCTOR ERROR! ***');
         console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** ERROR DETAILS: ***', {
           name: (authError as any)?.name,
           message: (authError as any)?.message,

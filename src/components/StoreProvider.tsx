@@ -67,12 +67,12 @@ type StoreType = ReturnType<typeof createStore>
 function CartInitializer() {
   const dispatch = useDispatch()
 
-  console.log('🔍 STEP4 DEBUG: CartInitializer starting - STEP 4 WITH ULTRA-AGGRESSIVE AUTH DEBUGGING')
+  console.log('🔍 STEP5 DEBUG: CartInitializer starting - STEP 5 FIXING AUTH PROPERTY ACCESS')
 
   // Always call useAuth first (React Hook rules)
-  console.log('🔍 STEP4 DEBUG: About to call useAuth()')
+  console.log('🔍 STEP5 DEBUG: About to call useAuth()')
   const authState = useAuth()
-  console.log('🔍 STEP4 DEBUG: useAuth() call successful')
+  console.log('🔍 STEP5 DEBUG: useAuth() call successful')
 
   // Safely extract auth properties with error handling
   let isAuthenticated = false
@@ -81,19 +81,19 @@ function CartInitializer() {
   let authError = null
 
   try {
-    console.log('🔍 STEP4 DEBUG: Extracting auth properties')
+    console.log('🔍 STEP5 DEBUG: Extracting auth properties')
     isAuthenticated = authState.isAuthenticated || false
     user = authState.user || null
     isLoading = authState.isLoading || false
-    console.log('🔍 STEP4 DEBUG: Auth properties extracted:', { isAuthenticated, hasUser: !!user, isLoading })
+    console.log('🔍 STEP5 DEBUG: Auth properties extracted:', { isAuthenticated, hasUser: !!user, isLoading })
   } catch (error) {
     authError = error
-    console.error('🔍 STEP4 DEBUG: ERROR extracting auth properties:', error)
-    console.error('🔍 STEP4 DEBUG: Auth extraction error message:', (error as any)?.message)
-    console.error('🔍 STEP4 DEBUG: Auth extraction error stack:', (error as any)?.stack)
+    console.error('🔍 STEP5 DEBUG: ERROR extracting auth properties:', error)
+    console.error('🔍 STEP5 DEBUG: Auth extraction error message:', (error as any)?.message)
+    console.error('🔍 STEP5 DEBUG: Auth extraction error stack:', (error as any)?.stack)
 
-    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
-      console.error('🔍 STEP4 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN AUTH PROPERTY EXTRACTION! ***')
+    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba') || (error as any)?.message?.includes('ja')) {
+      console.error('🔍 STEP5 DEBUG: *** FOUND CONSTRUCTOR ERROR IN AUTH PROPERTY EXTRACTION! ***')
     }
   }
 
@@ -122,39 +122,18 @@ function CartInitializer() {
       if (isAuthenticated && user) {
         console.log('🔍 STEP3 DEBUG: User is authenticated - TESTING AUTH STATE ACCESS')
 
-        // Test accessing user properties one by one
+        // Test accessing ONLY the valid UserProfile properties
         try {
-          console.log('🔍 STEP3 DEBUG: Testing user.id access')
-          const userId = user.id
-          console.log('🔍 STEP3 DEBUG: user.id accessed successfully:', userId ? 'present' : 'null')
-        } catch (userIdError) {
-          console.error('🔍 STEP3 DEBUG: ERROR accessing user.id:', userIdError)
-          if ((userIdError as any)?.message?.includes('constructor') || (userIdError as any)?.message?.includes('Ba')) {
-            console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN USER.ID ACCESS! ***')
-          }
-        }
-
-        try {
-          console.log('🔍 STEP3 DEBUG: Testing user properties access')
-          const userAny = user as any
-          const emails = userAny.emailAddresses
-          console.log('🔍 STEP3 DEBUG: user.emailAddresses accessed successfully:', emails ? 'present' : 'null')
-        } catch (emailError) {
-          console.error('🔍 STEP3 DEBUG: ERROR accessing user.emailAddresses:', emailError)
-          if ((emailError as any)?.message?.includes('constructor') || (emailError as any)?.message?.includes('Ba')) {
-            console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN USER.EMAILS ACCESS! ***')
-          }
-        }
-
-        try {
-          console.log('🔍 STEP3 DEBUG: Testing user.publicMetadata access')
-          const userAny = user as any
-          const metadata = userAny.publicMetadata
-          console.log('🔍 STEP3 DEBUG: user.publicMetadata accessed successfully:', metadata ? 'present' : 'null')
-        } catch (metadataError) {
-          console.error('🔍 STEP3 DEBUG: ERROR accessing user.publicMetadata:', metadataError)
-          if ((metadataError as any)?.message?.includes('constructor') || (metadataError as any)?.message?.includes('Ba')) {
-            console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN USER.METADATA ACCESS! ***')
+          console.log('🔍 STEP5 DEBUG: Testing valid UserProfile properties')
+          console.log('🔍 STEP5 DEBUG: user.id:', user.id ? 'present' : 'null')
+          console.log('🔍 STEP5 DEBUG: user.email:', user.email ? 'present' : 'null')
+          console.log('🔍 STEP5 DEBUG: user.role:', user.role || 'null')
+          console.log('🔍 STEP5 DEBUG: user.full_name:', user.full_name ? 'present' : 'null')
+          console.log('🔍 STEP5 DEBUG: All valid UserProfile properties accessed successfully')
+        } catch (userError) {
+          console.error('🔍 STEP5 DEBUG: ERROR accessing valid UserProfile properties:', userError)
+          if ((userError as any)?.message?.includes('constructor') || (userError as any)?.message?.includes('Ba') || (userError as any)?.message?.includes('ja')) {
+            console.error('🔍 STEP5 DEBUG: *** FOUND CONSTRUCTOR ERROR IN VALID USER PROPERTIES ACCESS! ***')
           }
         }
 

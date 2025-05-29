@@ -44,10 +44,10 @@ export default function RootLayout({
                     originalConsoleError.apply(console, args);
 
                     const errorString = args.join(' ');
-                    if (errorString.includes('constructor') || errorString.includes('Ba')) {
-                      console.log('🔍 STEP4 CONSOLE.ERROR: *** FOUND Ba CONSTRUCTOR ERROR IN CONSOLE! ***');
-                      console.log('🔍 STEP4 CONSOLE.ERROR: Full error:', errorString);
-                      console.log('🔍 STEP4 CONSOLE.ERROR: Stack trace:', new Error().stack);
+                    if (errorString.includes('constructor') || errorString.includes('Ba') || errorString.includes('ja')) {
+                      console.log('🔍 STEP5 CONSOLE.ERROR: *** FOUND CONSTRUCTOR ERROR IN CONSOLE! ***');
+                      console.log('🔍 STEP5 CONSOLE.ERROR: Full error:', errorString);
+                      console.log('🔍 STEP5 CONSOLE.ERROR: Stack trace:', new Error().stack);
                     }
                   };
 
@@ -60,9 +60,9 @@ export default function RootLayout({
                     console.log('🔍 STEP4 GLOBAL ERROR: Event lineno:', event.lineno);
                     console.log('🔍 STEP4 GLOBAL ERROR: Event colno:', event.colno);
 
-                    if (event.error?.message?.includes('constructor') || event.error?.message?.includes('Ba')) {
-                      console.log('🔍 STEP4 GLOBAL ERROR: *** FOUND Ba CONSTRUCTOR ERROR! ***');
-                      console.log('🔍 STEP4 GLOBAL ERROR: This is the Ba constructor error we are hunting!');
+                    if (event.error?.message?.includes('constructor') || event.error?.message?.includes('Ba') || event.error?.message?.includes('ja')) {
+                      console.log('🔍 STEP5 GLOBAL ERROR: *** FOUND CONSTRUCTOR ERROR! ***');
+                      console.log('🔍 STEP5 GLOBAL ERROR: This is the constructor error we are hunting!');
                     }
                   });
 
