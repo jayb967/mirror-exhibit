@@ -1,96 +1,85 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// STEP 4: ULTRA-AGGRESSIVE MIDDLEWARE DEBUGGING
-export default clerkMiddleware(async (auth, req) => {
-  console.log('🔍 STEP4 MIDDLEWARE DEBUG: Starting middleware for:', req.url);
-  console.log('🔍 STEP4 MIDDLEWARE DEBUG: Request method:', req.method);
-  console.log('🔍 STEP4 MIDDLEWARE DEBUG: Request headers:', Object.fromEntries(req.headers.entries()));
+// STEP 6A: MINIMAL MIDDLEWARE TO ISOLATE CLERK ISSUE
+const minimalClerkMiddleware = clerkMiddleware(async (auth, req) => {
+  console.log('🔍 STEP6A MIDDLEWARE DEBUG: Starting MINIMAL middleware for:', req.url);
+  console.log('🔍 STEP6A MIDDLEWARE DEBUG: Request method:', req.method);
 
   try {
-    // Step 1: Test if the basic middleware wrapper works
-    console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 1 - Basic middleware wrapper OK');
+    console.log('🔍 STEP6A MIDDLEWARE DEBUG: About to call auth() - MINIMAL VERSION');
 
-    // Step 2: Test if we can call auth() without errors
-    console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 2 - About to call auth()');
-    console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 2 - auth function type:', typeof auth);
-
+    // MINIMAL auth() call with maximum error catching
     let authResult;
     try {
-      console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 2 - Calling auth() now...');
       authResult = await auth();
-      console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 2 - auth() call successful');
-      console.log('🔍 STEP4 MIDDLEWARE DEBUG: Auth result type:', typeof authResult);
-      console.log('🔍 STEP4 MIDDLEWARE DEBUG: Auth result keys:', Object.keys(authResult || {}));
-      console.log('🔍 STEP4 MIDDLEWARE DEBUG: Auth result:', authResult);
+      console.log('🔍 STEP6A MIDDLEWARE DEBUG: auth() call successful - MINIMAL');
+      console.log('🔍 STEP6A MIDDLEWARE DEBUG: userId present:', !!authResult?.userId);
     } catch (authError) {
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: Step 2 - auth() call FAILED:', authError);
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: Auth error name:', (authError as any)?.name);
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: Auth error message:', (authError as any)?.message);
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: Auth error stack:', (authError as any)?.stack);
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: Auth error constructor:', (authError as any)?.constructor?.name);
+      console.error('🔍 STEP6A MIDDLEWARE DEBUG: *** AUTH() CALL FAILED - THIS IS THE ISSUE! ***');
+      console.error('🔍 STEP6A MIDDLEWARE DEBUG: Auth error:', authError);
+      console.error('🔍 STEP6A MIDDLEWARE DEBUG: Auth error message:', (authError as any)?.message);
+      console.error('🔍 STEP6A MIDDLEWARE DEBUG: Auth error name:', (authError as any)?.name);
+      console.error('🔍 STEP6A MIDDLEWARE DEBUG: Auth error stack:', (authError as any)?.stack);
 
-      // Check if this is the constructor error we're looking for
-      if ((authError as any)?.message?.includes('constructor') || (authError as any)?.message?.includes('Ba') || (authError as any)?.message?.includes('ja')) {
-        console.error('🔍 STEP5 MIDDLEWARE DEBUG: *** FOUND THE CONSTRUCTOR ERROR IN AUTH()! ***');
-        console.error('🔍 STEP5 MIDDLEWARE DEBUG: *** THIS IS THE SOURCE OF THE CONSTRUCTOR ERROR! ***');
-        console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** ERROR DETAILS: ***', {
-          name: (authError as any)?.name,
-          message: (authError as any)?.message,
-          stack: (authError as any)?.stack,
-          constructor: (authError as any)?.constructor?.name
-        });
+      // Check for constructor errors
+      if ((authError as any)?.message?.includes('constructor') ||
+          (authError as any)?.message?.includes('Ba') ||
+          (authError as any)?.message?.includes('ja')) {
+        console.error('🔍 STEP6A MIDDLEWARE DEBUG: *** FOUND CONSTRUCTOR ERROR IN AUTH()! ***');
+        console.error('🔍 STEP6A MIDDLEWARE DEBUG: *** THIS IS THE ROOT CAUSE! ***');
       }
 
-      // Return early if auth() fails
-      return NextResponse.next();
+      // Return error response instead of continuing
+      return new NextResponse('Middleware Auth Error', { status: 500 });
     }
 
-    // Step 3: Test if we can access basic auth properties
-    console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 3 - Accessing auth properties');
-    try {
-      const userId = authResult?.userId;
-      console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 3 - userId:', userId ? 'present' : 'null');
-    } catch (userIdError) {
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: Step 3 - userId access FAILED:', userIdError);
-      if ((userIdError as any)?.message?.includes('constructor') || (userIdError as any)?.message?.includes('Ba')) {
-        console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** FOUND Ba ERROR IN USERID ACCESS! ***');
-      }
-    }
-
-    // Step 4: Test if we can access session claims
-    console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 4 - Accessing session claims');
-    try {
-      const sessionClaims = authResult?.sessionClaims;
-      console.log('🔍 STEP4 MIDDLEWARE DEBUG: Step 4 - sessionClaims:', sessionClaims ? 'present' : 'null');
-    } catch (sessionError) {
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: Step 4 - sessionClaims access FAILED:', sessionError);
-      if ((sessionError as any)?.message?.includes('constructor') || (sessionError as any)?.message?.includes('Ba')) {
-        console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** FOUND Ba ERROR IN SESSION ACCESS! ***');
-      }
-    }
-
-    console.log('🔍 STEP4 MIDDLEWARE DEBUG: All steps completed successfully');
+    console.log('🔍 STEP6A MIDDLEWARE DEBUG: Minimal middleware completed successfully');
     return NextResponse.next();
 
   } catch (error) {
-    console.error('🔍 STEP4 MIDDLEWARE DEBUG: FATAL ERROR in middleware:', error);
-    console.error('🔍 STEP4 MIDDLEWARE DEBUG: Error name:', (error as any)?.name);
-    console.error('🔍 STEP4 MIDDLEWARE DEBUG: Error message:', (error as any)?.message);
-    console.error('🔍 STEP4 MIDDLEWARE DEBUG: Error stack:', (error as any)?.stack);
-    console.error('🔍 STEP4 MIDDLEWARE DEBUG: Error constructor:', (error as any)?.constructor?.name);
-    console.error('🔍 STEP4 MIDDLEWARE DEBUG: Error toString:', (error as any)?.toString?.());
+    console.error('🔍 STEP6A MIDDLEWARE DEBUG: *** FATAL MIDDLEWARE ERROR! ***');
+    console.error('🔍 STEP6A MIDDLEWARE DEBUG: Fatal error:', error);
+    console.error('🔍 STEP6A MIDDLEWARE DEBUG: Fatal error message:', (error as any)?.message);
+    console.error('🔍 STEP6A MIDDLEWARE DEBUG: Fatal error stack:', (error as any)?.stack);
 
-    // Check if this is the constructor error we're looking for
-    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR! ***');
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** THIS IS THE SOURCE OF THE Ba ERROR! ***');
-      console.error('🔍 STEP4 MIDDLEWARE DEBUG: *** FULL ERROR OBJECT: ***', error);
+    // Check for constructor errors
+    if ((error as any)?.message?.includes('constructor') ||
+        (error as any)?.message?.includes('Ba') ||
+        (error as any)?.message?.includes('ja')) {
+      console.error('🔍 STEP6A MIDDLEWARE DEBUG: *** FOUND CONSTRUCTOR ERROR IN MIDDLEWARE! ***');
+      console.error('🔍 STEP6A MIDDLEWARE DEBUG: *** THIS IS THE ROOT CAUSE! ***');
     }
 
-    return NextResponse.next();
+    return new NextResponse('Middleware Fatal Error', { status: 500 });
   }
 });
+
+// STEP 6B: COMPLETELY BYPASS CLERK MIDDLEWARE FOR TESTING
+function bypassMiddleware(req: NextRequest) {
+  console.log('🔍 STEP6B BYPASS DEBUG: Completely bypassing Clerk middleware for:', req.url);
+  console.log('🔍 STEP6B BYPASS DEBUG: Request method:', req.method);
+  console.log('🔍 STEP6B BYPASS DEBUG: No auth processing - just passing through');
+  return NextResponse.next();
+}
+
+// TOGGLE BETWEEN MINIMAL CLERK AND COMPLETE BYPASS
+// Set to true to use minimal Clerk middleware, false to completely bypass Clerk
+const USE_CLERK_MIDDLEWARE = true;
+
+export default function middleware(req: NextRequest) {
+  console.log('🔍 STEP6 MIDDLEWARE DEBUG: Middleware entry point');
+  console.log('🔍 STEP6 MIDDLEWARE DEBUG: USE_CLERK_MIDDLEWARE:', USE_CLERK_MIDDLEWARE);
+
+  if (USE_CLERK_MIDDLEWARE) {
+    console.log('🔍 STEP6 MIDDLEWARE DEBUG: Using minimal Clerk middleware');
+    return minimalClerkMiddleware(req);
+  } else {
+    console.log('🔍 STEP6 MIDDLEWARE DEBUG: Completely bypassing Clerk middleware');
+    return bypassMiddleware(req);
+  }
+}
 
 export const config = {
   matcher: [
