@@ -6,6 +6,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import cartSlice, { get_cart_products } from '@/redux/features/cartSlice'
 import productSlice from '@/redux/features/productSlice'
 import { productApi } from '@/redux/features/productApi'
+import { useAuth } from '@/hooks/useClerkAuth'
 
 // STEP 2: Remove complex middleware for now
 
@@ -62,27 +63,113 @@ function createStore() {
 // Define the store type
 type StoreType = ReturnType<typeof createStore>
 
-// STEP 2: Minimal CartInitializer - no auth logic, just basic cart loading
+// STEP 3: Add back useAuth but with comprehensive error handling
 function CartInitializer() {
   const dispatch = useDispatch()
 
-  console.log('🔍 STEP2 DEBUG: CartInitializer starting - MINIMAL VERSION')
+  console.log('🔍 STEP3 DEBUG: CartInitializer starting - ADDING BACK useAuth WITH DEBUGGING')
+
+  // Always call useAuth first (React Hook rules)
+  console.log('🔍 STEP3 DEBUG: About to call useAuth()')
+  const authState = useAuth()
+  console.log('🔍 STEP3 DEBUG: useAuth() call successful')
+
+  // Safely extract auth properties with error handling
+  let isAuthenticated = false
+  let user = null
+  let isLoading = true
+  let authError = null
+
+  try {
+    console.log('🔍 STEP3 DEBUG: Extracting auth properties')
+    isAuthenticated = authState.isAuthenticated || false
+    user = authState.user || null
+    isLoading = authState.isLoading || false
+    console.log('🔍 STEP3 DEBUG: Auth properties extracted:', { isAuthenticated, hasUser: !!user, isLoading })
+  } catch (error) {
+    authError = error
+    console.error('🔍 STEP3 DEBUG: ERROR extracting auth properties:', error)
+    console.error('🔍 STEP3 DEBUG: Auth extraction error message:', (error as any)?.message)
+
+    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+      console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN AUTH PROPERTY EXTRACTION! ***')
+    }
+  }
 
   useEffect(() => {
-    console.log('🔍 STEP2 DEBUG: Loading cart from localStorage only')
+    console.log('🔍 STEP3 DEBUG: Cart loading useEffect triggered')
     try {
-      // Only load cart from localStorage - no auth logic
+      // Only load cart from localStorage - no complex auth logic yet
       dispatch(get_cart_products())
-      console.log('🔍 STEP2 DEBUG: Cart loaded successfully')
+      console.log('🔍 STEP3 DEBUG: Cart loaded successfully')
     } catch (error) {
-      console.error('🔍 STEP2 DEBUG: Error loading cart:', error)
-      console.error('🔍 STEP2 DEBUG: Cart error message:', (error as any)?.message)
+      console.error('🔍 STEP3 DEBUG: Error loading cart:', error)
+      console.error('🔍 STEP3 DEBUG: Cart error message:', (error as any)?.message)
 
       if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
-        console.error('🔍 STEP2 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN CART LOADING! ***')
+        console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN CART LOADING! ***')
       }
     }
   }, [dispatch])
+
+  // Add useEffect to monitor auth state changes with more detailed debugging
+  useEffect(() => {
+    console.log('🔍 STEP3 DEBUG: Auth monitoring useEffect triggered')
+    console.log('🔍 STEP3 DEBUG: Current auth state:', { isAuthenticated, hasUser: !!user, isLoading, hasAuthError: !!authError })
+
+    try {
+      if (isAuthenticated && user) {
+        console.log('🔍 STEP3 DEBUG: User is authenticated - TESTING AUTH STATE ACCESS')
+
+        // Test accessing user properties one by one
+        try {
+          console.log('🔍 STEP3 DEBUG: Testing user.id access')
+          const userId = user.id
+          console.log('🔍 STEP3 DEBUG: user.id accessed successfully:', userId ? 'present' : 'null')
+        } catch (userIdError) {
+          console.error('🔍 STEP3 DEBUG: ERROR accessing user.id:', userIdError)
+          if ((userIdError as any)?.message?.includes('constructor') || (userIdError as any)?.message?.includes('Ba')) {
+            console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN USER.ID ACCESS! ***')
+          }
+        }
+
+        try {
+          console.log('🔍 STEP3 DEBUG: Testing user properties access')
+          const userAny = user as any
+          const emails = userAny.emailAddresses
+          console.log('🔍 STEP3 DEBUG: user.emailAddresses accessed successfully:', emails ? 'present' : 'null')
+        } catch (emailError) {
+          console.error('🔍 STEP3 DEBUG: ERROR accessing user.emailAddresses:', emailError)
+          if ((emailError as any)?.message?.includes('constructor') || (emailError as any)?.message?.includes('Ba')) {
+            console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN USER.EMAILS ACCESS! ***')
+          }
+        }
+
+        try {
+          console.log('🔍 STEP3 DEBUG: Testing user.publicMetadata access')
+          const userAny = user as any
+          const metadata = userAny.publicMetadata
+          console.log('🔍 STEP3 DEBUG: user.publicMetadata accessed successfully:', metadata ? 'present' : 'null')
+        } catch (metadataError) {
+          console.error('🔍 STEP3 DEBUG: ERROR accessing user.publicMetadata:', metadataError)
+          if ((metadataError as any)?.message?.includes('constructor') || (metadataError as any)?.message?.includes('Ba')) {
+            console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN USER.METADATA ACCESS! ***')
+          }
+        }
+
+      } else {
+        console.log('🔍 STEP3 DEBUG: User is not authenticated or still loading')
+      }
+    } catch (error) {
+      console.error('🔍 STEP3 DEBUG: ERROR in auth monitoring:', error)
+      console.error('🔍 STEP3 DEBUG: Auth monitoring error message:', (error as any)?.message)
+      console.error('🔍 STEP3 DEBUG: Auth monitoring error stack:', (error as any)?.stack)
+
+      if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+        console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN AUTH MONITORING! ***')
+      }
+    }
+  }, [isAuthenticated, user, isLoading, authError])
 
   return null
 }
