@@ -13,6 +13,7 @@ import {
   Cog6ToothIcon,
   ArrowLeftOnRectangleIcon,
   UserGroupIcon,
+  MegaphoneIcon,
 } from "@heroicons/react/24/outline";
 
 interface SimpleAdminLayoutProps {
@@ -30,6 +31,7 @@ const navigation = [
   { name: "Guest Users", href: "/admin/guests", icon: UserGroupIcon },
   { name: "Categories", href: "/admin/categories", icon: TagIcon },
   { name: "Coupons", href: "/admin/coupons", icon: TicketIcon },
+  { name: "Marketing", href: "/admin/marketing", icon: MegaphoneIcon },
   { name: "Settings", href: "/admin/settings", icon: Cog6ToothIcon },
 ];
 

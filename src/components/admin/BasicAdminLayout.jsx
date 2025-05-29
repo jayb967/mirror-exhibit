@@ -26,6 +26,7 @@ const BasicAdminLayout = ({ children }) => {
     { name: "Guest Users", href: "/admin/guests" },
     { name: "Categories", href: "/admin/categories" },
     { name: "Coupons", href: "/admin/coupons" },
+    { name: "Marketing", href: "/admin/marketing" },
     { name: "Settings", href: "/admin/settings" },
   ];
 
