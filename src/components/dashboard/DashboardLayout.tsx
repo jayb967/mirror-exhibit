@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useClerkAuth';
+import { useClerk } from '@clerk/nextjs';
 import {
   HomeIcon,
   ShoppingBagIcon,
@@ -28,8 +29,76 @@ const navigation = [
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const router = useRouter();
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
+  const { openSignIn } = useClerk();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || isLoading) return;
+
+    console.log('🔍 STEP10 DASHBOARD AUTH CHECK:', {
+      isAuthenticated,
+      pathname,
+      userId: user?.id
+    });
+
+    if (!isAuthenticated) {
+      console.log('🔍 STEP10 DASHBOARD: Not authenticated - opening sign in');
+      openSignIn({
+        redirectUrl: typeof window !== 'undefined' ? window.location.href : '/dashboard',
+      });
+      return;
+    }
+  }, [mounted, isLoading, isAuthenticated, user, openSignIn]);
+
+  // Don't render anything until mounted (prevents hydration issues)
+  if (!mounted) {
+    return null;
+  }
+
+  // Show loading while auth is being determined
+  if (isLoading) {
+    return (
+      <div className="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-bg-gray-50">
+        <div className="tw-text-center">
+          <div className="tw-animate-spin tw-rounded-full tw-h-12 tw-w-12 tw-border-b-2 tw-border-[#A6A182] tw-mx-auto"></div>
+          <p className="tw-mt-4 tw-text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-bg-gray-50">
+        <div className="tw-text-center tw-max-w-md tw-mx-auto tw-p-6">
+          <div className="tw-bg-yellow-100 tw-border tw-border-yellow-400 tw-text-yellow-700 tw-px-4 tw-py-3 tw-rounded tw-mb-4">
+            <strong className="tw-font-bold">Authentication Required!</strong>
+            <span className="tw-block tw-sm:inline tw-ml-2">You must be signed in to access the dashboard.</span>
+          </div>
+          <button
+            onClick={() => openSignIn({ redirectUrl: window.location.href })}
+            className="tw-bg-[#A6A182] tw-text-white tw-px-4 tw-py-2 tw-rounded tw-hover:bg-[#959070] tw-transition-colors tw-mr-2"
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => router.push('/')}
+            className="tw-bg-gray-500 tw-text-white tw-px-4 tw-py-2 tw-rounded tw-hover:bg-gray-600 tw-transition-colors"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     await logout();

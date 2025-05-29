@@ -1,31 +1,114 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// STEP 9: COMPLETE CLERK BYPASS SOLUTION
-// This completely bypasses the problematic clerkMiddleware wrapper
-// Based on Clerk documentation showing that clerkMiddleware is optional
+// STEP 10: CUSTOM ROUTE PROTECTION WITHOUT CLERK MIDDLEWARE
+// This implements route protection without using the problematic clerkMiddleware wrapper
+// Uses cookie-based auth detection and redirects for protection
 
 // CONFIGURATION
-const USE_CLERK_MIDDLEWARE = false; // Set to true to attempt Clerk middleware again
+const ENABLE_ROUTE_PROTECTION = true;
 
-// STEP 9: COMPLETE BYPASS MIDDLEWARE
+// Protected route patterns
+const ADMIN_ROUTES = ['/admin'];
+const DASHBOARD_ROUTES = ['/dashboard'];
+const PUBLIC_ROUTES = ['/admin/login', '/sign-in', '/sign-up', '/', '/shop', '/product', '/about-us', '/contact', '/faq'];
+
+// Helper function to check if route matches pattern
+function matchesRoute(pathname: string, patterns: string[]): boolean {
+  return patterns.some(pattern => pathname.startsWith(pattern));
+}
+
+// Helper function to check if route is public
+function isPublicRoute(pathname: string): boolean {
+  // Allow all API routes to pass through (they have their own protection)
+  if (pathname.startsWith('/api/')) return true;
+
+  // Allow static files and Next.js internals
+  if (pathname.startsWith('/_next/') || pathname.includes('.')) return true;
+
+  // Check against public route patterns
+  return PUBLIC_ROUTES.some(route => {
+    if (route === '/') return pathname === '/';
+    return pathname.startsWith(route);
+  });
+}
+
+// Helper function to extract auth info from cookies
+function getAuthFromCookies(req: NextRequest) {
+  const sessionCookie = req.cookies.get('__session')?.value;
+  const clerkSessionCookie = req.cookies.get('__clerk_session')?.value;
+
+  // Check for any Clerk-related cookies that indicate authentication
+  let hasClerkAuth = false;
+  req.cookies.getAll().forEach(cookie => {
+    if (cookie.name.startsWith('__clerk') || cookie.name.includes('clerk')) {
+      hasClerkAuth = true;
+    }
+  });
+
+  return {
+    hasSession: !!(sessionCookie || clerkSessionCookie || hasClerkAuth),
+    sessionCookie,
+    clerkSessionCookie,
+    hasClerkAuth
+  };
+}
+
+// STEP 10: CUSTOM ROUTE PROTECTION MIDDLEWARE
 export default function middleware(req: NextRequest) {
-  console.log('🔍 STEP9 MIDDLEWARE: Complete Clerk bypass for:', req.url);
-  console.log('🔍 STEP9 MIDDLEWARE: Method:', req.method);
-  console.log('🔍 STEP9 MIDDLEWARE: Headers:', Object.fromEntries(req.headers.entries()));
+  const { pathname } = req.nextUrl;
 
-  if (USE_CLERK_MIDDLEWARE) {
-    console.log('🔍 STEP9 MIDDLEWARE: Attempting to use Clerk middleware (may fail)');
-    // We could try to import and use clerkMiddleware here, but it will likely fail
-    // For now, we'll just bypass it completely
+  console.log('🔍 STEP10 MIDDLEWARE: Custom route protection for:', pathname);
+
+  if (!ENABLE_ROUTE_PROTECTION) {
+    console.log('🔍 STEP10 MIDDLEWARE: Route protection disabled - allowing all requests');
+    return NextResponse.next();
   }
 
-  console.log('🔍 STEP9 MIDDLEWARE: Bypassing ALL Clerk middleware processing');
-  console.log('🔍 STEP9 MIDDLEWARE: Client-side auth (useAuth, ClerkProvider) will handle authentication');
-  console.log('🔍 STEP9 MIDDLEWARE: No server-side auth protection - relying on client-side protection');
+  // Allow public routes
+  if (isPublicRoute(pathname)) {
+    console.log('🔍 STEP10 MIDDLEWARE: Public route - allowing access');
+    return NextResponse.next();
+  }
 
-  // Allow all requests to pass through
-  // Client-side Clerk components will handle authentication
+  // Get auth info from cookies
+  const authInfo = getAuthFromCookies(req);
+  console.log('🔍 STEP10 MIDDLEWARE: Auth info:', {
+    hasSession: authInfo.hasSession,
+    hasClerkAuth: authInfo.hasClerkAuth,
+    pathname
+  });
+
+  // Check admin routes
+  if (matchesRoute(pathname, ADMIN_ROUTES)) {
+    console.log('🔍 STEP10 MIDDLEWARE: Admin route detected');
+
+    if (!authInfo.hasSession) {
+      console.log('🔍 STEP10 MIDDLEWARE: No auth session - redirecting to admin login');
+      return NextResponse.redirect(new URL('/admin/login', req.url));
+    }
+
+    // For admin routes, we'll let the client-side check handle role verification
+    // since we can't safely access Clerk's auth() function here
+    console.log('🔍 STEP10 MIDDLEWARE: Auth session found - allowing admin route (role check on client)');
+    return NextResponse.next();
+  }
+
+  // Check dashboard routes
+  if (matchesRoute(pathname, DASHBOARD_ROUTES)) {
+    console.log('🔍 STEP10 MIDDLEWARE: Dashboard route detected');
+
+    if (!authInfo.hasSession) {
+      console.log('🔍 STEP10 MIDDLEWARE: No auth session - redirecting to sign-in');
+      return NextResponse.redirect(new URL('/sign-in', req.url));
+    }
+
+    console.log('🔍 STEP10 MIDDLEWARE: Auth session found - allowing dashboard route');
+    return NextResponse.next();
+  }
+
+  // Allow all other routes
+  console.log('🔍 STEP10 MIDDLEWARE: Other route - allowing access');
   return NextResponse.next();
 }
 
