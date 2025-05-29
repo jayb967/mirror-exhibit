@@ -1,116 +1,55 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { createClerkClient } from '@clerk/nextjs/server';
+import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-// Create Clerk client instance with error handling
-let clerkClient: any = null;
-try {
-  clerkClient = createClerkClient({
-    secretKey: process.env.CLERK_SECRET_KEY,
-  });
-} catch (error) {
-  console.error('Failed to create Clerk client:', error);
-}
-
-// Define protected routes that require authentication
-const isProtectedRoute = createRouteMatcher([
-  '/admin(.*)',
-  '/profile(.*)',
-  '/orders(.*)',
-]);
-
-// Define admin routes that require admin role
-const isAdminRoute = createRouteMatcher([
-  '/admin(.*)',
-]);
-
-// Define public admin routes that don't require authentication
-const isPublicAdminRoute = createRouteMatcher([
-  '/admin/login',
-  '/admin/forgot-password',
-]);
-
+// MINIMAL DEBUGGING MIDDLEWARE - To isolate the constructor error
 export default clerkMiddleware(async (auth, req) => {
+  console.log('🔍 MIDDLEWARE DEBUG: Starting middleware for:', req.url);
+
   try {
-    // Add specific error handling around auth() call
-    let userId, sessionClaims;
+    // Step 1: Test if the basic middleware wrapper works
+    console.log('🔍 MIDDLEWARE DEBUG: Step 1 - Basic middleware wrapper OK');
+
+    // Step 2: Test if we can call auth() without errors
+    console.log('🔍 MIDDLEWARE DEBUG: Step 2 - About to call auth()');
+
+    let authResult;
     try {
-      const authResult = await auth();
-      userId = authResult.userId;
-      sessionClaims = authResult.sessionClaims;
+      authResult = await auth();
+      console.log('🔍 MIDDLEWARE DEBUG: Step 2 - auth() call successful');
+      console.log('🔍 MIDDLEWARE DEBUG: Auth result keys:', Object.keys(authResult || {}));
     } catch (authError) {
-      console.warn('Auth function failed in middleware:', authError);
-      // If auth fails, treat as unauthenticated user and allow request to proceed
+      console.error('🔍 MIDDLEWARE DEBUG: Step 2 - auth() call FAILED:', authError);
+      console.error('🔍 MIDDLEWARE DEBUG: Auth error name:', (authError as any)?.name);
+      console.error('🔍 MIDDLEWARE DEBUG: Auth error message:', (authError as any)?.message);
+      // Return early if auth() fails
       return NextResponse.next();
     }
 
-    // Allow public admin routes
-    if (isPublicAdminRoute(req)) {
-      return NextResponse.next();
-    }
+    // Step 3: Test if we can access basic auth properties
+    console.log('🔍 MIDDLEWARE DEBUG: Step 3 - Accessing auth properties');
+    const userId = authResult?.userId;
+    console.log('🔍 MIDDLEWARE DEBUG: Step 3 - userId:', userId ? 'present' : 'null');
 
-    // Protect admin routes
-    if (isAdminRoute(req)) {
-      // Redirect to sign-in if not authenticated
-      if (!userId) {
-        const signInUrl = new URL('/admin/login', req.url);
-        signInUrl.searchParams.set('redirect_url', req.url);
-        return NextResponse.redirect(signInUrl);
-      }
+    // Step 4: Test if we can access session claims
+    console.log('🔍 MIDDLEWARE DEBUG: Step 4 - Accessing session claims');
+    const sessionClaims = authResult?.sessionClaims;
+    console.log('🔍 MIDDLEWARE DEBUG: Step 4 - sessionClaims:', sessionClaims ? 'present' : 'null');
 
-      // Check for admin role in multiple possible locations with error handling
-      let userRole;
-      try {
-        userRole = sessionClaims?.metadata?.role ||
-                   sessionClaims?.publicMetadata?.role ||
-                   sessionClaims?.privateMetadata?.role;
-      } catch (roleError) {
-        console.warn('Error accessing session claims:', roleError);
-        userRole = null;
-      }
-
-      // Check for admin role via Clerk API if not found in JWT and client is available
-      if (!userRole && clerkClient && userId) {
-        try {
-          const user = await clerkClient.users.getUser(userId);
-          userRole = (user.publicMetadata?.role as string) ||
-                     (user.privateMetadata?.role as string);
-          console.log('Admin access via Clerk API:', { userId, role: userRole });
-        } catch (error) {
-          console.warn('Error fetching user role from Clerk API:', error);
-          // Continue without role - access will be denied below
-        }
-      } else if (userRole) {
-        console.log('Admin access via JWT:', { userId, role: userRole });
-      }
-
-      if (userRole !== 'admin') {
-        console.log('Access denied: User role is not admin:', userRole);
-        return NextResponse.redirect(new URL('/unauthorized', req.url));
-      }
-
-      console.log('Admin access granted for user:', userId);
-    }
-
-    // Protect other authenticated routes - redirect to home page where Clerk modal can be triggered
-    if (isProtectedRoute(req) && !userId) {
-      const homeUrl = new URL('/', req.url);
-      homeUrl.searchParams.set('auth_required', 'true');
-      homeUrl.searchParams.set('redirect_url', req.url);
-      return NextResponse.redirect(homeUrl);
-    }
-
+    console.log('🔍 MIDDLEWARE DEBUG: All steps completed successfully');
     return NextResponse.next();
+
   } catch (error) {
-    console.error('Middleware error:', error);
-    // Log the specific error details for debugging
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+    console.error('🔍 MIDDLEWARE DEBUG: FATAL ERROR in middleware:', error);
+    console.error('🔍 MIDDLEWARE DEBUG: Error name:', (error as any)?.name);
+    console.error('🔍 MIDDLEWARE DEBUG: Error message:', (error as any)?.message);
+    console.error('🔍 MIDDLEWARE DEBUG: Error stack:', (error as any)?.stack);
+
+    // Check if this is the constructor error we're looking for
+    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('$a')) {
+      console.error('🔍 MIDDLEWARE DEBUG: *** FOUND THE CONSTRUCTOR ERROR! ***');
+      console.error('🔍 MIDDLEWARE DEBUG: This is the $a constructor error we are hunting');
     }
-    // If there's an error in authentication, allow the request to proceed
-    // This prevents the app from crashing due to Clerk crypto issues
+
     return NextResponse.next();
   }
 });
