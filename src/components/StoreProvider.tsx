@@ -67,12 +67,12 @@ type StoreType = ReturnType<typeof createStore>
 function CartInitializer() {
   const dispatch = useDispatch()
 
-  console.log('🔍 STEP3 DEBUG: CartInitializer starting - ADDING BACK useAuth WITH DEBUGGING')
+  console.log('🔍 STEP4 DEBUG: CartInitializer starting - STEP 4 WITH ULTRA-AGGRESSIVE AUTH DEBUGGING')
 
   // Always call useAuth first (React Hook rules)
-  console.log('🔍 STEP3 DEBUG: About to call useAuth()')
+  console.log('🔍 STEP4 DEBUG: About to call useAuth()')
   const authState = useAuth()
-  console.log('🔍 STEP3 DEBUG: useAuth() call successful')
+  console.log('🔍 STEP4 DEBUG: useAuth() call successful')
 
   // Safely extract auth properties with error handling
   let isAuthenticated = false
@@ -81,18 +81,19 @@ function CartInitializer() {
   let authError = null
 
   try {
-    console.log('🔍 STEP3 DEBUG: Extracting auth properties')
+    console.log('🔍 STEP4 DEBUG: Extracting auth properties')
     isAuthenticated = authState.isAuthenticated || false
     user = authState.user || null
     isLoading = authState.isLoading || false
-    console.log('🔍 STEP3 DEBUG: Auth properties extracted:', { isAuthenticated, hasUser: !!user, isLoading })
+    console.log('🔍 STEP4 DEBUG: Auth properties extracted:', { isAuthenticated, hasUser: !!user, isLoading })
   } catch (error) {
     authError = error
-    console.error('🔍 STEP3 DEBUG: ERROR extracting auth properties:', error)
-    console.error('🔍 STEP3 DEBUG: Auth extraction error message:', (error as any)?.message)
+    console.error('🔍 STEP4 DEBUG: ERROR extracting auth properties:', error)
+    console.error('🔍 STEP4 DEBUG: Auth extraction error message:', (error as any)?.message)
+    console.error('🔍 STEP4 DEBUG: Auth extraction error stack:', (error as any)?.stack)
 
     if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
-      console.error('🔍 STEP3 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN AUTH PROPERTY EXTRACTION! ***')
+      console.error('🔍 STEP4 DEBUG: *** FOUND Ba CONSTRUCTOR ERROR IN AUTH PROPERTY EXTRACTION! ***')
     }
   }
 
