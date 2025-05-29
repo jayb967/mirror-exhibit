@@ -60,58 +60,42 @@ function getClerkAuthFromCookies(req: NextRequest) {
 export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  console.log('🔍 STEP11 MIDDLEWARE: Clerk-only route protection for:', pathname);
 
   if (!ENABLE_ROUTE_PROTECTION) {
-    console.log('🔍 STEP11 MIDDLEWARE: Route protection disabled - allowing all requests');
     return NextResponse.next();
   }
 
   // Allow public routes
   if (isPublicRoute(pathname)) {
-    console.log('🔍 STEP11 MIDDLEWARE: Public route - allowing access');
     return NextResponse.next();
   }
 
   // Get Clerk auth info from cookies
   const authInfo = getClerkAuthFromCookies(req);
-  console.log('🔍 STEP11 MIDDLEWARE: Clerk auth info:', {
-    hasSession: authInfo.hasSession,
-    hasClerkAuth: authInfo.hasClerkAuth,
-    clerkCookies: authInfo.clerkCookies,
-    pathname
-  });
 
   // Check admin routes - STRICT: Must be authenticated (client-side will check admin role)
   if (matchesRoute(pathname, ADMIN_ROUTES)) {
-    console.log('🔍 STEP11 MIDDLEWARE: Admin route detected');
 
     if (!authInfo.hasSession) {
-      console.log('🔍 STEP11 MIDDLEWARE: No Clerk session - redirecting to admin login');
       return NextResponse.redirect(new URL('/admin/login', req.url));
     }
 
     // NOTE: We can't check admin role in middleware without using problematic clerkMiddleware
     // Client-side components will handle admin role verification
-    console.log('🔍 STEP11 MIDDLEWARE: Clerk session found - allowing admin route (admin role check on client)');
     return NextResponse.next();
   }
 
   // Check dashboard routes - Must be authenticated
   if (matchesRoute(pathname, DASHBOARD_ROUTES)) {
-    console.log('🔍 STEP11 MIDDLEWARE: Dashboard route detected');
 
     if (!authInfo.hasSession) {
-      console.log('🔍 STEP11 MIDDLEWARE: No Clerk session - redirecting to sign-in');
       return NextResponse.redirect(new URL('/sign-in', req.url));
     }
 
-    console.log('🔍 STEP11 MIDDLEWARE: Clerk session found - allowing dashboard route');
     return NextResponse.next();
   }
 
   // Allow all other routes
-  console.log('🔍 STEP11 MIDDLEWARE: Other route - allowing access');
   return NextResponse.next();
 }
 

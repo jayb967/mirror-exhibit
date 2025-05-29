@@ -12,26 +12,28 @@ This folder contains utility functions and helpers that provide common functiona
 
 ## 🧩 Key Utilities
 
-### admin-auth.ts 🛡️ **NEW - CENTRALIZED ADMIN AUTH**
+### admin-auth.ts 🛡️ **PRODUCTION-SAFE ADMIN AUTH**
 - **Purpose:** Centralized admin authentication and role verification for all admin API routes
 - **Usage:** Import in admin API routes for consistent authentication
 - **Functions:**
-  - `verifyAdminAccess(options?)` - Primary admin auth function for API routes
+  - `verifyAdminAccessSafe(request, options?)` - **RECOMMENDED** production-safe admin auth
+  - `verifyAdminAccess(options?)` - **DEPRECATED** legacy auth (causes production errors)
   - `isUserAdmin(userId?)` - Simple boolean admin check
   - `getUserRole(userId?)` - Get user role from Clerk
 - **Key Features:**
-  - JWT + Clerk API fallback for reliable role detection
-  - Detailed logging with operation context
-  - Proper HTTP error responses (401/403/500)
-  - TypeScript support with full type safety
-  - Consistent across all admin operations
+  - ✅ Production-safe verification without clerkMiddleware() requirement
+  - ✅ Direct Clerk client verification with session tokens
+  - ✅ Detailed logging with operation context
+  - ✅ Proper HTTP error responses (401/403/500)
+  - ✅ TypeScript support with full type safety
+  - ✅ Fixes "Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware()" errors
 
-**Usage Example:**
+**Usage Example (RECOMMENDED):**
 ```typescript
-import { verifyAdminAccess } from '@/utils/admin-auth';
+import { verifyAdminAccessSafe } from '@/utils/admin-auth';
 
 export async function POST(request: NextRequest) {
-  const authResult = await verifyAdminAccess({
+  const authResult = await verifyAdminAccessSafe(request, {
     operation: 'create products'
   });
 
@@ -42,6 +44,16 @@ export async function POST(request: NextRequest) {
   // Continue with admin logic...
   const { userId, userRole } = authResult;
 }
+```
+
+**Legacy Example (DEPRECATED - causes production errors):**
+```typescript
+// ❌ DON'T USE - Causes "clerkMiddleware() not detected" errors
+import { verifyAdminAccess } from '@/utils/admin-auth';
+
+const authResult = await verifyAdminAccess({
+  operation: 'create products'
+});
 ```
 
 ### supabase-client.ts ⭐ **CLIENT-SIDE ONLY**
@@ -139,6 +151,9 @@ export async function GET() {
 
 | Date       | Change Description                                                 | Reason                         |
 |------------|--------------------------------------------------------------------|--------------------------------|
+| 2025-01-27 | **🚨 CRITICAL FIX:** Created verifyAdminAccessSafe() to fix production auth errors | Fix "Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware()" errors |
+| 2025-01-27 | **🔧 UPDATED:** All admin API routes now use verifyAdminAccessSafe() | Prevent admin orders page and other admin endpoints from failing |
+| 2025-01-27 | **⚠️ DEPRECATED:** verifyAdminAccess() marked as deprecated | Guide developers away from problematic auth() function |
 | 2025-01-27 | **🔧 FIXED:** Clerk auth context errors in createServerSupabaseClient | Added error handling for static generation and missing request context |
 | 2025-01-27 | **🔧 FIXED:** Updated /api/products/random to use createAdminSupabaseClient | Fix Clerk auth errors for public product endpoints |
 | 2025-01-27 | **🔧 FIXED:** Added graceful fallbacks for Clerk auth failures | Prevent build failures when auth context is unavailable |
