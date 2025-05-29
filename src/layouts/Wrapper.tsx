@@ -12,7 +12,22 @@ import animationTitle from "@/utils/animationTitle";
 
 
 import { ScrollSmoother, ScrollToPlugin, ScrollTrigger, SplitText } from "@/plugins";
-gsap.registerPlugin(ScrollSmoother, ScrollTrigger, ScrollToPlugin, SplitText);
+
+// Add error handling for GSAP plugin registration
+try {
+  console.log('🔍 SSR DEBUG: About to register GSAP plugins')
+  gsap.registerPlugin(ScrollSmoother, ScrollTrigger, ScrollToPlugin, SplitText);
+  console.log('🔍 SSR DEBUG: GSAP plugins registered successfully')
+} catch (error) {
+  console.error('🔍 SSR DEBUG: Error registering GSAP plugins:', error)
+  console.error('🔍 SSR DEBUG: GSAP plugin error name:', (error as any)?.name)
+  console.error('🔍 SSR DEBUG: GSAP plugin error message:', (error as any)?.message)
+
+  // Check if this is the constructor error we're looking for
+  if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+    console.error('🔍 SSR DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN GSAP PLUGINS! ***')
+  }
+}
 
 
 
@@ -49,8 +64,11 @@ const getDevicePerformance = () => {
 };
 
 const Wrapper = ({ children }: any) => {
-  const performanceLevel = useRef(getDevicePerformance());
-  const animationsInitialized = useRef(false);
+  console.log('🔍 SSR DEBUG: Wrapper component starting')
+
+  try {
+    const performanceLevel = useRef(getDevicePerformance());
+    const animationsInitialized = useRef(false);
 
   // Optimized ScrollSmoother configuration based on device performance
   const getScrollSmootherConfig = useCallback(() => {
@@ -161,26 +179,40 @@ const Wrapper = ({ children }: any) => {
 
 
 
-  // Cart initialization is now handled in StoreProvider
+    // Cart initialization is now handled in StoreProvider
 
-  return <>
-    {children}
-    <ScrollToTop />
-    <FloatingCartButton />
-    <ToastContainer
-      position="top-center"
-      autoClose={2000}
-      hideProgressBar={false}
-      newestOnTop
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="light"
-      limit={1}
-    />
-  </>;
+    console.log('🔍 SSR DEBUG: About to render Wrapper children')
+
+    return <>
+      {children}
+      <ScrollToTop />
+      <FloatingCartButton />
+      <ToastContainer
+        position="top-center"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        limit={1}
+      />
+    </>;
+  } catch (error) {
+    console.error('🔍 SSR DEBUG: Error in Wrapper:', error)
+    console.error('🔍 SSR DEBUG: Wrapper error name:', (error as any)?.name)
+    console.error('🔍 SSR DEBUG: Wrapper error message:', (error as any)?.message)
+
+    // Check if this is the constructor error we're looking for
+    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+      console.error('🔍 SSR DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN WRAPPER! ***')
+    }
+
+    throw error
+  }
 };
 
 export default Wrapper;

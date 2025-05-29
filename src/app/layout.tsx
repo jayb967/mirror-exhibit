@@ -16,15 +16,32 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
-      <html lang="en">
-        <body suppressHydrationWarning={true} className={inter.className}>
-          <AppWrapper>
-            {children}
-          </AppWrapper>
-        </body>
-      </html>
-    </ClerkProvider>
-  );
+  console.log('🔍 SSR DEBUG: RootLayout starting')
+
+  try {
+    console.log('🔍 SSR DEBUG: About to render ClerkProvider')
+
+    return (
+      <ClerkProvider>
+        <html lang="en">
+          <body suppressHydrationWarning={true} className={inter.className}>
+            <AppWrapper>
+              {children}
+            </AppWrapper>
+          </body>
+        </html>
+      </ClerkProvider>
+    );
+  } catch (error) {
+    console.error('🔍 SSR DEBUG: Error in RootLayout:', error)
+    console.error('🔍 SSR DEBUG: RootLayout error name:', (error as any)?.name)
+    console.error('🔍 SSR DEBUG: RootLayout error message:', (error as any)?.message)
+
+    // Check if this is the constructor error we're looking for
+    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+      console.error('🔍 SSR DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN ROOTLAYOUT! ***')
+    }
+
+    throw error
+  }
 }
