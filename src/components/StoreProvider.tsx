@@ -70,18 +70,35 @@ type StoreType = ReturnType<typeof createStore>
 function CartInitializer() {
   const dispatch = useDispatch()
 
-  // Safely get auth state with error handling
+  console.log('🔍 CLIENT DEBUG: CartInitializer component starting')
+
+  console.log('🔍 CLIENT DEBUG: About to call useAuth()')
+
+  // Always call useAuth first (React Hook rules)
+  const authState = useAuth()
+
+  console.log('🔍 CLIENT DEBUG: useAuth() successful')
+
+  // Safely extract auth state with error handling
   let isAuthenticated = false
   let user = null
   let isLoading = true
 
   try {
-    const authState = useAuth()
     isAuthenticated = authState.isAuthenticated
     user = authState.user
     isLoading = authState.isLoading
-  } catch (authError) {
-    console.warn('Error getting auth state:', authError)
+    console.log('🔍 CLIENT DEBUG: Auth state extracted:', { isAuthenticated, hasUser: !!user, isLoading })
+  } catch (error) {
+    console.error('🔍 CLIENT DEBUG: Error extracting auth state properties:', error)
+    console.error('🔍 CLIENT DEBUG: Auth error name:', (error as any)?.name)
+    console.error('🔍 CLIENT DEBUG: Auth error message:', (error as any)?.message)
+
+    // Check if this is the constructor error we're looking for
+    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+      console.error('🔍 CLIENT DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN AUTH STATE EXTRACTION! ***')
+    }
+
     // Use default values (unauthenticated state)
     isAuthenticated = false
     user = null
@@ -96,17 +113,27 @@ function CartInitializer() {
   }, [dispatch])
 
   useEffect(() => {
+    console.log('🔍 CLIENT DEBUG: Auth change useEffect triggered', {
+      isLoading,
+      wasAuthenticated: prevAuthState.current,
+      isNowAuthenticated: isAuthenticated,
+      hasUser: !!user
+    })
+
     // Handle auth state changes
-    if (isLoading) return // Don't do anything while auth is loading
+    if (isLoading) {
+      console.log('🔍 CLIENT DEBUG: Auth still loading, returning early')
+      return // Don't do anything while auth is loading
+    }
 
     const wasAuthenticated = prevAuthState.current
     const isNowAuthenticated = isAuthenticated
 
     const handleAuthChange = async () => {
+      console.log('🔍 CLIENT DEBUG: handleAuthChange starting')
       try {
         if (!wasAuthenticated && isNowAuthenticated && user) {
-          // User just logged in - TEMPORARILY DISABLED cart operations to isolate constructor error
-          console.log('User logged in, cart operations temporarily disabled for debugging...')
+          console.log('🔍 CLIENT DEBUG: User just logged in - cart operations temporarily disabled for debugging...')
 
           // TEMPORARILY DISABLED: All cart operations during login
           // try {
@@ -144,37 +171,79 @@ function CartInitializer() {
           // }
         } else if (wasAuthenticated && !isNowAuthenticated) {
           // User logged out - continue with local storage only
-          console.log('User logged out, using local cart...')
+          console.log('🔍 CLIENT DEBUG: User logged out, using local cart...')
           dispatch(get_cart_products())
         }
 
         // Update previous auth state
+        console.log('🔍 CLIENT DEBUG: Updating previous auth state')
         prevAuthState.current = isAuthenticated
+        console.log('🔍 CLIENT DEBUG: handleAuthChange completed successfully')
       } catch (error) {
-        console.error('Error in auth change handler:', error)
+        console.error('🔍 CLIENT DEBUG: Error in auth change handler:', error)
+        console.error('🔍 CLIENT DEBUG: Auth handler error name:', (error as any)?.name)
+        console.error('🔍 CLIENT DEBUG: Auth handler error message:', (error as any)?.message)
+
+        // Check if this is the constructor error we're looking for
+        if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+          console.error('🔍 CLIENT DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN AUTH HANDLER! ***')
+        }
+
         // Fallback to local cart if anything fails
         dispatch(get_cart_products())
         prevAuthState.current = isAuthenticated
       }
     }
 
+    console.log('🔍 CLIENT DEBUG: About to call handleAuthChange()')
     handleAuthChange()
+    console.log('🔍 CLIENT DEBUG: handleAuthChange() called')
   }, [isAuthenticated, user, isLoading, dispatch])
 
   return null
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
+  console.log('🔍 CLIENT DEBUG: StoreProvider component starting')
+
   // Use useRef to ensure the store is only created once
   const storeRef = useRef<StoreType>()
   if (!storeRef.current) {
-    storeRef.current = createStore()
+    console.log('🔍 CLIENT DEBUG: Creating Redux store')
+    try {
+      storeRef.current = createStore()
+      console.log('🔍 CLIENT DEBUG: Redux store created successfully')
+    } catch (error) {
+      console.error('🔍 CLIENT DEBUG: Error creating Redux store:', error)
+      console.error('🔍 CLIENT DEBUG: Store creation error name:', (error as any)?.name)
+      console.error('🔍 CLIENT DEBUG: Store creation error message:', (error as any)?.message)
+
+      // Check if this is the constructor error we're looking for
+      if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+        console.error('🔍 CLIENT DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN STORE CREATION! ***')
+      }
+      throw error // Re-throw to prevent app from continuing with broken store
+    }
   }
 
-  return (
-    <Provider store={storeRef.current}>
-      <CartInitializer />
-      {children}
-    </Provider>
-  )
+  console.log('🔍 CLIENT DEBUG: About to render Provider with CartInitializer')
+
+  try {
+    return (
+      <Provider store={storeRef.current}>
+        <CartInitializer />
+        {children}
+      </Provider>
+    )
+  } catch (error) {
+    console.error('🔍 CLIENT DEBUG: Error in StoreProvider render:', error)
+    console.error('🔍 CLIENT DEBUG: Render error name:', (error as any)?.name)
+    console.error('🔍 CLIENT DEBUG: Render error message:', (error as any)?.message)
+
+    // Check if this is the constructor error we're looking for
+    if ((error as any)?.message?.includes('constructor') || (error as any)?.message?.includes('Ba')) {
+      console.error('🔍 CLIENT DEBUG: *** FOUND THE Ba CONSTRUCTOR ERROR IN PROVIDER RENDER! ***')
+    }
+    throw error // Re-throw to prevent app from continuing
+  }
 }
